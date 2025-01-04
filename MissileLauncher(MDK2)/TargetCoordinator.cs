@@ -38,7 +38,17 @@ namespace IngameScript
 
             public void Run(DateTime time)
             {
-                program.IGC.SendBroadcastMessage
+                foreach (var target in targets)
+                {
+                    TimeSpan timeSinceLastDetection = time - target.Value.Item3;
+
+                    if (timeSinceLastDetection.TotalSeconds > 5)
+                    {
+                        RemoveTarget(target.Key);
+                    }
+                }
+                var message = targets.ToImmutableDictionary();
+                program.IGC.SendBroadcastMessage(broadcastTag, message);
             }
 
             public void AddTarget(long targetID, Vector3 position, Vector3 velocity, DateTime time)
