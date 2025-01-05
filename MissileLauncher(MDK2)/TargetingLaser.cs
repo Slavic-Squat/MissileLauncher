@@ -56,7 +56,7 @@ namespace IngameScript
 
             private bool manualOverride = false;
 
-            public TargetingLaser(Program program, int ID, string broadcastTag, float sensitivity = 0.05f, float maxRaycastDistance = 5000, float raycastDistanceGrowthSpeed = 200)
+            public TargetingLaser(Program program, int ID, float sensitivity = 0.05f, float maxRaycastDistance = 5000, float raycastDistanceGrowthSpeed = 200)
             {
                 this.program = program;
                 this.ID = ID;
@@ -65,11 +65,17 @@ namespace IngameScript
                 this.maxTargetDistance = maxRaycastDistance * 0.8f;
                 this.raycastDistanceGrowthSpeed = raycastDistanceGrowthSpeed;
                 
-
-                azimuthRotor = (IMyMotorStator)program.GridTerminalSystem.GetBlockWithName($"Azimuth Rotor [{ID}]");
-                elevationRotor = (IMyMotorStator)program.GridTerminalSystem.GetBlockWithName($"Elevation Rotor [{ID}]");
-                laserController = (IMyShipController)program.GridTerminalSystem.GetBlockWithName($"Laser Controller [{ID}]");
-                program.GridTerminalSystem.GetBlockGroupWithName($"Camera Array [{ID}]").GetBlocksOfType<IMyCameraBlock>(cameraArray);
+                try
+                {
+                    azimuthRotor = program.GridTerminalSystem.GetBlockWithName($"Azimuth Rotor [{ID}]") as IMyMotorStator;
+                    elevationRotor = program.GridTerminalSystem.GetBlockWithName($"Elevation Rotor [{ID}]") as IMyMotorStator;
+                    laserController = program.GridTerminalSystem.GetBlockWithName($"Laser Controller [{ID}]") as IMyShipController;
+                    program.GridTerminalSystem.GetBlockGroupWithName($"Camera Array [{ID}]").GetBlocksOfType<IMyCameraBlock>(cameraArray);
+                }
+                catch (Exception ex)
+                {
+                    program.Echo("Error in TargetingLaser construction");
+                }
 
                 foreach (IMyCameraBlock camera in cameraArray)
                 {

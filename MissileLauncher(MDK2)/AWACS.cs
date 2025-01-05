@@ -44,10 +44,10 @@ namespace IngameScript
             private float raycastDistanceGrowthSpeed;
             float totalAvailRaycastDistance;
 
-            private Dictionary<long, MyTuple<Vector3, Vector3, DateTime>> lockedTargetsInfo = new Dictionary<long, MyTuple<Vector3, Vector3, DateTime>>();
-            private Dictionary<long, bool> lockedTargetsSyncInfo = new Dictionary<long, bool>();
-            private List<long> lockedTargetIDs = new List<long>();
-            int targetIndex;
+            public Dictionary<long, MyTuple<Vector3, Vector3, DateTime>> lockedTargetsInfo = new Dictionary<long, MyTuple<Vector3, Vector3, DateTime>>();
+            public Dictionary<long, bool> lockedTargetsSyncInfo = new Dictionary<long, bool>();
+            public List<long> lockedTargetIDs = new List<long>();
+            private int targetIndex;
 
             public AWACS(Program program, int ID, float maxRaycastDistance = 5000, float raycastDistanceGrowthSpeed = 200)
             {
@@ -57,13 +57,19 @@ namespace IngameScript
                 this.maxTargetDistance = maxRaycastDistance * 0.8f;
                 this.raycastDistanceGrowthSpeed = raycastDistanceGrowthSpeed;
                 
-
-                spinRotor = (IMyMotorStator)program.GridTerminalSystem.GetBlockWithName($"Spin Rotor [{ID}]");
-                laserController = (IMyShipController)program.GridTerminalSystem.GetBlockWithName($"Laser Controller [{ID}]");
-                program.GridTerminalSystem.GetBlockGroupWithName($"Camera Array0 [{ID}]").GetBlocksOfType<IMyCameraBlock>(cameraArray0);
-                program.GridTerminalSystem.GetBlockGroupWithName($"Camera Array1 [{ID}]").GetBlocksOfType<IMyCameraBlock>(cameraArray1);
-                program.GridTerminalSystem.GetBlockGroupWithName($"Camera Array2 [{ID}]").GetBlocksOfType<IMyCameraBlock>(cameraArray2);
-                program.GridTerminalSystem.GetBlockGroupWithName($"Camera Array3 [{ID}]").GetBlocksOfType<IMyCameraBlock>(cameraArray3);
+                try
+                {
+                    spinRotor = program.GridTerminalSystem.GetBlockWithName($"Spin Rotor [{ID}]") as IMyMotorStator;
+                    laserController = program.GridTerminalSystem.GetBlockWithName($"Laser Controller [{ID}]") as IMyShipController;
+                    program.GridTerminalSystem.GetBlockGroupWithName($"Camera Array0 [{ID}]").GetBlocksOfType<IMyCameraBlock>(cameraArray0);
+                    program.GridTerminalSystem.GetBlockGroupWithName($"Camera Array1 [{ID}]").GetBlocksOfType<IMyCameraBlock>(cameraArray1);
+                    program.GridTerminalSystem.GetBlockGroupWithName($"Camera Array2 [{ID}]").GetBlocksOfType<IMyCameraBlock>(cameraArray2);
+                    program.GridTerminalSystem.GetBlockGroupWithName($"Camera Array3 [{ID}]").GetBlocksOfType<IMyCameraBlock>(cameraArray3);
+                }
+                catch (Exception ex)
+                {
+                    program.Echo("Error in AWACS construction");
+                }
 
                 foreach (IMyCameraBlock camera in cameraArray0)
                 {

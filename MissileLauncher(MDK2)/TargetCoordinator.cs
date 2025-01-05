@@ -27,13 +27,14 @@ namespace IngameScript
             private Program program;
             private int ID;
             private string broadcastTag;
-            private TargetingLaser targetingLaser;
-            private AWACS awacs;
-            private Dictionary<long, MyTuple<Vector3, Vector3, DateTime>> targets = new Dictionary<long, MyTuple<Vector3, Vector3, DateTime>>();
+            public Dictionary<long, MyTuple<Vector3, Vector3, DateTime>> targets = new Dictionary<long, MyTuple<Vector3, Vector3, DateTime>>();
+            public List<long> targetIDs = new List<long>();
 
-            public TargetCoordinator()
+            public TargetCoordinator(Program program, int ID, string broadcastTag)
             {
-
+                this.program = program;
+                this.ID = ID;
+                this.broadcastTag = broadcastTag;
             }
 
             public void Run(DateTime time)
@@ -64,6 +65,11 @@ namespace IngameScript
                 {
                     targets[targetID] = new MyTuple<Vector3, Vector3, DateTime>(position, velocity, time);
                 }
+
+                if (!targetIDs.Contains(targetID))
+                {
+                    targetIDs.Add(targetID);
+                }
             }
 
             public void AddTargets(Dictionary<long, MyTuple<Vector3, Vector3, DateTime>> targets)
@@ -77,13 +83,14 @@ namespace IngameScript
             public void RemoveTarget(long targetID)
             {
                 targets.Remove(targetID);
+                targetIDs.Remove(targetID);
             }
 
             public void RemoveTargets(List<long> targetIDs)
             {
                 foreach (var targetID in targetIDs)
                 {
-                    targets.Remove(targetID);
+                    RemoveTarget(targetID);
                 }
             }
         }

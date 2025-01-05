@@ -27,24 +27,99 @@ namespace IngameScript
             Program program;
             int ID;
             private List<MissileBay> missileBays = new List<MissileBay>();
+            private TargetingLaser targetingLaser;
+            private AWACS awacs;
+            private TargetCoordinator targetCoordinator;
+            private IMyShipController controller;
+            private long selectedTarget;
+            private int selectedTargetIndex;
+            private IMyTextSurface display;
 
             public MissileLauncher(Program program, int ID, int numberOfMissileBays)
             {
                 this.program = program;
                 this.ID = ID;
-                for (int i = 0; i < numberOfMissileBays; i++)
+
+                try
                 {
-                    missileBays.Add(new MissileBay(program, i));
+                    for (int i = 0; i < numberOfMissileBays; i++)
+                    {
+                        missileBays.Add(new MissileBay(program, i));
+                    }
+                    targetingLaser = new TargetingLaser(program, 0);
+                    awacs = new AWACS(program, 0);
+                    targetCoordinator = new TargetCoordinator(program, 0, "JombieMissile");
+                    controller = program.GridTerminalSystem.GetBlockWithName($"Launch Controller [{ID}]") as IMyShipController;
+                    display = program.GridTerminalSystem.GetBlockWithName($"Launch Display [{ID}]") as IMyTextSurface;
+                }
+                catch (Exception ex)
+                {
+                    program.Echo("Error in MissileLauncher Construction");
                 }
             }
 
-            public void LaunchNextAvailableMissile(int targetID)
+            public void Run(DateTime time)
+            {
+                targetingLaser.Run(time);
+                awacs.Run(time);
+                targetCoordinator.Run(time);
+                UpdateTargetCoordinator();
+
+                if (controller.MoveIndicator.Z == -1)
+                {
+                    selectedTargetIndex = targetCoordinator.targetIDs.IndexOf(selectedTarget);
+                    if (selectedTargetIndex == -1)
+                    {
+                        selectedTargetIndex = 0;
+                    }
+                    else
+                    {
+                        selectedTargetIndex++;
+                        selectedTargetIndex = selectedTargetIndex >= targetCoordinator.targetIDs.Count ? 0 : selectedTargetIndex++;
+                    }
+                }
+                else if (controller.MoveIndicator.Z == 1)
+                {
+                    selectedTargetIndex = targetCoordinator.targetIDs.IndexOf(selectedTarget);
+                    if (selectedTargetIndex == -1)
+                    {
+                        selectedTargetIndex = 0;
+                    }
+                    else
+                    {
+                        selectedTargetIndex--;
+                        selectedTargetIndex = selectedTargetIndex < 0 ? targetCoordinator.targetIDs.Count - 1 : selectedTargetIndex--;
+                    }
+                }
+            }
+
+            public void LaunchNextAvailableMissile(long targetID)
             {
                 int missileBayIndex = missileBays.FindIndex(x => x.status == MissileBay.Status.Ready);
                 if (missileBayIndex != -1)
                 {
                     missileBays[missileBayIndex].Launch($"Target {targetID} [{ID}]");
                 }
+            }
+
+            public void LaunchNextAvailableMissile()
+            {
+                LaunchNextAvailableMissile(selectedTarget);
+            }
+
+            public void SyncTarget()
+            {
+                long targetID = targetingLaser.lockedTarget.EntityId;
+                Vector3 targetPosition = targetingLaser.lockedTarget.Position;
+                Vector3 targetVelocity = targetingLaser.lockedTarget.Velocity;
+                DateTime lastDetectionTime = targetingLaser.lastTargetDetection;
+
+                awacs.AddTarget(targetID, targetPosition, targetVelocity, lastDetectionTime);
+            }
+
+            public void UpdateTargetCoordinator()
+            {
+                targetCoordinator.AddTargets(awacs.lockedTargetsInfo);
             }
 
 

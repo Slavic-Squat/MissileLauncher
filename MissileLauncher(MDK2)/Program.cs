@@ -23,18 +23,17 @@ namespace IngameScript
     partial class Program : MyGridProgram
     {
         MissileLauncher missileLauncher;
-        TargetingLaser laser1;
         Dictionary<string, Action<int>> commands = new Dictionary<string, Action<int>>();
         MyCommandLine commandLine = new MyCommandLine();
+        DateTime time;
 
         public Program()
         {
             Runtime.UpdateFrequency = UpdateFrequency.Update1;
 
-            missileLauncher = new MissileLauncher(this, 1);
-            laser1 = new TargetingLaser(this, 0, $"Targeting Laser Data {0}");
+            missileLauncher = new MissileLauncher(this, 0, 1);
 
-            commands["Launch"] = missileLauncher.LaunchNextAvailableMissile;
+            commands["Launch"] = _ => missileLauncher.LaunchNextAvailableMissile();
         }
 
         public void Save()
@@ -44,7 +43,9 @@ namespace IngameScript
 
         public void Main(string argument, UpdateType updateSource)
         {
-            laser1.Run();
+            time += Runtime.TimeSinceLastRun;
+            missileLauncher.Run(time);
+
             if (commandLine.TryParse(argument))
             {
                 string commandName = commandLine.Argument(0);
