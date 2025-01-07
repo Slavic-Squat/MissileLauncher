@@ -30,6 +30,7 @@ namespace IngameScript
             private TargetingLaser targetingLaser;
             private AWACS awacs;
             private TargetCoordinator targetCoordinator;
+            private TargetingUI targetingUI;
             private IMyShipController controller;
             private long selectedTarget;
             private int selectedTargetIndex;
@@ -59,6 +60,7 @@ namespace IngameScript
                     targetingLaser = new TargetingLaser(program, 0, controller);
                     awacs = new AWACS(program, 0);
                     targetCoordinator = new TargetCoordinator(program, 0, "JombieMissile");
+                    targetingUI = new TargetingUI(program, 0, display, controller);
                 }
                 catch (Exception ex)
                 {
@@ -73,6 +75,9 @@ namespace IngameScript
                 awacs.Run(time);
                 targetCoordinator.Run(time);
                 UpdateTargetCoordinator();
+                targetingUI.selectedTarget = selectedTarget;
+                targetingUI.AddTargets(targetCoordinator.targetsInfo);
+                targetingUI.Run(time);
             }
 
             public void LaunchNextAvailableMissile(long targetID)
