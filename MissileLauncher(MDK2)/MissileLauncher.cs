@@ -42,19 +42,28 @@ namespace IngameScript
 
                 try
                 {
+                    controller = program.GridTerminalSystem.GetBlockWithName($"Launch Controller [{ID}]") as IMyShipController;
+                    if (controller == null)
+                    {
+                        throw new Exception();
+                    }
+                    display = program.GridTerminalSystem.GetBlockWithName($"Launch Display [{ID}]") as IMyTextSurface;
+                    if (display == null)
+                    {
+                        throw new Exception();
+                    }
                     for (int i = 0; i < numberOfMissileBays; i++)
                     {
                         missileBays.Add(new MissileBay(program, i));
                     }
-                    targetingLaser = new TargetingLaser(program, 0);
+                    targetingLaser = new TargetingLaser(program, 0, controller);
                     awacs = new AWACS(program, 0);
                     targetCoordinator = new TargetCoordinator(program, 0, "JombieMissile");
-                    controller = program.GridTerminalSystem.GetBlockWithName($"Launch Controller [{ID}]") as IMyShipController;
-                    display = program.GridTerminalSystem.GetBlockWithName($"Launch Display [{ID}]") as IMyTextSurface;
                 }
                 catch (Exception ex)
                 {
                     program.Echo("Error in MissileLauncher Construction");
+                    throw;
                 }
             }
 
@@ -64,33 +73,6 @@ namespace IngameScript
                 awacs.Run(time);
                 targetCoordinator.Run(time);
                 UpdateTargetCoordinator();
-
-                if (controller.MoveIndicator.Z == -1)
-                {
-                    selectedTargetIndex = targetCoordinator.targetIDs.IndexOf(selectedTarget);
-                    if (selectedTargetIndex == -1)
-                    {
-                        selectedTargetIndex = 0;
-                    }
-                    else
-                    {
-                        selectedTargetIndex++;
-                        selectedTargetIndex = selectedTargetIndex >= targetCoordinator.targetIDs.Count ? 0 : selectedTargetIndex++;
-                    }
-                }
-                else if (controller.MoveIndicator.Z == 1)
-                {
-                    selectedTargetIndex = targetCoordinator.targetIDs.IndexOf(selectedTarget);
-                    if (selectedTargetIndex == -1)
-                    {
-                        selectedTargetIndex = 0;
-                    }
-                    else
-                    {
-                        selectedTargetIndex--;
-                        selectedTargetIndex = selectedTargetIndex < 0 ? targetCoordinator.targetIDs.Count - 1 : selectedTargetIndex--;
-                    }
-                }
             }
 
             public void LaunchNextAvailableMissile(long targetID)
@@ -122,7 +104,43 @@ namespace IngameScript
                 targetCoordinator.AddTargets(awacs.lockedTargetsInfo);
             }
 
+            public void SelectNextTarget()
+            {
+                if (targetCoordinator.targetIDs.Count != 0)
+                {
+                    selectedTargetIndex = targetCoordinator.targetIDs.IndexOf(selectedTarget);
+                    if (selectedTargetIndex == -1)
+                    {
+                        selectedTargetIndex = 0;
+                    }
+                    else
+                    {
+                        selectedTargetIndex++;
+                        selectedTargetIndex %= targetCoordinator.targetIDs.Count;
+                    }
 
+                    selectedTarget = targetCoordinator.targetIDs[selectedTargetIndex];
+                }
+            }
+
+            public void SelectPreviousTarget()
+            {
+                if (targetCoordinator.targetIDs.Count != 0)
+                {
+                    selectedTargetIndex = targetCoordinator.targetIDs.IndexOf(selectedTarget);
+                    if (selectedTargetIndex == -1)
+                    {
+                        selectedTargetIndex = 0;
+                    }
+                    else
+                    {
+                        selectedTargetIndex--;
+                        selectedTargetIndex %= targetCoordinator.targetIDs.Count;
+                    }
+
+                    selectedTarget = targetCoordinator.targetIDs[selectedTargetIndex];
+                }
+            }
         }
     }
 }

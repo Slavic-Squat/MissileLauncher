@@ -28,7 +28,11 @@ namespace IngameScript
             private int ID;
 
             private IMyMotorStator azimuthRotor;
+            private float azimuthRotorAngle;
+            private bool azimuthRotorInverted;
             private IMyMotorStator elevationRotor;
+            private float elevationRotorAngle;
+            private bool elevationRotorInverted;
             private IMyShipController laserController;
             private List<IMyCameraBlock> cameraArray = new List<IMyCameraBlock>();
 
@@ -56,7 +60,7 @@ namespace IngameScript
 
             private bool manualOverride = false;
 
-            public TargetingLaser(Program program, int ID, float sensitivity = 0.05f, float maxRaycastDistance = 5000, float raycastDistanceGrowthSpeed = 200)
+            public TargetingLaser(Program program, int ID, IMyShipController controller, float sensitivity = 0.05f, float maxRaycastDistance = 5000, float raycastDistanceGrowthSpeed = 200)
             {
                 this.program = program;
                 this.ID = ID;
@@ -68,13 +72,22 @@ namespace IngameScript
                 try
                 {
                     azimuthRotor = program.GridTerminalSystem.GetBlockWithName($"Azimuth Rotor [{ID}]") as IMyMotorStator;
+                    if (azimuthRotor == null)
+                    {
+                        throw new Exception();
+                    }
                     elevationRotor = program.GridTerminalSystem.GetBlockWithName($"Elevation Rotor [{ID}]") as IMyMotorStator;
-                    laserController = program.GridTerminalSystem.GetBlockWithName($"Laser Controller [{ID}]") as IMyShipController;
+                    if (elevationRotor == null)
+                    {
+                        throw new Exception();
+                    }
+                    laserController = controller;
                     program.GridTerminalSystem.GetBlockGroupWithName($"Camera Array [{ID}]").GetBlocksOfType<IMyCameraBlock>(cameraArray);
                 }
                 catch (Exception ex)
                 {
                     program.Echo("Error in TargetingLaser construction");
+                    throw;
                 }
 
                 foreach (IMyCameraBlock camera in cameraArray)
@@ -82,6 +95,8 @@ namespace IngameScript
                     camera.EnableRaycast = true;
                 }
 
+                azimuthRotorInverted = azimuthRotor.CustomData.Contains("Inverted");
+                elevationRotorInverted = elevationRotor.CustomData.Contains("Inverted");
                 azimuthPID = new PIDControl(25, 2, 0.1f);
                 elevationPID = new PIDControl(25, 2, 0.1f);
             }
@@ -91,9 +106,11 @@ namespace IngameScript
                 float timeDeltaMiliseconds = (float)program.Runtime.TimeSinceLastRun.TotalMilliseconds;
                 float timeDeltaSeconds = (float)program.Runtime.TimeSinceLastRun.TotalSeconds;
 
+                azimuthRotorAngle = azimuthRotorInverted ? -azimuthRotor.Angle : azimuthRotor.Angle;
+                elevationRotorAngle = elevationRotorInverted ? -elevationRotor.Angle : elevationRotor.Angle;
                 Matrix H0 = azimuthRotor.WorldMatrix;
-                Matrix H1 = Matrix.CreateRotationY(-azimuthRotor.Angle);
-                Matrix H2 = Matrix.CreateRotationX(-elevationRotor.Angle);
+                Matrix H1 = Matrix.CreateRotationY(azimuthRotorAngle);
+                Matrix H2 = Matrix.CreateRotationX(elevationRotorAngle);
                 H2.Translation = new Vector3(0, 3, 0);
 
                 Matrix referenceMatrix = H2 * H1 * H0;
@@ -134,20 +151,20 @@ namespace IngameScript
                         azimuthError = (float)Math.Atan2(-estimatedTargetDirLocal.X, -estimatedTargetDirLocal.Z);
                         elevationError = (float)Math.Asin(estimatedTargetDirLocal.Y);
 
-                        azimuthRotor.TargetVelocityRad = -azimuthPID.Run(azimuthError, timeDeltaSeconds);
-                        elevationRotor.TargetVelocityRad = -elevationPID.Run(elevationError, timeDeltaSeconds);
+                        azimuthRotor.TargetVelocityRad = azimuthRotorInverted ? -azimuthPID.Run(azimuthError, timeDeltaSeconds) : azimuthPID.Run(azimuthError, timeDeltaSeconds);
+                        elevationRotor.TargetVelocityRad = elevationRotorInverted ? -elevationPID.Run(elevationError, timeDeltaSeconds) : elevationPID.Run(elevationError, timeDeltaSeconds);
                     }
                     else if (manualOverride == true)
                     {
-                        elevationRotor.TargetVelocityRad = laserController.RotationIndicator.X * sensitivity;
-                        azimuthRotor.TargetVelocityRad = laserController.RotationIndicator.Y * sensitivity;
+                        elevationRotor.TargetVelocityRad = elevationRotorInverted ? laserController.RotationIndicator.X * sensitivity : -laserController.RotationIndicator.X * sensitivity;
+                        azimuthRotor.TargetVelocityRad = azimuthRotorInverted ? laserController.RotationIndicator.Y * sensitivity : -laserController.RotationIndicator.Y * sensitivity;
                     }
                 }
 
                 else
                 {
-                    elevationRotor.TargetVelocityRad = laserController.RotationIndicator.X * sensitivity;
-                    azimuthRotor.TargetVelocityRad = laserController.RotationIndicator.Y * sensitivity;
+                    elevationRotor.TargetVelocityRad = elevationRotorInverted ? laserController.RotationIndicator.X * sensitivity : -laserController.RotationIndicator.X * sensitivity;
+                    azimuthRotor.TargetVelocityRad = azimuthRotorInverted ? laserController.RotationIndicator.Y * sensitivity : -laserController.RotationIndicator.Y * sensitivity;
                 }
 
                 totalAvailRaycastDistance += 2 * timeDeltaMiliseconds * cameraArray.Count;

@@ -27,7 +27,7 @@ namespace IngameScript
             private Program program;
             private int ID;
             private string broadcastTag;
-            public Dictionary<long, MyTuple<Vector3, Vector3, DateTime>> targets = new Dictionary<long, MyTuple<Vector3, Vector3, DateTime>>();
+            public Dictionary<long, MyTuple<Vector3, Vector3, long>> targetsInfo = new Dictionary<long, MyTuple<Vector3, Vector3, long>>();
             public List<long> targetIDs = new List<long>();
 
             public TargetCoordinator(Program program, int ID, string broadcastTag)
@@ -39,31 +39,32 @@ namespace IngameScript
 
             public void Run(DateTime time)
             {
-                foreach (var target in targets)
+                for (int i = targetIDs.Count - 1; i >= 0; i--)
                 {
-                    TimeSpan timeSinceLastDetection = time - target.Value.Item3;
+                    var targetID = targetIDs[i];
+                    TimeSpan timeSinceLastDetection = time - new DateTime(targetsInfo[targetID].Item3);
 
                     if (timeSinceLastDetection.TotalSeconds > 5)
                     {
-                        RemoveTarget(target.Key);
+                        RemoveTarget(targetID);
                     }
                 }
-                var message = targets.ToImmutableDictionary();
+                var message = targetsInfo.ToImmutableDictionary();
                 program.IGC.SendBroadcastMessage(broadcastTag, message);
             }
 
             public void AddTarget(long targetID, Vector3 position, Vector3 velocity, DateTime time)
             {
-                if (targets.ContainsKey(targetID))
+                if (targetsInfo.ContainsKey(targetID))
                 {
-                    if (targets[targetID].Item3 < time)
+                    if (targetsInfo[targetID].Item3 < time.Ticks)
                     {
-                        targets[targetID] = new MyTuple<Vector3, Vector3, DateTime>(position, velocity, time);
+                        targetsInfo[targetID] = new MyTuple<Vector3, Vector3, long>(position, velocity, time.Ticks);
                     }
                 }
                 else
                 {
-                    targets[targetID] = new MyTuple<Vector3, Vector3, DateTime>(position, velocity, time);
+                    targetsInfo[targetID] = new MyTuple<Vector3, Vector3, long>(position, velocity, time.Ticks);
                 }
 
                 if (!targetIDs.Contains(targetID))
@@ -82,7 +83,7 @@ namespace IngameScript
 
             public void RemoveTarget(long targetID)
             {
-                targets.Remove(targetID);
+                targetsInfo.Remove(targetID);
                 targetIDs.Remove(targetID);
             }
 

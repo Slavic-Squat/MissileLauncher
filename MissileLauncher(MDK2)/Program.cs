@@ -31,9 +31,10 @@ namespace IngameScript
         {
             Runtime.UpdateFrequency = UpdateFrequency.Update1;
 
-            missileLauncher = new MissileLauncher(this, 0, 1);
+            missileLauncher = new MissileLauncher(this, 0, 0);
 
-            commands["Launch"] = _ => missileLauncher.LaunchNextAvailableMissile();
+            commands["QuickLaunch"] = _ => missileLauncher.LaunchNextAvailableMissile();
+            commands["SyncTarget"] = _ => missileLauncher.SyncTarget();
         }
 
         public void Save()
@@ -44,6 +45,7 @@ namespace IngameScript
         public void Main(string argument, UpdateType updateSource)
         {
             time += Runtime.TimeSinceLastRun;
+            Echo(time.ToString());
             missileLauncher.Run(time);
 
             if (commandLine.TryParse(argument))
