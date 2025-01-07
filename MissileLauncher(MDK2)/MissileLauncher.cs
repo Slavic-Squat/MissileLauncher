@@ -59,7 +59,7 @@ namespace IngameScript
                     }
                     targetingLaser = new TargetingLaser(program, 0, controller);
                     awacs = new AWACS(program, 0);
-                    targetCoordinator = new TargetCoordinator(program, 0, "JombieMissile");
+                    targetCoordinator = new TargetCoordinator(program, 0, "Jombie");
                     targetingUI = new TargetingUI(program, 0, display, controller);
                 }
                 catch (Exception ex)

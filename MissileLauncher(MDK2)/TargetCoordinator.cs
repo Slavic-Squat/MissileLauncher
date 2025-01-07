@@ -50,7 +50,7 @@ namespace IngameScript
                     }
                 }
                 var message = targetsInfo.ToImmutableDictionary();
-                program.IGC.SendBroadcastMessage(broadcastTag, message);
+                program.IGC.SendBroadcastMessage($"{broadcastTag}_TargetInfo", message);
             }
 
             public void AddTarget(long targetID, Vector3 position, Vector3 velocity, DateTime time)

@@ -23,9 +23,13 @@ namespace IngameScript
     partial class Program : MyGridProgram
     {
         MissileLauncher missileLauncher;
-        Dictionary<string, Action<int>> commands = new Dictionary<string, Action<int>>();
+        Dictionary<string, Action<string>> commands = new Dictionary<string, Action<string>>();
         MyCommandLine commandLine = new MyCommandLine();
         DateTime time;
+        bool mainClock = true;
+        bool listeningForClock = false;
+        string broadcastTag;
+        IMyBroadcastListener broadcastListener;
 
         public Program()
         {
@@ -33,8 +37,14 @@ namespace IngameScript
 
             missileLauncher = new MissileLauncher(this, 0, 0);
 
+            broadcastTag = "ClockSync0";
+            broadcastListener = IGC.RegisterBroadcastListener(broadcastTag);
+
             commands["QuickLaunch"] = _ => missileLauncher.LaunchNextAvailableMissile();
             commands["SyncTarget"] = _ => missileLauncher.SyncTarget();
+            commands["SyncClock"] = SyncClock;
+            commands["RecieveClock"] = RecieveClock;
+            commands["BroadcastClock"] = BroadcastClock;
         }
 
         public void Save()
@@ -45,6 +55,18 @@ namespace IngameScript
         public void Main(string argument, UpdateType updateSource)
         {
             time += Runtime.TimeSinceLastRun;
+            if (!mainClock && listeningForClock)
+            {
+                while (broadcastListener.HasPendingMessage)
+                {
+                    var message = broadcastListener.AcceptMessage();
+                    if (message.Data is long)
+                    {
+                        time = new DateTime((long)message.Data);
+                        listeningForClock = false;
+                    }
+                }
+            }
             Echo(time.ToString());
             missileLauncher.Run(time);
 
@@ -52,16 +74,38 @@ namespace IngameScript
             {
                 string commandName = commandLine.Argument(0);
                 string commandArgument = commandLine.Argument(1);
-                Action<int> command;
+                Action<string> command;
 
                 if (commandName != null && commandArgument != null)
                 {
                     if (commands.TryGetValue(commandName, out command))
                     {
-                        command(int.Parse(commandArgument));
+                        command(commandArgument);
                     }
                 }
             }
+        }
+
+        public void SyncClock(string ticksString)
+        {
+            long ticks;
+            long.TryParse(ticksString, out ticks);
+            time = new DateTime(ticks);
+        }
+
+        public void BroadcastClock(string channel)
+        {
+            mainClock = true;
+            broadcastTag = channel;
+            IGC.SendBroadcastMessage(channel, time.Ticks);
+        }
+
+        public void RecieveClock(string channel)
+        {
+            mainClock = false;
+            listeningForClock = true;
+            broadcastTag = channel;
+            broadcastListener = IGC.RegisterBroadcastListener(channel);
         }
     }
 }
