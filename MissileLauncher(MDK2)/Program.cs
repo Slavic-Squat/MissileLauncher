@@ -35,10 +35,7 @@ namespace IngameScript
         {
             Runtime.UpdateFrequency = UpdateFrequency.Update1;
 
-            missileLauncher = new MissileLauncher(this, 0, 0);
-
-            broadcastTag = "ClockSync0";
-            broadcastListener = IGC.RegisterBroadcastListener(broadcastTag);
+            missileLauncher = new MissileLauncher(this, 0, "JombieLauncher", "Jombie268", 0);
 
             commands["QuickLaunch"] = _ => missileLauncher.LaunchNextAvailableMissile();
             commands["SyncTarget"] = _ => missileLauncher.SyncTarget();
@@ -55,14 +52,14 @@ namespace IngameScript
         public void Main(string argument, UpdateType updateSource)
         {
             time += Runtime.TimeSinceLastRun;
-            if (!mainClock && listeningForClock)
+            if (!mainClock && listeningForClock && broadcastListener != null)
             {
                 while (broadcastListener.HasPendingMessage)
                 {
                     var message = broadcastListener.AcceptMessage();
                     if (message.Data is long)
                     {
-                        time = new DateTime((long)message.Data);
+                        time = new DateTime(message.As<long>());
                         listeningForClock = false;
                     }
                 }
@@ -76,11 +73,15 @@ namespace IngameScript
                 string commandArgument = commandLine.Argument(1);
                 Action<string> command;
 
-                if (commandName != null && commandArgument != null)
+                if (commands.TryGetValue(commandName, out command))
                 {
-                    if (commands.TryGetValue(commandName, out command))
+                    try
                     {
                         command(commandArgument);
+                    }
+                    catch (Exception ex)
+                    {
+                        Echo("Command had incorrect parameters");
                     }
                 }
             }

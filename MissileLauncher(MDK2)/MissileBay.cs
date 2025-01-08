@@ -26,11 +26,12 @@ namespace IngameScript
         {
             private Program program;
             private int ID;
+            private int missileCounter;
             private IMyProgrammableBlock missileComputer;
 
             public enum Status
             {
-                Firing, Ready, Fueling, Building, Empty
+                Firing, Ready, Fueling, Building, Empty, Exists, Error
             }
 
             public Status status = Status.Empty;
@@ -44,7 +45,7 @@ namespace IngameScript
 
                 if (missileComputer != null)
                 {
-                    status = Status.Ready;
+                    status = Status.Exists;
                 }
             }
 
@@ -64,10 +65,25 @@ namespace IngameScript
                 }
             }
 
-            public void Launch(string broadcastTag)
+            public void InitMissile(string broadcastTag)
             {
-                missileComputer.TryRun($@"Launch ""{broadcastTag}""");
-                status = Status.Firing;
+                if (missileComputer.TryRun($"InitMissile {broadcastTag} {ID}_{missileCounter}"))
+                {
+                    status = Status.Ready;
+                }
+            }
+
+            public void Launch(long targetID)
+            {
+                if (missileComputer.TryRun($"Launch {targetID}") && status == Status.Ready)
+                {
+                    status = Status.Firing;
+                }
+            }
+
+            public void ResetMissile()
+            {
+
             }
         }
     }

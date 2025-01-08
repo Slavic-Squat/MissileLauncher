@@ -26,6 +26,8 @@ namespace IngameScript
         {
             Program program;
             int ID;
+            string name;
+            string broadcastTag;
             private List<MissileBay> missileBays = new List<MissileBay>();
             private TargetingLaser targetingLaser;
             private AWACS awacs;
@@ -36,10 +38,12 @@ namespace IngameScript
             private int selectedTargetIndex;
             private IMyTextSurface display;
 
-            public MissileLauncher(Program program, int ID, int numberOfMissileBays)
+            public MissileLauncher(Program program, int ID, string name, string broadcastTag, int numberOfMissileBays)
             {
                 this.program = program;
                 this.ID = ID;
+                this.name = name;
+                this.broadcastTag = broadcastTag;
 
                 try
                 {
@@ -59,7 +63,7 @@ namespace IngameScript
                     }
                     targetingLaser = new TargetingLaser(program, 0, controller);
                     awacs = new AWACS(program, 0);
-                    targetCoordinator = new TargetCoordinator(program, 0, "Jombie");
+                    targetCoordinator = new TargetCoordinator(program, 0, controller, name, broadcastTag);
                     targetingUI = new TargetingUI(program, 0, display, controller);
                 }
                 catch (Exception ex)
@@ -85,7 +89,7 @@ namespace IngameScript
                 int missileBayIndex = missileBays.FindIndex(x => x.status == MissileBay.Status.Ready);
                 if (missileBayIndex != -1)
                 {
-                    missileBays[missileBayIndex].Launch($"Target {targetID} [{ID}]");
+                    missileBays[missileBayIndex].Launch(broadcastTag, targetID);
                 }
             }
 

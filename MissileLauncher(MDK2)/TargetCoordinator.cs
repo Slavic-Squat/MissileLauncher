@@ -26,14 +26,18 @@ namespace IngameScript
         {
             private Program program;
             private int ID;
+            private IMyShipController launcher;
+            private string name;
             private string broadcastTag;
+            public MyTuple<string, Vector3, Vector3, long> launcherInfo;
             public Dictionary<long, MyTuple<Vector3, Vector3, long>> targetsInfo = new Dictionary<long, MyTuple<Vector3, Vector3, long>>();
             public List<long> targetIDs = new List<long>();
 
-            public TargetCoordinator(Program program, int ID, string broadcastTag)
+            public TargetCoordinator(Program program, int ID, IMyShipController launcher, string name, string broadcastTag)
             {
                 this.program = program;
                 this.ID = ID;
+                this.launcher = launcher;
                 this.broadcastTag = broadcastTag;
             }
 
@@ -49,8 +53,11 @@ namespace IngameScript
                         RemoveTarget(targetID);
                     }
                 }
-                var message = targetsInfo.ToImmutableDictionary();
-                program.IGC.SendBroadcastMessage($"{broadcastTag}_TargetInfo", message);
+                launcherInfo = new MyTuple<string, Vector3, Vector3, long>(name, launcher.GetPosition(), launcher.GetShipVelocities().LinearVelocity, time.Ticks);
+                var messageOut0 = targetsInfo.ToImmutableDictionary();
+                var messageOut1 = launcherInfo;
+                program.IGC.SendBroadcastMessage($"[{broadcastTag}]_TargetInfo", messageOut0);
+                program.IGC.SendBroadcastMessage($"[{broadcastTag}]_LauncherInfo", messageOut1);
             }
 
             public void AddTarget(long targetID, Vector3 position, Vector3 velocity, DateTime time)
