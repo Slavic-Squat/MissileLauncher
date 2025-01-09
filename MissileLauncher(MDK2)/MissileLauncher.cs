@@ -84,13 +84,16 @@ namespace IngameScript
                 targetingUI.Run(time);
             }
 
+            public void InitNextAvailableMissile()
+            {
+                MissileBay missileBay = missileBays.Find(x => x.status == MissileBay.Status.Exists);
+                missileBay?.InitMissile(broadcastTag);
+            }
+
             public void LaunchNextAvailableMissile(long targetID)
             {
-                int missileBayIndex = missileBays.FindIndex(x => x.status == MissileBay.Status.Ready);
-                if (missileBayIndex != -1)
-                {
-                    missileBays[missileBayIndex].Launch(broadcastTag, targetID);
-                }
+                MissileBay missileBay = missileBays.Find(x => x.status == MissileBay.Status.Ready);
+                missileBay?.Launch(targetID);
             }
 
             public void LaunchNextAvailableMissile()
@@ -100,17 +103,13 @@ namespace IngameScript
 
             public void SyncTarget()
             {
-                long targetID = targetingLaser.lockedTarget.EntityId;
-                Vector3 targetPosition = targetingLaser.lockedTarget.Position;
-                Vector3 targetVelocity = targetingLaser.lockedTarget.Velocity;
-                DateTime lastDetectionTime = targetingLaser.lastTargetDetection;
-
-                awacs.AddTarget(targetID, targetPosition, targetVelocity, lastDetectionTime);
+                awacs.AddTarget(targetingLaser.lockedTarget.EntityId, targetingLaser.lockedTarget.Position, targetingLaser.lockedTarget.Velocity, targetingLaser.lastTargetDetection);
             }
 
             public void UpdateTargetCoordinator()
             {
                 targetCoordinator.AddTargets(awacs.lockedTargetsInfo);
+                targetCoordinator.AddTarget(targetingLaser.lockedTarget.EntityId, targetingLaser.lockedTarget.Position, targetingLaser.lockedTarget.Velocity, targetingLaser.lastTargetDetection);
             }
 
             public void SelectNextTarget()

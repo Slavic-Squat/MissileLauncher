@@ -41,12 +41,8 @@ namespace IngameScript
             {
                 this.program = program;
                 this.ID = ID;
-                missileComputer = program.GridTerminalSystem.GetBlockWithName($"Missile Computer [{ID}]") as IMyProgrammableBlock;
 
-                if (missileComputer != null)
-                {
-                    status = Status.Exists;
-                }
+                RegisterMissile();
             }
 
             public IEnumerator<Status> State()
@@ -55,7 +51,7 @@ namespace IngameScript
                 {
                     case Status.Firing:
 
-                        while (program.GridTerminalSystem.GetBlockWithName($"Missile Computer [{ID}]") as IMyProgrammableBlock != null)
+                        while (program.GridTerminalSystem.CanAccess(missileComputer))
                         {
                             yield return Status.Firing;
                         }
@@ -65,19 +61,35 @@ namespace IngameScript
                 }
             }
 
+            public void RegisterMissile()
+            {
+                missileComputer = program.GridTerminalSystem.GetBlockWithName($"Missile Computer [{ID}]") as IMyProgrammableBlock;
+
+                if (missileComputer != null)
+                {
+                    status = Status.Exists;
+                }
+            }
+
             public void InitMissile(string broadcastTag)
             {
-                if (missileComputer.TryRun($"InitMissile {broadcastTag} {ID}_{missileCounter}"))
+                if (status == Status.Exists)
                 {
-                    status = Status.Ready;
+                    if (missileComputer.TryRun($"InitMissile {broadcastTag} {ID}_{missileCounter} {program.time.Ticks}"))
+                    {
+                        status = Status.Ready;
+                    }
                 }
             }
 
             public void Launch(long targetID)
             {
-                if (missileComputer.TryRun($"Launch {targetID}") && status == Status.Ready)
+                if (status == Status.Ready)
                 {
-                    status = Status.Firing;
+                    if (missileComputer.TryRun($"Launch {targetID}"))
+                    {
+                        status = Status.Firing;
+                    }
                 }
             }
 

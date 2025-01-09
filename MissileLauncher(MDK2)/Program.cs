@@ -22,14 +22,18 @@ namespace IngameScript
 {
     partial class Program : MyGridProgram
     {
-        MissileLauncher missileLauncher;
-        Dictionary<string, Action<string>> commands = new Dictionary<string, Action<string>>();
+        MyIni config = new MyIni();
+        bool updatesPending = false;
         MyCommandLine commandLine = new MyCommandLine();
+        Dictionary<string, Action<string[]>> commands = new Dictionary<string, Action<string[]>>();
+
         DateTime time;
+        IMyBroadcastListener broadcastListener;
+        string broadcastTag;
         bool mainClock = true;
         bool listeningForClock = false;
-        string broadcastTag;
-        IMyBroadcastListener broadcastListener;
+
+        MissileLauncher missileLauncher;
 
         public Program()
         {
@@ -37,11 +41,12 @@ namespace IngameScript
 
             missileLauncher = new MissileLauncher(this, 0, "JombieLauncher", "Jombie268", 0);
 
-            commands["QuickLaunch"] = _ => missileLauncher.LaunchNextAvailableMissile();
-            commands["SyncTarget"] = _ => missileLauncher.SyncTarget();
-            commands["SyncClock"] = SyncClock;
-            commands["RecieveClock"] = RecieveClock;
-            commands["BroadcastClock"] = BroadcastClock;
+            commands["QuickInit"] = (args) => missileLauncher.InitNextAvailableMissile();
+            commands["QuickLaunch"] = (args) => missileLauncher.LaunchNextAvailableMissile();
+            commands["SyncTarget"] = (args) => missileLauncher.SyncTarget();
+            commands["SyncClock"] = (args) => SyncClock(args[0]);
+            commands["RecieveClock"] = (args) => RecieveClock(args[0]);
+            commands["BroadcastClock"] = (args) => BroadcastClock(args[0]);
         }
 
         public void Save()
@@ -51,6 +56,17 @@ namespace IngameScript
 
         public void Main(string argument, UpdateType updateSource)
         {
+            if (argument != null)
+            {
+                TryRunCommand(argument);
+            }
+            if (updatesPending)
+            {
+                UpdateConfig();
+                Echo(updatesPending.ToString());
+            }
+            TryRunQueuedCommands();
+
             time += Runtime.TimeSinceLastRun;
             if (!mainClock && listeningForClock && broadcastListener != null)
             {
@@ -66,25 +82,6 @@ namespace IngameScript
             }
             Echo(time.ToString());
             missileLauncher.Run(time);
-
-            if (commandLine.TryParse(argument))
-            {
-                string commandName = commandLine.Argument(0);
-                string commandArgument = commandLine.Argument(1);
-                Action<string> command;
-
-                if (commands.TryGetValue(commandName, out command))
-                {
-                    try
-                    {
-                        command(commandArgument);
-                    }
-                    catch (Exception ex)
-                    {
-                        Echo("Command had incorrect parameters");
-                    }
-                }
-            }
         }
 
         public void SyncClock(string ticksString)
@@ -107,6 +104,107 @@ namespace IngameScript
             listeningForClock = true;
             broadcastTag = channel;
             broadcastListener = IGC.RegisterBroadcastListener(channel);
+        }
+
+        public bool TryRunCommand(string commandString)
+        {
+            try
+            {
+                if (commandLine.TryParse(commandString))
+                {
+                    if (commandLine.Switch("ConfigUpdated"))
+                    {
+                        updatesPending = true;
+                    }
+                    string commandName = commandLine.Argument(0);
+                    string[] commandArguments = new string[commandLine.ArgumentCount - 1];
+                    for (int i = 0; i < commandArguments.Length; i++)
+                    {
+                        commandArguments[i] = commandLine.Argument(i + 1);
+                    }
+                    Action<string[]> command;
+
+                    if (commandName != null)
+                    {
+                        if (commands.TryGetValue(commandName, out command))
+                        {
+                            command(commandArguments);
+                        }
+                        else
+                        {
+                            throw new Exception();
+                        }
+                    }
+                    return true;
+                }
+                else
+                {
+                    throw new Exception();
+                }
+            }
+            catch (Exception ex)
+            {
+                return false;
+            }
+        }
+
+        public bool TryQueueUserCommand(string userCommandName)
+        {
+            try
+            {
+                string userCommandString = config.Get("User Commands", userCommandName).ToString();
+                int queuedCommandsCounter = config.Get("Script Info", "Queued Commands Counter").ToInt32();
+                config.Set("Queued Commands", $"{queuedCommandsCounter}", userCommandString);
+                queuedCommandsCounter++;
+                config.Set("Script Info", "Queued Commands Counter", $"{queuedCommandsCounter}");
+                Me.CustomData = config.ToString();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                return false;
+            }
+        }
+
+        public bool TryDequeueUserCommand(string userCommandName)
+        {
+            try
+            {
+                config.Delete("Queued Commands", userCommandName);
+                Me.CustomData = config.ToString();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                return false;
+            }
+        }
+
+        public bool TryRunQueuedCommands()
+        {
+            try
+            {
+                List<MyIniKey> queuedCommandKeys = new List<MyIniKey>();
+                config.GetKeys("Queued Commands", queuedCommandKeys);
+                queuedCommandKeys.Sort();
+
+                foreach (var queueCommandKey in queuedCommandKeys)
+                {
+                    TryRunCommand(config.Get(queueCommandKey).ToString());
+                    TryDequeueUserCommand(queueCommandKey.Name);
+                }
+                return true;
+            }
+            catch (Exception ex)
+            {
+                return false;
+            }
+        }
+
+        public void UpdateConfig()
+        {
+            config.TryParse(Me.CustomData);
+            updatesPending = false;
         }
     }
 }
