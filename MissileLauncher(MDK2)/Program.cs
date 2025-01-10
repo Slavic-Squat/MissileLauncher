@@ -22,7 +22,7 @@ namespace IngameScript
 {
     partial class Program : MyGridProgram
     {
-        private ConfigCommandHelper configCommandHelper;
+        private CommandHandler commandHandler;
         private Dictionary<string, Action<string[]>> commands = new Dictionary<string, Action<string[]>>();
 
         private DateTime time;
@@ -46,7 +46,7 @@ namespace IngameScript
             commands["RecieveClock"] = (args) => RecieveClock(args[0]);
             commands["BroadcastClock"] = (args) => BroadcastClock(args[0]);
 
-            configCommandHelper = new ConfigCommandHelper(Me, commands);
+            commandHandler = new CommandHandler(Me, commands);
         }
 
         public void Save()
@@ -58,8 +58,9 @@ namespace IngameScript
         {
             if (argument != null)
             {
-                configCommandHelper.TryRunCommand(argument);
+                commandHandler.TryRunCommand(argument);
             }
+            commandHandler.Run();
 
             time += Runtime.TimeSinceLastRun;
             if (!mainClock && listeningForClock && broadcastListener != null)
