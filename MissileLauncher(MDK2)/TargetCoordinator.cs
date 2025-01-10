@@ -24,20 +24,32 @@ namespace IngameScript
     {
         public class TargetCoordinator
         {
+            #region General Info
             private Program program;
             private int ID;
-            private IMyShipController launcher;
             private string name;
+            #endregion
+
+            #region Parts
+            private IMyShipController launcher;
+            #endregion
+
+            #region Broadcast Info
             private string broadcastTag;
+            #endregion
+
+            #region Output
             public MyTuple<string, Vector3, Vector3, long> launcherInfo;
             public Dictionary<long, MyTuple<Vector3, Vector3, long>> targetsInfo = new Dictionary<long, MyTuple<Vector3, Vector3, long>>();
             public List<long> targetIDs = new List<long>();
+            #endregion
 
             public TargetCoordinator(Program program, int ID, IMyShipController launcher, string name, string broadcastTag)
             {
                 this.program = program;
                 this.ID = ID;
                 this.launcher = launcher;
+                this.name = name;
                 this.broadcastTag = broadcastTag;
             }
 

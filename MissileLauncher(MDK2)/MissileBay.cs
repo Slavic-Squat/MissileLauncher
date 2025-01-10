@@ -24,18 +24,24 @@ namespace IngameScript
     {
         public class MissileBay
         {
+            #region General Info
             private Program program;
             private int ID;
-            private int missileCounter;
+            #endregion
+
+            #region Parts
             private IMyProgrammableBlock missileComputer;
+            #endregion
+
+            #region State Info
+            private int missileCounter;
+            public Status status = Status.Empty;
+            #endregion
 
             public enum Status
             {
                 Firing, Ready, Fueling, Building, Empty, Exists, Error
             }
-
-            public Status status = Status.Empty;
-
 
             public MissileBay(Program program, int ID)
             {
@@ -77,10 +83,7 @@ namespace IngameScript
                 {
                     if (ConfigUtilties.TryQueueExternalCommand(missileComputer, $"InitMissile {broadcastTag} {ID}_{missileCounter} {program.time.Ticks}"))
                     {
-
-                    }
-                    if (missileComputer.TryRun($"InitMissile {broadcastTag} {ID}_{missileCounter} {program.time.Ticks}"))
-                    {
+                        missileComputer.TryRun("-ConfigUpdated");
                         status = Status.Ready;
                     }
                 }
@@ -90,8 +93,9 @@ namespace IngameScript
             {
                 if (status == Status.Ready)
                 {
-                    if (missileComputer.TryRun($"Launch {targetID}"))
+                    if (ConfigUtilties.TryQueueExternalCommand(missileComputer, $"Launch {targetID}"))
                     {
+                        missileComputer.TryRun("-ConfigUpdated");
                         status = Status.Firing;
                     }
                 }

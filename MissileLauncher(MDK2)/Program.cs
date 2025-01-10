@@ -22,14 +22,21 @@ namespace IngameScript
 {
     partial class Program : MyGridProgram
     {
+        #region Command Control
         private CommandHandler commandHandler;
         private Dictionary<string, Action<string[]>> commands = new Dictionary<string, Action<string[]>>();
+        #endregion
 
-        private DateTime time;
+        #region Broadcast Info
         private IMyBroadcastListener broadcastListener;
         private string broadcastTag;
+        #endregion
+
+        #region State Info
+        private DateTime time;
         private bool mainClock = true;
         private bool listeningForClock = false;
+        #endregion
 
         MissileLauncher missileLauncher;
 

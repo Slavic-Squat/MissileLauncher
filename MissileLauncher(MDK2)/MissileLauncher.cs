@@ -24,19 +24,33 @@ namespace IngameScript
     {
         public class MissileLauncher
         {
+            #region General Info
             Program program;
             int ID;
             string name;
+            #endregion
+
+            #region Broadcast Info
             string broadcastTag;
+            #endregion
+
+            #region Parts
+            private IMyShipController controller;
+            private IMyTextSurface display;
+            #endregion
+
+            #region State Info
+            private long selectedTarget;
+            private int selectedTargetIndex;
+            #endregion
+
+            #region Components
             private List<MissileBay> missileBays = new List<MissileBay>();
             private TargetingLaser targetingLaser;
             private AWACS awacs;
             private TargetCoordinator targetCoordinator;
             private TargetingUI targetingUI;
-            private IMyShipController controller;
-            private long selectedTarget;
-            private int selectedTargetIndex;
-            private IMyTextSurface display;
+            #endregion
 
             public MissileLauncher(Program program, int ID, string name, string broadcastTag, int numberOfMissileBays)
             {

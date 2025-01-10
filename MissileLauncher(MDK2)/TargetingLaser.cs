@@ -24,41 +24,52 @@ namespace IngameScript
     {
         public class TargetingLaser
         {
+            #region General Info
             private Program program;
             private int ID;
+            #endregion
 
+            #region Parts
             private IMyMotorStator azimuthRotor;
-            private float azimuthRotorAngle;
-            private bool azimuthRotorInverted;
             private IMyMotorStator elevationRotor;
-            private float elevationRotorAngle;
-            private bool elevationRotorInverted;
             private IMyShipController laserController;
             private List<IMyCameraBlock> cameraArray = new List<IMyCameraBlock>();
+            #endregion
 
-            private int raycastCounter;
+            #region Properties
+            private bool azimuthRotorInverted;
+            private bool elevationRotorInverted;
             private float maxTargetDistance;
             private float maxRaycastDistance;
             private float raycastDistanceGrowthSpeed;
-            private float totalAvailRaycastDistance;
             private float sensitivity;
+            #endregion
 
+            #region State Info
+            private float azimuthRotorAngle;
+            private float azimuthError;
+            private float elevationRotorAngle;
+            private float elevationError;
+            private int raycastCounter;
+            private float totalAvailRaycastDistance;
             private DateTime lastUniqueDetection;
-            public DateTime lastTargetDetection;
             private int matchingDetectionCounter;
-
             private MyDetectedEntityInfo detectedTarget;
             private MyDetectedEntityInfo previouslyDetectedTarget;
-            public MyDetectedEntityInfo lockedTarget;
+            private bool manualOverride = false;
+            #endregion
 
-            private MyDetectedEntityInfo emptyTarget = new MyDetectedEntityInfo();
-
-            private float azimuthError;
-            private float elevationError;
+            #region Controllers
             private PIDControl azimuthPID;
             private PIDControl elevationPID;
+            #endregion
 
-            private bool manualOverride = false;
+            #region Output
+            public MyDetectedEntityInfo lockedTarget;
+            public DateTime lastTargetDetection;
+            #endregion
+
+            private MyDetectedEntityInfo emptyTarget = new MyDetectedEntityInfo();
 
             public TargetingLaser(Program program, int ID, IMyShipController controller, float sensitivity = 0.05f, float maxRaycastDistance = 5000, float raycastDistanceGrowthSpeed = 200)
             {

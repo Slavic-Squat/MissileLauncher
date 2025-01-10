@@ -24,13 +24,21 @@ namespace IngameScript
     {
         public class TargetingUI
         {
+            #region General Info
             private Program program;
             private int ID;
+            #endregion
+
+            #region Parts
             private IMyTextSurface display;
             private IMyTerminalBlock reference;
+            #endregion
+
+            #region State Info
             private Dictionary<long, MyTuple<Vector3, Vector3, DateTime>> targets = new Dictionary<long, MyTuple<Vector3, Vector3, DateTime>>();
             public long selectedTarget;
             private int runCounter;
+            #endregion
 
             public TargetingUI(Program program, int ID, IMyTextSurface display, IMyTerminalBlock reference)
             {

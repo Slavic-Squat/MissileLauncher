@@ -24,31 +24,46 @@ namespace IngameScript
     {
         public class AWACS
         {
+            #region General Info
             private Program program;
             private int ID;
+            #endregion
 
+            #region Parts
             private IMyMotorStator spinRotor;
-            private float spinRotorAngle;
-            private bool spinRotorInverted;
             private List<IMyCameraBlock> cameraArray0 = new List<IMyCameraBlock>();
             private List<IMyCameraBlock> cameraArray1 = new List<IMyCameraBlock>();
             private List<IMyCameraBlock> cameraArray2 = new List<IMyCameraBlock>();
             private List<IMyCameraBlock> cameraArray3 = new List<IMyCameraBlock>();
-            private Matrix referenceMatrix;
+            #endregion
 
+            #region Properties
+            private float spinRotorAngle;
+            private bool spinRotorInverted;
+
+            private float maxTargetDistance;
+            private float maxRaycastDistance;
+            private float raycastDistanceGrowthSpeed;
+
+            private Matrix referenceMatrix;
+            #endregion
+
+            #region State Info
             private int raycastCounter0;
             private int raycastCounter1;
             private int raycastCounter2;
             private int raycastCounter3;
-            private float maxTargetDistance;
-            private float maxRaycastDistance;
-            private float raycastDistanceGrowthSpeed;
-            float totalAvailRaycastDistance;
 
+            private float totalAvailRaycastDistance;
+
+            private int targetIndex;
+            #endregion
+
+            #region Output
             public Dictionary<long, MyTuple<Vector3, Vector3, DateTime>> lockedTargetsInfo = new Dictionary<long, MyTuple<Vector3, Vector3, DateTime>>();
             public Dictionary<long, bool> lockedTargetsSyncInfo = new Dictionary<long, bool>();
             public List<long> lockedTargetIDs = new List<long>();
-            private int targetIndex;
+            #endregion
 
             public AWACS(Program program, int ID, float maxRaycastDistance = 5000, float raycastDistanceGrowthSpeed = 200)
             {
