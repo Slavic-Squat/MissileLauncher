@@ -75,6 +75,11 @@ namespace IngameScript
             {
                 if (status == Status.Exists)
                 {
+                    MyIni missileConfig = new MyIni();
+                    if (missileConfig.TryParse(missileComputer.CustomData))
+                    {
+
+                    }
                     if (missileComputer.TryRun($"InitMissile {broadcastTag} {ID}_{missileCounter} {program.time.Ticks}"))
                     {
                         status = Status.Ready;
