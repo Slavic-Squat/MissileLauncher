@@ -77,11 +77,11 @@ namespace IngameScript
                 }
             }
 
-            public void InitMissile(string broadcastTag)
+            public void InitMissile(string launcherTag)
             {
                 if (status == Status.Exists)
                 {
-                    if (ConfigUtilties.TryQueueExternalCommand(missileComputer, $"InitMissile {broadcastTag} {ID}_{missileCounter} {program.time.Ticks}"))
+                    if (ConfigUtilties.TryQueueExternalCommand(missileComputer, $"InitMissile {launcherTag} {ID}_{missileCounter} {program.time.Ticks}"))
                     {
                         missileComputer.TryRun("-ConfigUpdated");
                         status = Status.Ready;

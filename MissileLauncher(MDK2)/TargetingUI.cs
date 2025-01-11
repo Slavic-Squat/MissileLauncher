@@ -36,6 +36,7 @@ namespace IngameScript
 
             #region State Info
             private Dictionary<long, MyTuple<Vector3, Vector3, DateTime>> targets = new Dictionary<long, MyTuple<Vector3, Vector3, DateTime>>();
+            private Dictionary<string, MyTuple<string, long, Vector3, Vector3, DateTime>> missiles = new Dictionary<string, MyTuple<string, long, Vector3, Vector3, DateTime>>();
             public long selectedTarget;
             private int runCounter;
             #endregion
@@ -60,7 +61,9 @@ namespace IngameScript
                 {
                     var frame = display.DrawFrame();
                     DrawBackground(frame, new Vector2(256, 256));
+                    DrawRangeVectors(frame, new Vector2(256, 256));
                     DrawTargets(frame, new Vector2(256, 256));
+                    DrawMissiles(frame, new Vector2(256, 256));
                     DrawTargetSelector(frame, new Vector2(256, 256));
                     frame.Dispose();
                 }
@@ -77,6 +80,19 @@ namespace IngameScript
                     var timeDetected = new DateTime(target.Value.Item3);
 
                     this.targets[target.Key] = new MyTuple<Vector3, Vector3, DateTime>(targetLocalPos, targetLocalVel, timeDetected);
+                }
+            }
+
+            public void AddMissiles(Dictionary<string, MyTuple<string, long, Vector3, Vector3, DateTime>> missiles)
+            {
+                this.missiles.Clear();
+
+                foreach (var missile in missiles)
+                {
+                    var missileLocalPos = Vector3.TransformNormal(missile.Value.Item3 - reference.GetPosition(), Matrix.Transpose(reference.WorldMatrix));
+                    var missileLocalVel = Vector3.TransformNormal(missile.Value.Item4, Matrix.Transpose(reference.WorldMatrix));
+
+                    this.missiles[missile.Key] = new MyTuple<string, long, Vector3, Vector3, DateTime>(missile.Value.Item1, missile.Value.Item2, missileLocalPos, missileLocalVel, missile.Value.Item5);
                 }
             }
 
@@ -107,6 +123,53 @@ namespace IngameScript
                         Color = new Color(0, 255, 0, 255),
                         RotationOrScale = 0f
                     });
+                }
+            }
+
+            public void DrawMissiles(MySpriteDrawFrame frame, Vector2 centerPos, float scale = 1f)
+            {
+                foreach (var missile in missiles)
+                {
+                    if (missile.Value.Item1 != "Idle" && missile.Value.Item1 != "Launching")
+                    {
+                        var position = missile.Value.Item3;
+                        var angle = (float)Math.Atan2(-missile.Value.Item4.X, -missile.Value.Item4.Z);
+                        frame.Add(new MySprite()
+                        {
+                            Type = SpriteType.TEXTURE,
+                            Alignment = TextAlignment.CENTER,
+                            Data = "Triangle",
+                            Position = new Vector2(position.X / 40, position.Z / 40) * scale + centerPos,
+                            Size = new Vector2(8f, 16f) * scale,
+                            Color = new Color(0, 255, 0, 255),
+                            RotationOrScale = -angle
+                        });
+                    }
+                }
+            }
+
+            public void DrawRangeVectors(MySpriteDrawFrame frame, Vector2 centerPos, float scale = 1f)
+            {
+                foreach (var missile in missiles)
+                {
+                    if (targets.ContainsKey(missile.Value.Item2))
+                    {
+                        var rangeVector = targets[missile.Value.Item2].Item1 - missile.Value.Item3;
+                        var angle = (float)Math.Atan2(-rangeVector.X, -rangeVector.Z);
+                        var position = (targets[missile.Value.Item2].Item1 + missile.Value.Item3) / 2;
+                        var length = rangeVector.Length();
+
+                        frame.Add(new MySprite()
+                        {
+                            Type = SpriteType.TEXTURE,
+                            Alignment = TextAlignment.CENTER,
+                            Data = "SquareSimple",
+                            Position = new Vector2(position.X / 40, position.Z / 40) * scale + centerPos,
+                            Size = new Vector2(1f, length / 40) * scale,
+                            Color = new Color(0, 255, 0, 255),
+                            RotationOrScale = -angle
+                        });
+                    }
                 }
             }
 

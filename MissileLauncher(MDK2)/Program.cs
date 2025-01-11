@@ -29,7 +29,7 @@ namespace IngameScript
 
         #region Broadcast Info
         private IMyBroadcastListener broadcastListener;
-        private string broadcastTag;
+        private string channelTag;
         #endregion
 
         #region State Info
@@ -93,19 +93,19 @@ namespace IngameScript
             time = new DateTime(ticks);
         }
 
-        public void BroadcastClock(string channel)
+        public void BroadcastClock(string channelTag)
         {
             mainClock = true;
-            broadcastTag = channel;
-            IGC.SendBroadcastMessage(channel, time.Ticks);
+            this.channelTag = channelTag;
+            IGC.SendBroadcastMessage(channelTag, time.Ticks);
         }
 
-        public void RecieveClock(string channel)
+        public void RecieveClock(string channelTag)
         {
             mainClock = false;
             listeningForClock = true;
-            broadcastTag = channel;
-            broadcastListener = IGC.RegisterBroadcastListener(channel);
+            this.channelTag = channelTag;
+            broadcastListener = IGC.RegisterBroadcastListener(channelTag);
         }
     }
 }

@@ -31,7 +31,7 @@ namespace IngameScript
             #endregion
 
             #region Broadcast Info
-            string broadcastTag;
+            string launcherTag;
             #endregion
 
             #region Parts
@@ -52,12 +52,12 @@ namespace IngameScript
             private TargetingUI targetingUI;
             #endregion
 
-            public MissileLauncher(Program program, int ID, string name, string broadcastTag, int numberOfMissileBays)
+            public MissileLauncher(Program program, int ID, string name, string launcherTag, int numberOfMissileBays)
             {
                 this.program = program;
                 this.ID = ID;
                 this.name = name;
-                this.broadcastTag = broadcastTag;
+                this.launcherTag = launcherTag;
 
                 try
                 {
@@ -77,7 +77,7 @@ namespace IngameScript
                     }
                     targetingLaser = new TargetingLaser(program, 0, controller);
                     awacs = new AWACS(program, 0);
-                    targetCoordinator = new TargetCoordinator(program, 0, controller, name, broadcastTag);
+                    targetCoordinator = new TargetCoordinator(program, 0, controller, name, launcherTag);
                     targetingUI = new TargetingUI(program, 0, display, controller);
                 }
                 catch (Exception ex)
@@ -101,7 +101,7 @@ namespace IngameScript
             public void InitNextAvailableMissile()
             {
                 MissileBay missileBay = missileBays.Find(x => x.status == MissileBay.Status.Exists);
-                missileBay?.InitMissile(broadcastTag);
+                missileBay?.InitMissile(launcherTag);
             }
 
             public void LaunchNextAvailableMissile(long targetID)
