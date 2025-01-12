@@ -17,6 +17,7 @@ using VRage.Game.ModAPI.Ingame;
 using VRage.Game.ModAPI.Ingame.Utilities;
 using VRage.Game.ObjectBuilders.Definitions;
 using VRageMath;
+using static VRage.Game.MyObjectBuilder_ControllerSchemaDefinition;
 
 namespace IngameScript
 {
@@ -79,7 +80,17 @@ namespace IngameScript
                 this.maxRaycastDistance = maxRaycastDistance;
                 this.maxTargetDistance = maxRaycastDistance * 0.8f;
                 this.raycastDistanceGrowthSpeed = raycastDistanceGrowthSpeed;
-                
+                laserController = controller;
+
+                TryGetBlocks();
+                Init();
+
+                azimuthPID = new PIDControl(25, 2, 0.1f);
+                elevationPID = new PIDControl(25, 2, 0.1f);
+            }
+
+            public bool TryGetBlocks()
+            {
                 try
                 {
                     azimuthRotor = program.GridTerminalSystem.GetBlockWithName($"Azimuth Rotor [{ID}]") as IMyMotorStator;
@@ -92,30 +103,39 @@ namespace IngameScript
                     {
                         throw new Exception();
                     }
-                    laserController = controller;
-                    program.GridTerminalSystem.GetBlockGroupWithName($"Camera Array [{ID}]").GetBlocksOfType<IMyCameraBlock>(cameraArray);
+                    var CameraGroup = program.GridTerminalSystem.GetBlockGroupWithName($"Camera Array [{ID}]");
+                    if (CameraGroup == null)
+                    {
+                        throw new Exception();
+                    }
+                    CameraGroup.GetBlocksOfType<IMyCameraBlock>(cameraArray);
+                    return true;
                 }
                 catch (Exception ex)
                 {
                     program.Echo("Error in TargetingLaser construction");
-                    throw;
+                    return false;
                 }
+            }
 
+            public void Init()
+            {
                 foreach (IMyCameraBlock camera in cameraArray)
                 {
                     camera.EnableRaycast = true;
+                    totalAvailRaycastDistance += (float)camera.AvailableScanRange;
                 }
 
                 azimuthRotorInverted = azimuthRotor.CustomData.Contains("Inverted");
                 elevationRotorInverted = elevationRotor.CustomData.Contains("Inverted");
-                azimuthPID = new PIDControl(25, 2, 0.1f);
-                elevationPID = new PIDControl(25, 2, 0.1f);
             }
 
             public void Run(DateTime time)
             {
                 float timeDeltaMiliseconds = (float)program.Runtime.TimeSinceLastRun.TotalMilliseconds;
                 float timeDeltaSeconds = (float)program.Runtime.TimeSinceLastRun.TotalSeconds;
+
+                totalAvailRaycastDistance += 2 * timeDeltaMiliseconds * cameraArray.Count;
 
                 azimuthRotorAngle = azimuthRotorInverted ? -azimuthRotor.Angle : azimuthRotor.Angle;
                 elevationRotorAngle = elevationRotorInverted ? -elevationRotor.Angle : elevationRotor.Angle;
@@ -125,16 +145,6 @@ namespace IngameScript
                 H2.Translation = new Vector3(0, 3, 0);
 
                 Matrix referenceMatrix = H2 * H1 * H0;
-
-                /*
-                Quaternion azimuthRotation = Quaternion.CreateFromAxisAngle(referenceMatrix.Up, -azimuthRotor.Angle);
-                Quaternion elevationRotation = Quaternion.CreateFromAxisAngle(referenceMatrix.Right, -elevationRotor.Angle);
-                Quaternion totalRotation = azimuthRotation * elevationRotation;
-
-                Matrix.Transform(ref referenceMatrix, ref totalRotation, out referenceMatrix);
-
-                referenceMatrix.Translation = Vector3.Transform(rotationPointLocal, azimuthRotor.WorldMatrix);
-                */
 
                 TimeSpan timeSinceLastTargetDetection = TimeSpan.Zero;
                 Vector3 estimatedTargetPos = Vector3.Zero;
@@ -178,7 +188,6 @@ namespace IngameScript
                     azimuthRotor.TargetVelocityRad = azimuthRotorInverted ? laserController.RotationIndicator.Y * sensitivity : -laserController.RotationIndicator.Y * sensitivity;
                 }
 
-                totalAvailRaycastDistance += 2 * timeDeltaMiliseconds * cameraArray.Count;
                 float baseAvailRaycastDistance = 2 * maxRaycastDistance * cameraArray.Count;
 
                 if (totalAvailRaycastDistance >= baseAvailRaycastDistance && ((!lockedTarget.IsEmpty() && manualOverride == false) || laserController.MoveIndicator.Y == 1))

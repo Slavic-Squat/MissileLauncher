@@ -43,7 +43,7 @@ namespace IngameScript
             public MyTuple<string, Vector3, Vector3, long> launcherInfo;
             public Dictionary<long, MyTuple<Vector3, Vector3, long>> targetsInfo = new Dictionary<long, MyTuple<Vector3, Vector3, long>>();
             public List<long> targetIDs = new List<long>();
-            public Dictionary<string, MyTuple<string, long, Vector3, Vector3, DateTime>> missilesInfo = new Dictionary<string, MyTuple<string, long, Vector3, Vector3, DateTime>>();
+            public Dictionary<string, MyTuple<MyTuple<string, long, long>, MyTuple<Vector3, Vector3, Vector3>>> missilesInfo = new Dictionary<string, MyTuple<MyTuple<string, long, long>, MyTuple<Vector3, Vector3, Vector3>>>();
             public List<string> missileTags = new List<string>();
             #endregion
 
@@ -63,17 +63,17 @@ namespace IngameScript
                 while (missilesInfoListener.HasPendingMessage)
                 {
                     var messageIn = missilesInfoListener.AcceptMessage();
-                    if (messageIn.Data is MyTuple<string, string, long, Vector3, Vector3>)
+                    if (messageIn.Data is MyTuple<MyTuple<string, string, long, long>, MyTuple<Vector3, Vector3, Vector3>>)
                     {
-                        var missileInfo = messageIn.As<MyTuple<string, string, long, Vector3, Vector3>>();
-                        AddMissile(missileInfo.Item1, missileInfo.Item2, missileInfo.Item3, missileInfo.Item4, missileInfo.Item5, time);
+                        var missileInfo = messageIn.As<MyTuple<MyTuple<string, string, long, long>, MyTuple<Vector3, Vector3, Vector3>>>();
+                        AddMissile(missileInfo.Item1.Item1, missileInfo.Item1.Item2, missileInfo.Item1.Item3, missileInfo.Item1.Item4, missileInfo.Item2.Item1, missileInfo.Item2.Item2, missileInfo.Item2.Item3);
                     }
                 }
 
                 for (int i = missileTags.Count - 1; i >= 0; i--)
                 {
                     var missileTag = missileTags[i];
-                    TimeSpan timeSinceLastUpdate = time - missilesInfo[missileTag].Item5;
+                    TimeSpan timeSinceLastUpdate = time - new DateTime(missilesInfo[missileTag].Item1.Item3);
 
                     if (timeSinceLastUpdate.TotalSeconds > 5)
                     {
@@ -93,7 +93,7 @@ namespace IngameScript
                 launcherInfo = new MyTuple<string, Vector3, Vector3, long>(name, launcher.GetPosition(), launcher.GetShipVelocities().LinearVelocity, time.Ticks);
                 var messageOut0 = targetsInfo.ToImmutableDictionary();
                 var messageOut1 = launcherInfo;
-                program.IGC.SendBroadcastMessage($"[{launcherTag}]_TargetInfo", messageOut0);
+                program.IGC.SendBroadcastMessage($"[{launcherTag}]_TargetsInfo", messageOut0);
                 program.IGC.SendBroadcastMessage($"[{launcherTag}]_LauncherInfo", messageOut1);
             }
 
@@ -135,13 +135,17 @@ namespace IngameScript
                 }
             }
 
-            public void AddMissile(string missileTag, string stage, long targetID, Vector3 position, Vector3 velocity, DateTime timeUpdated)
+            public void AddMissile(string missileTag, string stage, long targetID, long timeTicks, Vector3 position, Vector3 velocity, Vector3 headingVector)
             {
                 if (!missileTags.Contains(missileTag))
                 {
                     missileTags.Add(missileTag);
                 }
-                missilesInfo[missileTag] = new MyTuple<string, long, Vector3, Vector3, DateTime>(stage, targetID, position, velocity, timeUpdated);
+                missilesInfo[missileTag] = new MyTuple<MyTuple<string, long, long>, MyTuple<Vector3, Vector3, Vector3>>()
+                {
+                    Item1 = new MyTuple<string, long, long>(stage, targetID, timeTicks),
+                    Item2 = new MyTuple<Vector3, Vector3, Vector3>(position, velocity, headingVector)
+                };
             }
 
             public void RemoveMissile(string missileTag)

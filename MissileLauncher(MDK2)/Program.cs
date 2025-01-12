@@ -44,8 +44,11 @@ namespace IngameScript
         {
             Runtime.UpdateFrequency = UpdateFrequency.Update1;
 
-            missileLauncher = new MissileLauncher(this, 0, "JombieLauncher", "Jombie268", 0);
+            missileLauncher = new MissileLauncher(this, 0, "JombieLauncher", "Jombie268", 1);
 
+            commands["QueueCommand"] = (args) => commandHandler.TryQueueUserCommand(args[0]);
+            commands["SelectNextTarget"] = (args) => missileLauncher.SelectNextTarget();
+            commands["SelectPrevTarget"] = (args) => missileLauncher.SelectPreviousTarget();
             commands["QuickInit"] = (args) => missileLauncher.InitNextAvailableMissile();
             commands["QuickLaunch"] = (args) => missileLauncher.LaunchNextAvailableMissile();
             commands["SyncTarget"] = (args) => missileLauncher.SyncTarget();
@@ -63,13 +66,14 @@ namespace IngameScript
 
         public void Main(string argument, UpdateType updateSource)
         {
+            time += Runtime.TimeSinceLastRun;
+
             if (argument != null)
             {
                 commandHandler.TryRunCommand(argument);
             }
             commandHandler.Run();
 
-            time += Runtime.TimeSinceLastRun;
             if (!mainClock && listeningForClock && broadcastListener != null)
             {
                 while (broadcastListener.HasPendingMessage)

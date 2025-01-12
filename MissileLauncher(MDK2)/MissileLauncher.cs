@@ -75,8 +75,8 @@ namespace IngameScript
                     {
                         missileBays.Add(new MissileBay(program, i));
                     }
-                    targetingLaser = new TargetingLaser(program, 0, controller);
-                    awacs = new AWACS(program, 0);
+                    targetingLaser = new TargetingLaser(program, 0, controller, maxRaycastDistance: 10000);
+                    awacs = new AWACS(program, 0, maxRaycastDistance: 10000);
                     targetCoordinator = new TargetCoordinator(program, 0, controller, name, launcherTag);
                     targetingUI = new TargetingUI(program, 0, display, controller);
                 }
@@ -95,6 +95,7 @@ namespace IngameScript
                 UpdateTargetCoordinator();
                 targetingUI.selectedTarget = selectedTarget;
                 targetingUI.AddTargets(targetCoordinator.targetsInfo);
+                targetingUI.AddMissiles(targetCoordinator.missilesInfo);
                 targetingUI.Run(time);
             }
 

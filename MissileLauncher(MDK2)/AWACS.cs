@@ -72,7 +72,13 @@ namespace IngameScript
                 this.maxRaycastDistance = maxRaycastDistance;
                 this.maxTargetDistance = maxRaycastDistance * 0.8f;
                 this.raycastDistanceGrowthSpeed = raycastDistanceGrowthSpeed;
-                
+
+                TryGetBlocks();
+                Init();
+            }
+
+            public bool TryGetBlocks()
+            {
                 try
                 {
                     spinRotor = program.GridTerminalSystem.GetBlockWithName($"Spin Rotor [{ID}]") as IMyMotorStator;
@@ -80,35 +86,63 @@ namespace IngameScript
                     {
                         throw new Exception();
                     }
-                    program.GridTerminalSystem.GetBlockGroupWithName($"Camera Array0 [{ID}]").GetBlocksOfType<IMyCameraBlock>(cameraArray0);
-                    program.GridTerminalSystem.GetBlockGroupWithName($"Camera Array1 [{ID}]").GetBlocksOfType<IMyCameraBlock>(cameraArray1);
-                    program.GridTerminalSystem.GetBlockGroupWithName($"Camera Array2 [{ID}]").GetBlocksOfType<IMyCameraBlock>(cameraArray2);
-                    program.GridTerminalSystem.GetBlockGroupWithName($"Camera Array3 [{ID}]").GetBlocksOfType<IMyCameraBlock>(cameraArray3);
+                    var cameraGroup0 = program.GridTerminalSystem.GetBlockGroupWithName($"Camera Array0 [{ID}]");
+                    if (cameraGroup0 == null)
+                    {
+                        throw new Exception();
+                    }
+                    cameraGroup0.GetBlocksOfType<IMyCameraBlock>(cameraArray0);
+                    var cameraGroup1 = program.GridTerminalSystem.GetBlockGroupWithName($"Camera Array1 [{ID}]");
+                    if (cameraGroup1 == null)
+                    {
+                        throw new Exception();
+                    }
+                    cameraGroup1.GetBlocksOfType<IMyCameraBlock>(cameraArray1);
+                    var cameraGroup2 = program.GridTerminalSystem.GetBlockGroupWithName($"Camera Array2 [{ID}]");
+                    if (cameraGroup2 == null)
+                    {
+                        throw new Exception();
+                    }
+                    cameraGroup2.GetBlocksOfType<IMyCameraBlock>(cameraArray2);
+                    var cameraGroup3 = program.GridTerminalSystem.GetBlockGroupWithName($"Camera Array3 [{ID}]");
+                    if (cameraGroup3 == null)
+                    {
+                        throw new Exception();
+                    }
+                    cameraGroup3.GetBlocksOfType<IMyCameraBlock>(cameraArray3);
+                    return true;
                 }
                 catch (Exception ex)
                 {
                     program.Echo("Error in AWACS construction");
-                    throw;
+                    return false;
                 }
+            }
 
+            public void Init()
+            {
                 foreach (IMyCameraBlock camera in cameraArray0)
                 {
                     camera.EnableRaycast = true;
+                    totalAvailRaycastDistance += (float)camera.AvailableScanRange;
                 }
 
                 foreach (IMyCameraBlock camera in cameraArray1)
                 {
                     camera.EnableRaycast = true;
+                    totalAvailRaycastDistance += (float)camera.AvailableScanRange;
                 }
 
                 foreach (IMyCameraBlock camera in cameraArray2)
                 {
                     camera.EnableRaycast = true;
+                    totalAvailRaycastDistance += (float)camera.AvailableScanRange;
                 }
 
                 foreach (IMyCameraBlock camera in cameraArray3)
                 {
                     camera.EnableRaycast = true;
+                    totalAvailRaycastDistance += (float)camera.AvailableScanRange;
                 }
 
                 spinRotorInverted = spinRotor.CustomData.Contains("Inverted");
@@ -116,10 +150,11 @@ namespace IngameScript
 
             public void Run(DateTime time)
             {
+                float timeDeltaMiliseconds = (float)program.Runtime.TimeSinceLastRun.TotalMilliseconds;
+                totalAvailRaycastDistance += 2 * timeDeltaMiliseconds * (cameraArray0.Count + cameraArray1.Count + cameraArray2.Count + cameraArray3.Count);
+
                 if (lockedTargetIDs.Count != 0)
                 {
-                    float timeDeltaMiliseconds = (float)program.Runtime.TimeSinceLastRun.TotalMilliseconds;
-
                     referenceMatrix = spinRotor.WorldMatrix;
                     spinRotorAngle = spinRotorInverted ? -spinRotor.Angle : spinRotor.Angle;
                     spinRotorAngle = Math.Abs(spinRotorAngle) > Math.PI ? (float)((2 * Math.PI - Math.Abs(spinRotorAngle)) * -Math.Sign(spinRotorAngle)) : spinRotorAngle;
@@ -135,15 +170,16 @@ namespace IngameScript
                         long targetID = lockedTargetIDs[i];
                         TimeSpan timeSinceLastDetection = time - lockedTargetsInfo[targetID].Item3;
                         Vector3 estimatedTargetPos = (lockedTargetsInfo[targetID].Item1 + lockedTargetsInfo[targetID].Item2 * (float)timeSinceLastDetection.TotalSeconds);
+                        Vector3 estimatedTargetDirLocal = Vector3.Normalize(Vector3.TransformNormal(estimatedTargetPos - referenceMatrix.Translation, Matrix.Transpose(referenceMatrix)));
                         float estimatedTargetDistance = (estimatedTargetPos - referenceMatrix.Translation).Length();
+                        float targetElevationLocal = (float)(Math.Asin(estimatedTargetDirLocal.Y) * (180 / Math.PI));
 
-                        if (timeSinceLastDetection.TotalSeconds > 50 || estimatedTargetDistance > maxTargetDistance)
+                        if (timeSinceLastDetection.TotalSeconds > 5 || estimatedTargetDistance >= maxTargetDistance || targetElevationLocal >= 45)
                         {
                             RemoveTarget(targetID);
                         }
                     }
 
-                    totalAvailRaycastDistance += 2 * timeDeltaMiliseconds * (cameraArray0.Count + cameraArray1.Count + cameraArray2.Count + cameraArray3.Count);
                     float baseAvailRaycastDistance = 2 * maxRaycastDistance * (cameraArray0.Count + cameraArray1.Count + cameraArray2.Count + cameraArray3.Count);
 
                     if (lockedTargetIDs.Count != 0)
