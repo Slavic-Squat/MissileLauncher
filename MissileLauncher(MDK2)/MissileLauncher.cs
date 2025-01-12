@@ -59,6 +59,20 @@ namespace IngameScript
                 this.name = name;
                 this.launcherTag = launcherTag;
 
+                TryGetBlocks();
+
+                for (int i = 0; i < numberOfMissileBays; i++)
+                {
+                    missileBays.Add(new MissileBay(program, i));
+                }
+                targetingLaser = new TargetingLaser(program, 0, controller, maxRaycastDistance: 10000);
+                awacs = new AWACS(program, 0, maxRaycastDistance: 10000);
+                targetCoordinator = new TargetCoordinator(program, 0, controller, name, launcherTag);
+                targetingUI = new TargetingUI(program, 0, display, controller);
+            }
+
+            public bool TryGetBlocks()
+            {
                 try
                 {
                     controller = program.GridTerminalSystem.GetBlockWithName($"Launch Controller [{ID}]") as IMyShipController;
@@ -71,19 +85,12 @@ namespace IngameScript
                     {
                         throw new Exception();
                     }
-                    for (int i = 0; i < numberOfMissileBays; i++)
-                    {
-                        missileBays.Add(new MissileBay(program, i));
-                    }
-                    targetingLaser = new TargetingLaser(program, 0, controller, maxRaycastDistance: 10000);
-                    awacs = new AWACS(program, 0, maxRaycastDistance: 10000);
-                    targetCoordinator = new TargetCoordinator(program, 0, controller, name, launcherTag);
-                    targetingUI = new TargetingUI(program, 0, display, controller);
+                    return true;
                 }
                 catch (Exception ex)
                 {
                     program.Echo("Error in MissileLauncher Construction");
-                    throw;
+                    return false;
                 }
             }
 
