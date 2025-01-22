@@ -17,7 +17,6 @@ using VRage.Game.ModAPI.Ingame;
 using VRage.Game.ModAPI.Ingame.Utilities;
 using VRage.Game.ObjectBuilders.Definitions;
 using VRageMath;
-using static VRage.Game.MyObjectBuilder_ControllerSchemaDefinition;
 
 namespace IngameScript
 {
@@ -25,226 +24,216 @@ namespace IngameScript
     {
         public class TargetingLaser
         {
-            #region General Info
-            private Program program;
-            private int ID;
-            #endregion
-
             #region Parts
-            private IMyMotorStator azimuthRotor;
-            private IMyMotorStator elevationRotor;
-            private IMyShipController laserController;
-            private List<IMyCameraBlock> cameraArray = new List<IMyCameraBlock>();
-            #endregion
-
-            #region Properties
-            private bool azimuthRotorInverted;
-            private bool elevationRotorInverted;
-            private float maxTargetDistance;
-            private float maxRaycastDistance;
-            private float raycastDistanceGrowthSpeed;
-            private float sensitivity;
+            private IMyMotorStator _azimuthRotor;
+            private IMyMotorStator _elevationRotor;
+            private IMyShipController _controller;
+            private List<IMyCameraBlock> _cameraArray = new List<IMyCameraBlock>();
             #endregion
 
             #region State Info
-            private float azimuthRotorAngle;
-            private float azimuthError;
-            private float elevationRotorAngle;
-            private float elevationError;
-            private int raycastCounter;
-            private float totalAvailRaycastDistance;
-            private DateTime lastUniqueDetection;
-            private int matchingDetectionCounter;
-            private MyDetectedEntityInfo detectedTarget;
-            private MyDetectedEntityInfo previouslyDetectedTarget;
-            private bool manualOverride = false;
+            private bool _azimuthRotorInverted;
+            private bool _elevationRotorInverted;
+            private float _maxTargetDistance;
+            private Matrix _referenceMatrix;
+            private float _azimuthRotorAngle;
+            private float _azimuthError;
+            private float _elevationRotorAngle;
+            private float _elevationError;
+            private int _raycastCounter;
+            private float _totalAvailRaycastDistance;
+            private DateTime _lastUniqueDetectionTime;
+            private int _matchingDetectionCounter;
+            private MyDetectedEntityInfo _detectedEntity;
+            private MyDetectedEntityInfo _previouslyDetectedEntity;            
             #endregion
 
             #region Controllers
-            private PIDControl azimuthPID;
-            private PIDControl elevationPID;
+            private PIDControl _azimuthPID;
+            private PIDControl _elevationPID;
             #endregion
 
-            #region Output
-            public MyDetectedEntityInfo lockedTarget;
-            public DateTime lastTargetDetection;
+            #region Properties
+            public Program Program { get; private set; }
+            public int ID { get; private set; }
+            public float MaxRaycastDistance { get; set; }
+            public float RaycastDistanceGrowthSpeed { get; set; }
+            public float Sensitivity { get; set; }
+            public bool ManualOverride { get; set; }
+            public TargetInfo Target {  get; private set; }
             #endregion
 
-            private MyDetectedEntityInfo emptyTarget = new MyDetectedEntityInfo();
-
-            public TargetingLaser(Program program, int ID, IMyShipController controller, float sensitivity = 0.05f, float maxRaycastDistance = 5000, float raycastDistanceGrowthSpeed = 200)
+            public TargetingLaser(Program program, int id, IMyShipController controller, float sensitivity = 0.05f, float maxRaycastDistance = 5000, float raycastDistanceGrowthSpeed = 200, bool manualOverride = false)
             {
-                this.program = program;
-                this.ID = ID;
-                this.sensitivity = sensitivity;
-                this.maxRaycastDistance = maxRaycastDistance;
-                this.maxTargetDistance = maxRaycastDistance * 0.8f;
-                this.raycastDistanceGrowthSpeed = raycastDistanceGrowthSpeed;
-                laserController = controller;
+                Program = program;
+                ID = id;
+                Sensitivity = sensitivity;
+                MaxRaycastDistance = maxRaycastDistance;
+                _maxTargetDistance = MaxRaycastDistance * 0.8f;
+                RaycastDistanceGrowthSpeed = raycastDistanceGrowthSpeed;
+                _controller = controller;
 
                 TryGetBlocks();
                 Init();
 
-                azimuthPID = new PIDControl(25, 2, 0.1f);
-                elevationPID = new PIDControl(25, 2, 0.1f);
+                _azimuthPID = new PIDControl(25, 2, 0.1f);
+                _elevationPID = new PIDControl(25, 2, 0.1f);
             }
 
             public bool TryGetBlocks()
             {
                 try
                 {
-                    azimuthRotor = program.GridTerminalSystem.GetBlockWithName($"Azimuth Rotor [{ID}]") as IMyMotorStator;
-                    if (azimuthRotor == null)
+                    _azimuthRotor = Program.GridTerminalSystem.GetBlockWithName($"Azimuth Rotor [{ID}]") as IMyMotorStator;
+                    if (_azimuthRotor == null)
                     {
                         throw new Exception();
                     }
-                    elevationRotor = program.GridTerminalSystem.GetBlockWithName($"Elevation Rotor [{ID}]") as IMyMotorStator;
-                    if (elevationRotor == null)
+                    _elevationRotor = Program.GridTerminalSystem.GetBlockWithName($"Elevation Rotor [{ID}]") as IMyMotorStator;
+                    if (_elevationRotor == null)
                     {
                         throw new Exception();
                     }
-                    var CameraGroup = program.GridTerminalSystem.GetBlockGroupWithName($"Camera Array [{ID}]");
+                    var CameraGroup = Program.GridTerminalSystem.GetBlockGroupWithName($"Camera Array [{ID}]");
                     if (CameraGroup == null)
                     {
                         throw new Exception();
                     }
-                    CameraGroup.GetBlocksOfType<IMyCameraBlock>(cameraArray);
+                    CameraGroup.GetBlocksOfType<IMyCameraBlock>(_cameraArray);
                     return true;
                 }
                 catch (Exception ex)
                 {
-                    program.Echo("Error in TargetingLaser construction");
+                    Program.Echo("Error in TargetingLaser construction");
                     return false;
                 }
             }
 
             public void Init()
             {
-                foreach (IMyCameraBlock camera in cameraArray)
+                foreach (IMyCameraBlock camera in _cameraArray)
                 {
                     camera.EnableRaycast = true;
-                    totalAvailRaycastDistance += (float)camera.AvailableScanRange;
+                    _totalAvailRaycastDistance += (float)camera.AvailableScanRange;
                 }
 
-                azimuthRotorInverted = azimuthRotor.CustomData.Contains("Inverted");
-                elevationRotorInverted = elevationRotor.CustomData.Contains("Inverted");
+                _azimuthRotorInverted = _azimuthRotor.CustomData.Contains("Inverted");
+                _elevationRotorInverted = _elevationRotor.CustomData.Contains("Inverted");
             }
 
             public void Run(DateTime time)
             {
-                float timeDeltaMiliseconds = (float)program.Runtime.TimeSinceLastRun.TotalMilliseconds;
-                float timeDeltaSeconds = (float)program.Runtime.TimeSinceLastRun.TotalSeconds;
+                float timeDeltaMiliseconds = (float)Program.Runtime.TimeSinceLastRun.TotalMilliseconds;
+                float timeDeltaSeconds = (float)Program.Runtime.TimeSinceLastRun.TotalSeconds;
 
-                totalAvailRaycastDistance += 2 * timeDeltaMiliseconds * cameraArray.Count;
+                _totalAvailRaycastDistance += 2 * timeDeltaMiliseconds * _cameraArray.Count;
 
-                azimuthRotorAngle = azimuthRotorInverted ? -azimuthRotor.Angle : azimuthRotor.Angle;
-                elevationRotorAngle = elevationRotorInverted ? -elevationRotor.Angle : elevationRotor.Angle;
-                Matrix H0 = azimuthRotor.WorldMatrix;
-                Matrix H1 = Matrix.CreateRotationY(azimuthRotorAngle);
-                Matrix H2 = Matrix.CreateRotationX(elevationRotorAngle);
+                _azimuthRotorAngle = _azimuthRotorInverted ? -_azimuthRotor.Angle : _azimuthRotor.Angle;
+                _elevationRotorAngle = _elevationRotorInverted ? -_elevationRotor.Angle : _elevationRotor.Angle;
+
+                Matrix H0 = _azimuthRotor.WorldMatrix;
+                Matrix H1 = Matrix.CreateRotationY(_azimuthRotorAngle);
+                Matrix H2 = Matrix.CreateRotationX(_elevationRotorAngle);
                 H2.Translation = new Vector3(0, 3, 0);
 
-                Matrix referenceMatrix = H2 * H1 * H0;
+                _referenceMatrix = H2 * H1 * H0;
 
                 TimeSpan timeSinceLastTargetDetection = TimeSpan.Zero;
                 Vector3 estimatedTargetPos = Vector3.Zero;
                 float estimatedTargetDistance = 0;
 
-                if (!lockedTarget.IsEmpty())
+                if (!Target.IsEmpty())
                 {
-                    timeSinceLastTargetDetection = time - lastTargetDetection;
-                    estimatedTargetPos = lockedTarget.Position + lockedTarget.Velocity * (float)timeSinceLastTargetDetection.TotalSeconds;
-                    estimatedTargetDistance = (estimatedTargetPos - referenceMatrix.Translation).Length();
+                    timeSinceLastTargetDetection = time - Target.TimeRecorded;
+                    estimatedTargetPos = Target.Position + Target.Velocity * (float)timeSinceLastTargetDetection.TotalSeconds;
+                    estimatedTargetDistance = (estimatedTargetPos - _referenceMatrix.Translation).Length();
 
-                    if (laserController.MoveIndicator.Y == -1 || estimatedTargetDistance > maxTargetDistance || timeSinceLastTargetDetection.TotalSeconds > 5)
+                    if (_controller.MoveIndicator.Y == -1 || estimatedTargetDistance > _maxTargetDistance || timeSinceLastTargetDetection.TotalSeconds > 5)
                     {
-                        lockedTarget = emptyTarget;
-                        lastTargetDetection = DateTime.MinValue;
-                        matchingDetectionCounter = 0;
+                        Target = new TargetInfo();
+                        _matchingDetectionCounter = 0;
                     }
                 }
 
-                if (!lockedTarget.IsEmpty())
+                if (!Target.IsEmpty())
                 {
-                    if (manualOverride == false)
+                    if (ManualOverride == false)
                     {
-                        Vector3 estimatedTargetDirLocal = Vector3.Normalize(Vector3.TransformNormal(estimatedTargetPos - referenceMatrix.Translation, Matrix.Transpose(referenceMatrix)));
-                        azimuthError = (float)Math.Atan2(-estimatedTargetDirLocal.X, -estimatedTargetDirLocal.Z);
-                        elevationError = (float)Math.Asin(estimatedTargetDirLocal.Y);
+                        Vector3 estimatedTargetDirLocal = Vector3.Normalize(Vector3.TransformNormal(estimatedTargetPos - _referenceMatrix.Translation, Matrix.Transpose(_referenceMatrix)));
+                        _azimuthError = (float)Math.Atan2(-estimatedTargetDirLocal.X, -estimatedTargetDirLocal.Z);
+                        _elevationError = (float)Math.Asin(estimatedTargetDirLocal.Y);
 
-                        azimuthRotor.TargetVelocityRad = azimuthRotorInverted ? -azimuthPID.Run(azimuthError, timeDeltaSeconds) : azimuthPID.Run(azimuthError, timeDeltaSeconds);
-                        elevationRotor.TargetVelocityRad = elevationRotorInverted ? -elevationPID.Run(elevationError, timeDeltaSeconds) : elevationPID.Run(elevationError, timeDeltaSeconds);
+                        _azimuthRotor.TargetVelocityRad = _azimuthRotorInverted ? -_azimuthPID.Run(_azimuthError, timeDeltaSeconds) : _azimuthPID.Run(_azimuthError, timeDeltaSeconds);
+                        _elevationRotor.TargetVelocityRad = _elevationRotorInverted ? -_elevationPID.Run(_elevationError, timeDeltaSeconds) : _elevationPID.Run(_elevationError, timeDeltaSeconds);
                     }
-                    else if (manualOverride == true)
+                    else if (ManualOverride == true)
                     {
-                        elevationRotor.TargetVelocityRad = elevationRotorInverted ? laserController.RotationIndicator.X * sensitivity : -laserController.RotationIndicator.X * sensitivity;
-                        azimuthRotor.TargetVelocityRad = azimuthRotorInverted ? laserController.RotationIndicator.Y * sensitivity : -laserController.RotationIndicator.Y * sensitivity;
+                        _elevationRotor.TargetVelocityRad = _elevationRotorInverted ? _controller.RotationIndicator.X * Sensitivity : -_controller.RotationIndicator.X * Sensitivity;
+                        _azimuthRotor.TargetVelocityRad = _azimuthRotorInverted ? _controller.RotationIndicator.Y * Sensitivity : -_controller.RotationIndicator.Y * Sensitivity;
                     }
                 }
 
                 else
                 {
-                    elevationRotor.TargetVelocityRad = elevationRotorInverted ? laserController.RotationIndicator.X * sensitivity : -laserController.RotationIndicator.X * sensitivity;
-                    azimuthRotor.TargetVelocityRad = azimuthRotorInverted ? laserController.RotationIndicator.Y * sensitivity : -laserController.RotationIndicator.Y * sensitivity;
+                    _elevationRotor.TargetVelocityRad = _elevationRotorInverted ? _controller.RotationIndicator.X * Sensitivity : -_controller.RotationIndicator.X * Sensitivity;
+                    _azimuthRotor.TargetVelocityRad = _azimuthRotorInverted ? _controller.RotationIndicator.Y * Sensitivity : -_controller.RotationIndicator.Y * Sensitivity;
                 }
 
-                float baseAvailRaycastDistance = 2 * maxRaycastDistance * cameraArray.Count;
+                float baseAvailRaycastDistance = 2 * MaxRaycastDistance * _cameraArray.Count;
 
-                if (totalAvailRaycastDistance >= baseAvailRaycastDistance && ((!lockedTarget.IsEmpty() && manualOverride == false) || laserController.MoveIndicator.Y == 1))
+                if (_totalAvailRaycastDistance >= baseAvailRaycastDistance && ((!Target.IsEmpty() && ManualOverride == false) || _controller.MoveIndicator.Y == 1))
                 {
-                    Vector3 cameraPos = cameraArray[raycastCounter].GetPosition();
+                    Vector3 cameraPos = _cameraArray[_raycastCounter].GetPosition();
                     Vector3 raycastTarget = Vector3.Zero;
                     float raycastDistance;
 
-                    if (laserController.MoveIndicator.Y == 1 && (lockedTarget.IsEmpty() || manualOverride == true))
+                    if (_controller.MoveIndicator.Y == 1 && (Target.IsEmpty() || ManualOverride == true))
                     {
-                        raycastTarget = referenceMatrix.Forward * maxTargetDistance + referenceMatrix.Translation;
+                        raycastTarget = _referenceMatrix.Forward * _maxTargetDistance + _referenceMatrix.Translation;
                     }
-                    else if (!lockedTarget.IsEmpty())
+                    else if (!Target.IsEmpty())
                     {
-                        Vector3 raycastOvershoot = Vector3.Normalize(estimatedTargetPos - cameraPos) * (raycastDistanceGrowthSpeed * (float)timeSinceLastTargetDetection.TotalSeconds);
+                        Vector3 raycastOvershoot = Vector3.Normalize(estimatedTargetPos - cameraPos) * (RaycastDistanceGrowthSpeed * (float)timeSinceLastTargetDetection.TotalSeconds);
                         raycastTarget = estimatedTargetPos + raycastOvershoot;
                     }
 
                     raycastDistance = (raycastTarget - cameraPos).Length();
-                    raycastTarget = raycastDistance > maxRaycastDistance ? Vector3.Normalize(raycastTarget - cameraPos) * maxRaycastDistance + cameraPos : raycastTarget;
+                    raycastTarget = raycastDistance > MaxRaycastDistance ? Vector3.Normalize(raycastTarget - cameraPos) * MaxRaycastDistance + cameraPos : raycastTarget;
 
-                    if (cameraArray[raycastCounter].CanScan(raycastTarget))
+                    if (_cameraArray[_raycastCounter].CanScan(raycastTarget))
                     {
-                        MyDetectedEntityInfo raycastResult = cameraArray[raycastCounter].Raycast(raycastTarget);
-                        totalAvailRaycastDistance -= raycastDistance;
-                        raycastCounter++;
-                        raycastCounter %= cameraArray.Count;
+                        MyDetectedEntityInfo raycastResult = _cameraArray[_raycastCounter].Raycast(raycastTarget);
+                        _totalAvailRaycastDistance -= raycastDistance;
+                        _raycastCounter++;
+                        _raycastCounter %= _cameraArray.Count;
 
                         if (!raycastResult.IsEmpty())
                         {
-                            detectedTarget = raycastResult;
+                            _detectedEntity = raycastResult;
 
-                            if (!lockedTarget.IsEmpty() && detectedTarget.EntityId == lockedTarget.EntityId)
+                            if (!Target.IsEmpty() && _detectedEntity.EntityId == Target.EntityID)
                             {
-                                lastTargetDetection = time;
-                                lockedTarget = detectedTarget;
+                                Target = new TargetInfo(_detectedEntity.EntityId, _detectedEntity.Position, _detectedEntity.Velocity, time);
                             }
 
-                            else if (lockedTarget.IsEmpty())
+                            else if (Target.IsEmpty())
                             {
-                                if (detectedTarget.EntityId == previouslyDetectedTarget.EntityId)
+                                if (_detectedEntity.EntityId == _previouslyDetectedEntity.EntityId)
                                 {
-                                    matchingDetectionCounter += 1;
+                                    _matchingDetectionCounter += 1;
                                 }
                                 else
                                 {
-                                    lastUniqueDetection = time;
-                                    matchingDetectionCounter = 0;
+                                    _lastUniqueDetectionTime = time;
+                                    _matchingDetectionCounter = 0;
                                 }
 
-                                previouslyDetectedTarget = detectedTarget;
+                                _previouslyDetectedEntity = _detectedEntity;
 
-                                TimeSpan timeSinceLastUniqueDetection = time - lastUniqueDetection;
-                                if (timeSinceLastUniqueDetection.TotalSeconds > 2 && matchingDetectionCounter >= 3)
+                                TimeSpan timeSinceLastUniqueDetection = time - _lastUniqueDetectionTime;
+                                if (timeSinceLastUniqueDetection.TotalSeconds > 2 && _matchingDetectionCounter >= 3)
                                 {
-                                    lockedTarget = detectedTarget;
-                                    lastTargetDetection = time;
+                                    Target = new TargetInfo(_detectedEntity.EntityId, _detectedEntity.Position, _detectedEntity.Velocity, time);
                                 }
                             }
                         }
