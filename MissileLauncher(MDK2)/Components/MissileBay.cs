@@ -24,44 +24,44 @@ namespace IngameScript
     {
         public class MissileBay
         {
-            #region General Info
-            private Program program;
-            private int ID;
+            #region Fields
+            private int _missileCounter;
             #endregion
 
             #region Parts
-            private IMyProgrammableBlock missileComputer;
+            private IMyProgrammableBlock _missileComputer;
             #endregion
 
-            #region State Info
-            private int missileCounter;
-            public Status status = Status.Empty;
+            #region Properties
+            public Program Program { get; private set; }
+            public int ID {  get; private set; }      
+            public Status State { get; private set; }
             #endregion
 
             public enum Status
             {
-                Firing, Ready, Fueling, Building, Empty, Exists, Error
+                Empty, Exists, Building, Fueling, Ready, Firing, Error
             }
 
-            public MissileBay(Program program, int ID)
+            public MissileBay(Program Program, int ID)
             {
-                this.program = program;
+                this.Program = Program;
                 this.ID = ID;
 
                 RegisterMissile();
             }
 
-            public IEnumerator<Status> State()
+            public IEnumerator<Status> StateUpdate()
             {
-                switch (status)
+                switch (State)
                 {
                     case Status.Firing:
 
-                        while (program.GridTerminalSystem.CanAccess(missileComputer))
+                        while (Program.GridTerminalSystem.CanAccess(_missileComputer))
                         {
                             yield return Status.Firing;
                         }
-                        status = Status.Empty;
+                        State = Status.Empty;
                         yield return Status.Empty;
                         break;
                 }
@@ -69,34 +69,34 @@ namespace IngameScript
 
             public void RegisterMissile()
             {
-                missileComputer = program.GridTerminalSystem.GetBlockWithName($"Missile Computer [{ID}]") as IMyProgrammableBlock;
+                _missileComputer = Program.GridTerminalSystem.GetBlockWithName($"Missile Computer [{ID}]") as IMyProgrammableBlock;
 
-                if (missileComputer != null)
+                if (_missileComputer != null)
                 {
-                    status = Status.Exists;
+                    State = Status.Exists;
                 }
             }
 
             public void InitMissile(string launcherTag)
             {
-                if (status == Status.Exists)
+                if (State == Status.Exists)
                 {
-                    if (ConfigUtilties.TryQueueExternalCommand(missileComputer, $"InitMissile {launcherTag} {ID}_{missileCounter} {program.time.Ticks}"))
+                    if (ConfigUtilties.TryQueueExternalCommand(_missileComputer, $"InitMissile {launcherTag} {ID}_{_missileCounter} {Program.time.Ticks}"))
                     {
-                        missileComputer.TryRun("-ConfigUpdated");
-                        status = Status.Ready;
+                        _missileComputer.TryRun("-ConfigUpdated");
+                        State = Status.Ready;
                     }
                 }
             }
 
             public void Launch(long targetID)
             {
-                if (status == Status.Ready)
+                if (State == Status.Ready)
                 {
-                    if (ConfigUtilties.TryQueueExternalCommand(missileComputer, $"Launch {targetID}"))
+                    if (ConfigUtilties.TryQueueExternalCommand(_missileComputer, $"Launch {targetID}"))
                     {
-                        missileComputer.TryRun("-ConfigUpdated");
-                        status = Status.Firing;
+                        _missileComputer.TryRun("-ConfigUpdated");
+                        State = Status.Firing;
                     }
                 }
             }

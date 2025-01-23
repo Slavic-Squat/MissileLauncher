@@ -32,10 +32,10 @@ namespace IngameScript
             #endregion
 
             #region State Info
+            private Matrix _referenceMatrix;
             private bool _azimuthRotorInverted;
             private bool _elevationRotorInverted;
             private float _maxTargetDistance;
-            private Matrix _referenceMatrix;
             private float _azimuthRotorAngle;
             private float _azimuthError;
             private float _elevationRotorAngle;

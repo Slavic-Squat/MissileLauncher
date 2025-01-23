@@ -30,7 +30,7 @@ namespace IngameScript
             public Vector3 Velocity { get;}
             public DateTime TimeRecorded { get;}
 
-            public TargetInfo(long entityID, Vector3 position, Vector3 velocity, DateTime timeRecorded, string name = "Default")
+            public TargetInfo(long entityID, Vector3 position, Vector3 velocity, DateTime timeRecorded, string name = "Unknown")
             {
                 Name = name;
                 EntityID = entityID;
@@ -42,6 +42,16 @@ namespace IngameScript
             public bool IsEmpty()
             {
                 return EntityID == 0;
+            }
+
+            public static MyTuple<string, long, Vector3, Vector3, long> ToIGC(TargetInfo targetInfo)
+            {
+                return new MyTuple<string, long, Vector3, Vector3, long>(targetInfo.Name, targetInfo.EntityID, targetInfo.Position, targetInfo.Velocity, targetInfo.TimeRecorded.Ticks);
+            }
+
+            public static TargetInfo FromIGC(MyTuple<string, long, Vector3, Vector3, long> messsage)
+            {
+                return new TargetInfo(messsage.Item2, messsage.Item3, messsage.Item4, new DateTime(messsage.Item5), name: messsage.Item1);
             }
         }
     }

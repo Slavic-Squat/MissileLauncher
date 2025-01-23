@@ -24,134 +24,138 @@ namespace IngameScript
     {
         public class TargetCoordinator
         {
-            #region General Info
-            private Program program;
-            private int ID;
-            private string name;
-            #endregion
-
             #region Parts
-            private IMyShipController launcher;
+            private IMyShipController _launcherController;
+            private IMyBroadcastListener _missilesInfoListener;
             #endregion
 
-            #region Broadcast Info
-            private string launcherTag;
-            private IMyBroadcastListener missilesInfoListener;
+            #region Fields
+            private Dictionary<long, MyTuple<string, long, Vector3, Vector3, long>> _targetsIGC = new Dictionary<long, MyTuple<string, long, Vector3, Vector3, long>>();
             #endregion
 
-            #region Output
-            public MyTuple<string, Vector3, Vector3, long> launcherInfo;
-            public Dictionary<long, MyTuple<Vector3, Vector3, long>> targetsInfo = new Dictionary<long, MyTuple<Vector3, Vector3, long>>();
-            public List<long> targetIDs = new List<long>();
-            public Dictionary<string, MyTuple<MyTuple<string, long, long>, MyTuple<Vector3, Vector3, Vector3>>> missilesInfo = new Dictionary<string, MyTuple<MyTuple<string, long, long>, MyTuple<Vector3, Vector3, Vector3>>>();
-            public List<string> missileTags = new List<string>();
+            #region Properties
+            public Program Program { get; private set; }
+            public int ID { get; private set; }
+            public string Name { get; private set; }
+            public string LauncherTag { get; private set; }
+            public LauncherInfo Launcher {  get; private set; }
+            public Dictionary<long, TargetInfo> Targets {  get; private set; }
+            public List<long> TargetIDs { get; private set; }
+            public Dictionary<long, MissileInfo> Missiles { get; private set; }
+            public List<long> MissileIDs { get; private set; }
             #endregion
 
-            public TargetCoordinator(Program program, int ID, IMyShipController launcher, string name, string launcherTag)
+            public TargetCoordinator(Program program, int id, IMyShipController launcherController, string name, string coordinatorTag)
             {
-                this.program = program;
-                this.ID = ID;
-                this.launcher = launcher;
-                this.name = name;
-                this.launcherTag = launcherTag;
+                Program = program;
+                ID = id;
+                _launcherController = launcherController;
+                Name = name;
+                LauncherTag = coordinatorTag;
 
-                missilesInfoListener = program.IGC.RegisterBroadcastListener($"[{launcherTag}]_MissilesInfo");
+                Targets = new Dictionary<long, TargetInfo>();
+                TargetIDs = new List<long>();
+                Missiles = new Dictionary<long, MissileInfo>();
+                MissileIDs = new List<long>();
+
+                _missilesInfoListener = Program.IGC.RegisterBroadcastListener($"[{LauncherTag}]_MissilesInfo");
             }
 
             public void Run(DateTime time)
             {
-                while (missilesInfoListener.HasPendingMessage)
+                while (_missilesInfoListener.HasPendingMessage)
                 {
-                    var messageIn = missilesInfoListener.AcceptMessage();
-                    if (messageIn.Data is MyTuple<MyTuple<string, string, long, long>, MyTuple<Vector3, Vector3, Vector3>>)
+                    var messageIn = _missilesInfoListener.AcceptMessage();
+                    if (messageIn.Data is MyTuple<MyTuple<long, long, Vector3, Vector3, long>, MyTuple<string, string>>)
                     {
-                        var missileInfo = messageIn.As<MyTuple<MyTuple<string, string, long, long>, MyTuple<Vector3, Vector3, Vector3>>>();
-                        AddMissile(missileInfo.Item1.Item1, missileInfo.Item1.Item2, missileInfo.Item1.Item3, missileInfo.Item1.Item4, missileInfo.Item2.Item1, missileInfo.Item2.Item2, missileInfo.Item2.Item3);
+                        var missileInfo = messageIn.As<MyTuple<MyTuple<long, long, Vector3, Vector3, long>, MyTuple<string, string>>>();
+                        AddMissile(MissileInfo.FromIGC(missileInfo));
                     }
                 }
 
-                for (int i = missileTags.Count - 1; i >= 0; i--)
+                for (int i = MissileIDs.Count - 1; i >= 0; i--)
                 {
-                    var missileTag = missileTags[i];
-                    TimeSpan timeSinceLastUpdate = time - new DateTime(missilesInfo[missileTag].Item1.Item3);
+                    var missileID = MissileIDs[i];
+                    TimeSpan timeSinceLastUpdate = time - Missiles[missileID].TimeRecorded;
 
                     if (timeSinceLastUpdate.TotalSeconds > 5)
                     {
-                        RemoveMissile(missileTag);
+                        RemoveMissile(missileID);
                     }
                 }
-                for (int i = targetIDs.Count - 1; i >= 0; i--)
+                for (int i = TargetIDs.Count - 1; i >= 0; i--)
                 {
-                    var targetID = targetIDs[i];
-                    TimeSpan timeSinceLastDetection = time - new DateTime(targetsInfo[targetID].Item3);
+                    var targetID = TargetIDs[i];
+                    TimeSpan timeSinceLastDetection = time - Targets[targetID].TimeRecorded;
 
                     if (timeSinceLastDetection.TotalSeconds > 5)
                     {
                         RemoveTarget(targetID);
                     }
                 }
-                launcherInfo = new MyTuple<string, Vector3, Vector3, long>(name, launcher.GetPosition(), launcher.GetShipVelocities().LinearVelocity, time.Ticks);
-                var messageOut0 = targetsInfo.ToImmutableDictionary();
-                var messageOut1 = launcherInfo;
-                program.IGC.SendBroadcastMessage($"[{launcherTag}]_TargetsInfo", messageOut0);
-                program.IGC.SendBroadcastMessage($"[{launcherTag}]_LauncherInfo", messageOut1);
+                Launcher = new LauncherInfo(Name, _launcherController.CubeGrid.EntityId, _launcherController.GetPosition(), _launcherController.GetShipVelocities().LinearVelocity, time);
+                _targetsIGC.Clear();
+                foreach (var target in Targets)
+                {
+                    _targetsIGC.Add(target.Key, TargetInfo.ToIGC(target.Value));
+                }
+                var messageOut0 = _targetsIGC.ToImmutableDictionary();
+                var messageOut1 = LauncherInfo.ToIGC(Launcher);
+                Program.IGC.SendBroadcastMessage($"[{LauncherTag}]_TargetsInfo", messageOut0);
+                Program.IGC.SendBroadcastMessage($"[{LauncherTag}]_LauncherInfo", messageOut1);
             }
 
-            public void AddTarget(long targetID, Vector3 position, Vector3 velocity, DateTime time)
+            public void AddTarget(TargetInfo target)
             {
-                if (targetIDs.Contains(targetID))
+                if (TargetIDs.Contains(target.EntityID))
                 {
-                    if (targetsInfo[targetID].Item3 < time.Ticks)
+                    if (Targets[target.EntityID].TimeRecorded < target.TimeRecorded)
                     {
-                        targetsInfo[targetID] = new MyTuple<Vector3, Vector3, long>(position, velocity, time.Ticks);
+                        Targets[target.EntityID] = target;
                     }
                 }
                 else
                 {
-                    targetsInfo[targetID] = new MyTuple<Vector3, Vector3, long>(position, velocity, time.Ticks);
-                    targetIDs.Add(targetID);
+                    Targets[target.EntityID] = target;
+                    TargetIDs.Add(target.EntityID);
                 }
             }
 
-            public void AddTargets(Dictionary<long, MyTuple<Vector3, Vector3, DateTime>> targets)
+            public void AddTargets(Dictionary<long, TargetInfo> targets)
             {
-                foreach (var target in targets)
+                foreach (var target in targets.Values)
                 {
-                    AddTarget(target.Key, target.Value.Item1, target.Value.Item2, target.Value.Item3);
+                    AddTarget(target);
                 }
             }
 
             public void RemoveTarget(long targetID)
             {
-                targetsInfo.Remove(targetID);
-                targetIDs.Remove(targetID);
+                Targets.Remove(targetID);
+                TargetIDs.Remove(targetID);
             }
 
-            public void RemoveTargets(List<long> targetIDs)
+            public void RemoveTargets(List<long> TargetIDs)
             {
-                foreach (var targetID in targetIDs)
+                foreach (var targetID in TargetIDs)
                 {
                     RemoveTarget(targetID);
                 }
             }
 
-            public void AddMissile(string missileTag, string stage, long targetID, long timeTicks, Vector3 position, Vector3 velocity, Vector3 headingVector)
+            public void AddMissile(MissileInfo missile)
             {
-                if (!missileTags.Contains(missileTag))
+                if (!MissileIDs.Contains(missile.EntityID))
                 {
-                    missileTags.Add(missileTag);
+                    MissileIDs.Add(missile.EntityID);
                 }
-                missilesInfo[missileTag] = new MyTuple<MyTuple<string, long, long>, MyTuple<Vector3, Vector3, Vector3>>()
-                {
-                    Item1 = new MyTuple<string, long, long>(stage, targetID, timeTicks),
-                    Item2 = new MyTuple<Vector3, Vector3, Vector3>(position, velocity, headingVector)
-                };
+                Missiles[missile.EntityID] = missile;
             }
 
-            public void RemoveMissile(string missileTag)
+            public void RemoveMissile(long missileID)
             {
-                missilesInfo.Remove(missileTag);
-                missileTags.Remove(missileTag);
+                Missiles.Remove(missileID);
+                MissileIDs.Remove(missileID);
             }
         }
     }
