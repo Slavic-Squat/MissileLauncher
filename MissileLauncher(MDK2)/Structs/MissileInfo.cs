@@ -48,6 +48,14 @@ namespace IngameScript
                 return EntityID == 0;
             }
 
+            public static MissileInfo Transform(MissileInfo missileInfo, Matrix transform)
+            {
+                var Postion = Vector3.Transform(missileInfo.Position, transform);
+                var Velocity = Vector3.Transform(missileInfo.Velocity, transform);
+
+                return new MissileInfo(missileInfo.EntityID, missileInfo.TargetID, Postion, Velocity, missileInfo.TimeRecorded, name: missileInfo.Name, stage: missileInfo.Stage);
+            }
+
             public static MyTuple<MyTuple<long, long, Vector3, Vector3, long>, MyTuple<string, string>> ToIGC(MissileInfo missileInfo)
             {
                 var part0 = new MyTuple<long, long, Vector3, Vector3, long>(missileInfo.EntityID, missileInfo.TargetID, missileInfo.Position, missileInfo.Velocity, missileInfo.TimeRecorded.Ticks);

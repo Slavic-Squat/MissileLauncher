@@ -44,6 +44,14 @@ namespace IngameScript
                 return EntityID == 0;
             }
 
+            public static LauncherInfo Transform(LauncherInfo launcherInfo, Matrix transform)
+            {
+                var Postion = Vector3.Transform(launcherInfo.Position, transform);
+                var Velocity = Vector3.Transform(launcherInfo.Velocity, transform);
+
+                return new LauncherInfo(launcherInfo.Name, launcherInfo.EntityID, Postion, Velocity, launcherInfo.TimeRecorded);
+            }
+
             public static MyTuple<string, long, Vector3, Vector3, long> ToIGC(LauncherInfo launcherInfo)
             {
                 return new MyTuple<string, long, Vector3, Vector3, long>(launcherInfo.Name, launcherInfo.EntityID, launcherInfo.Position, launcherInfo.Velocity, launcherInfo.TimeRecorded.Ticks);

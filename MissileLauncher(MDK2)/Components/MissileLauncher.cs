@@ -22,7 +22,7 @@ namespace IngameScript
 {
     partial class Program
     {
-        public class MissileLauncher
+        public class MissileLauncher : IMissileLauncher
         {
             #region Parts
             private IMyShipController _controller;
@@ -46,6 +46,7 @@ namespace IngameScript
             public TargetingLaser TargetingLaser { get; private set; }
             public AWACS AWACS { get; private set; }
             public TargetCoordinator TargetCoordinator { get; private set; }
+            public TargetingSpriteBuilder TargetingSpriteBuilder { get; private set; }
             public TargetingUI TargetingUI { get; private set; }
             #endregion
 
@@ -66,7 +67,10 @@ namespace IngameScript
                 TargetingLaser = new TargetingLaser(Program, 0, _controller, maxRaycastDistance: 10000);
                 AWACS = new AWACS(Program, 0, maxRaycastDistance: 10000);
                 TargetCoordinator = new TargetCoordinator(Program, 0, _controller, Name, LauncherTag);
-                TargetingUI = new TargetingUI(Program, 0, _display, _controller);
+                TargetingSpriteBuilder = new TargetingSpriteBuilder(_controller, 30, 1, 100, 100000);
+                TargetingSpriteBuilder.Targets = TargetCoordinator.Targets;
+                TargetingSpriteBuilder.Missiles = TargetCoordinator.Missiles;
+                TargetingUI = new TargetingUI(_display, TargetingSpriteBuilder);
             }
 
             public bool TryGetBlocks()
@@ -98,9 +102,7 @@ namespace IngameScript
                 AWACS.Run(time);
                 TargetCoordinator.Run(time);
                 UpdateTargetCoordinator();
-                TargetingUI._selectedTarget = _selectedTarget;
-                TargetingUI.AddTargets(TargetCoordinator.targetsInfo);
-                TargetingUI.AddMissiles(TargetCoordinator.missilesInfo);
+                TargetingSpriteBuilder.Run(time);
                 TargetingUI.Run(time);
             }
 
@@ -123,20 +125,20 @@ namespace IngameScript
 
             public void SyncTarget()
             {
-                AWACS.AddTarget(TargetingLaser.Target.EntityID, TargetingLaser.Target.Position, TargetingLaser.Target.Velocity, TargetingLaser.Target.TimeRecorded);
+                AWACS.AddTarget(TargetingLaser.Target);
             }
 
             public void UpdateTargetCoordinator()
             {
                 TargetCoordinator.AddTargets(AWACS.Targets);
-                TargetCoordinator.AddTarget(TargetingLaser.Target.EntityID, TargetingLaser.Target.Position, TargetingLaser.Target.Velocity, TargetingLaser.Target.TimeRecorded);
+                TargetCoordinator.AddTarget(TargetingLaser.Target);
             }
 
             public void SelectNextTarget()
             {
-                if (TargetCoordinator.targetIDs.Count != 0)
+                if (TargetCoordinator.TargetIDs.Count != 0)
                 {
-                    _selectedTargetIndex = TargetCoordinator.targetIDs.IndexOf(_selectedTarget);
+                    _selectedTargetIndex = TargetCoordinator.TargetIDs.IndexOf(_selectedTarget);
                     if (_selectedTargetIndex == -1)
                     {
                         _selectedTargetIndex = 0;
@@ -144,18 +146,18 @@ namespace IngameScript
                     else
                     {
                         _selectedTargetIndex++;
-                        _selectedTargetIndex %= TargetCoordinator.targetIDs.Count;
+                        _selectedTargetIndex %= TargetCoordinator.TargetIDs.Count;
                     }
 
-                    _selectedTarget = TargetCoordinator.targetIDs[_selectedTargetIndex];
+                    _selectedTarget = TargetCoordinator.TargetIDs[_selectedTargetIndex];
                 }
             }
 
             public void SelectPreviousTarget()
             {
-                if (TargetCoordinator.targetIDs.Count != 0)
+                if (TargetCoordinator.TargetIDs.Count != 0)
                 {
-                    _selectedTargetIndex = TargetCoordinator.targetIDs.IndexOf(_selectedTarget);
+                    _selectedTargetIndex = TargetCoordinator.TargetIDs.IndexOf(_selectedTarget);
                     if (_selectedTargetIndex == -1)
                     {
                         _selectedTargetIndex = 0;
@@ -163,10 +165,10 @@ namespace IngameScript
                     else
                     {
                         _selectedTargetIndex--;
-                        _selectedTargetIndex %= TargetCoordinator.targetIDs.Count;
+                        _selectedTargetIndex %= TargetCoordinator.TargetIDs.Count;
                     }
 
-                    _selectedTarget = TargetCoordinator.targetIDs[_selectedTargetIndex];
+                    _selectedTarget = TargetCoordinator.TargetIDs[_selectedTargetIndex];
                 }
             }
         }

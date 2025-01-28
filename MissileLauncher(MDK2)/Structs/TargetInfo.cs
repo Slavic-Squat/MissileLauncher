@@ -44,6 +44,14 @@ namespace IngameScript
                 return EntityID == 0;
             }
 
+            public static TargetInfo Transform(TargetInfo targetInfo, Matrix transform)
+            {
+                var Postion = Vector3.Transform(targetInfo.Position, transform);
+                var Velocity = Vector3.Transform(targetInfo.Velocity, transform);
+
+                return new TargetInfo(targetInfo.EntityID, Postion, Velocity, targetInfo.TimeRecorded, name: targetInfo.Name);
+            }
+
             public static MyTuple<string, long, Vector3, Vector3, long> ToIGC(TargetInfo targetInfo)
             {
                 return new MyTuple<string, long, Vector3, Vector3, long>(targetInfo.Name, targetInfo.EntityID, targetInfo.Position, targetInfo.Velocity, targetInfo.TimeRecorded.Ticks);
