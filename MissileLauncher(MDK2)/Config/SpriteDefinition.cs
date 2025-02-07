@@ -22,9 +22,16 @@ namespace IngameScript
 {
     partial class Program
     {
-        public static class ConfigUtilties
+        public class SpriteDefinition
         {
-            
+            public string Name { get; set; }
+            public float NativeAR {  get; set; }
+            public float BaseScale { get; set; }
+            public float MinDepthScale { get; set; }
+            public float MaxDepthScale { get; set; }
+            public Color SpriteColor { get; set; }
+            public float Rotation { get; set; }
+
         }
     }
 }

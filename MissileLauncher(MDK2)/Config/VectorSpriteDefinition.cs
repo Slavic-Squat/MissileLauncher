@@ -22,9 +22,11 @@ namespace IngameScript
 {
     partial class Program
     {
-        public static class ConfigUtilties
+        public class VectorSpriteDefinition
         {
-            
+            public string Name { get; set; }
+            public Color SpriteColor { get; set; }
+
         }
     }
 }

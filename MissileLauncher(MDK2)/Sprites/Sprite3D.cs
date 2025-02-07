@@ -22,15 +22,13 @@ namespace IngameScript
 {
     partial class Program
     {
-        public interface IMissileLauncher
+        public abstract class Sprite3D
         {
-            void InitNextAvailableMissile();
-            void LaunchNextAvailableMissile(long targetID);
-            void LaunchNextAvailableMissile();
-            void SyncTarget();
-            void UpdateTargetCoordinator();
-            void SelectNextTarget();
-            void SelectPreviousTarget();
+            public float Z { get; set; }
+            public Vector3 Position { get; set; }
+            public Color SpriteColor { get; set; }
+            public float Rotation { get; set; }
+            public abstract MySprite ToMySprite(Vector2 screenSize);
         }
     }
 }

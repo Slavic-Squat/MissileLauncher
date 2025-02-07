@@ -25,15 +25,16 @@ namespace IngameScript
         public class TargetingSpriteBuilder
         {
             #region Properties
-            public Dictionary<long, TargetInfo> Targets { get; set; }
-            public List<Sprite3D> TargetSprites { get; private set; }
-            public Dictionary<long, MissileInfo> Missiles { get; set; }
-            public List<Sprite3D> MissileSprites { get; private set; }
-            public List<Sprite3D> FinalSprites { get; private set; }
+            public TargetCoordinator TargetCoordinator;
+            public Dictionary<long, EntityInfo> Targets { get; set; }
+            public List<EntitySprite3D> TargetSprites { get; private set; }
+            public Dictionary<long, EntityInfo> Missiles { get; set; }
+            public List<EntitySprite3D> MissileSprites { get; private set; }
+            public List<ISprite3D> FinalSprites { get; private set; }
             #endregion
 
             #region Parts
-            private IMyTerminalBlock _reference;
+            private IMyCubeGrid _referenceGrid;
             #endregion
 
             #region State Info
@@ -55,51 +56,15 @@ namespace IngameScript
             private Matrix _viewMatrix = Matrix.Identity;
             private Matrix _projectionMatrix = Matrix.Identity;
             private Plane _gridPlaneView = new Plane();
-
-            private string _missileSpriteName = "Missile";
-            private float _missileSpriteAR = 512f / 443f;
-            private float _missileSpriteMaxScale = 0.1f;
-            private float _missileSpriteMinScale = 0.0f;
-            private Color _missileSpriteColor = Color.White;
-
-            private string _targetSpriteName = "Target";
-            private float _targetSpriteAR = 1;
-            private float _targetSpriteMaxScale = 0.1f;
-            private float _targetSpriteMinScale = 0.0f;
-            private Color _targetSpriteColor = Color.White;
-
-            private string _radialGridSpriteName = "Radial_Grid";
-            private string _radialGradientSpriteName = "Radial_Gradient";
-            private float _radialSpriteAR = 1;
-            private Color _radialGridSpriteColor = Color.White;
-            private Color _radialGradientSpriteColor = Color.White;
-
-            private string _launcherSpriteName = "Launcher";
-            private float _launcherSpriteAR = 1444f / 694f;
-            private float _launcherSpriteMaxScale = 0.2f;
-            private float _launcherSpriteMinScale = 0.0f;
-            private Color _launcherSpriteColor = Color.White;
-
-            private string _targetStatusSpriteName = "Target_Laser_Status";
-            private float _targetStatusSpriteAR = 1;
-            private float _targetStatusSpriteMaxScale = 0.1f;
-            private float _targetStatusSpriteMinScale = 0.0f;
-            private Color _targetStatusColor = Color.White;
-
-            private string _baseSpriteName = "Sprite_Base";
-            private float _baseSpriteAR = 224f / 97f;
-            private float _baseSpriteMaxScale = 0.1f;
-            private float _baseSpriteMinScale = 0.0f;
-            private Color _baseSpriteColor = Color.White;
-
-            private Color _stemSpriteColor = Color.White;
-
-            private Color _missileVectorColor = Color.White;
             #endregion
 
-            public TargetingSpriteBuilder(IMyTerminalBlock reference, float FOV, float AR, float n, float f)
+            public TargetingSpriteBuilder(TargetCoordinator targetCoordinator, IMyCubeGrid referenceGrid, float FOV, float AR, float n, float f)
             {
-                _reference = reference;
+                TargetCoordinator = targetCoordinator;
+                Missiles = TargetCoordinator.Missiles;
+                Targets = TargetCoordinator.Targets;
+
+                _referenceGrid = referenceGrid;
                 _FOV = FOV;
                 _AR = AR;
                 _n = n;
@@ -111,7 +76,7 @@ namespace IngameScript
                 FinalSprites = new List<Sprite3D>();
             }
 
-            public void Run(DateTime time)
+            public void Run()
             {
                 _runCounter++;
                 _runCounter %= 10;
@@ -124,7 +89,7 @@ namespace IngameScript
 
             public void BuildSprite3Ds()
             {
-                _worldMatrix = _reference.WorldMatrix;
+                _worldMatrix = _referenceGrid.WorldMatrix;
 
                 Vector3 cameraPositionLocal = new Vector3(17861, 14241, 30238);
                 Vector3 cameraPositionWorld = Vector3.Transform(cameraPositionLocal, _worldMatrix);
@@ -135,8 +100,8 @@ namespace IngameScript
 
                 Vector3 radialSpritePosView = Vector3.Transform(_worldMatrix.Translation, _viewMatrix);
                 Vector3 radialSpritePosNDC = Vector3.Transform(radialSpritePosView, _projectionMatrix);
-                _radialGridSprite = Sprite3D.CreateSprite3D(Sprite3D.Sprite3DType.Misc, _radialGridSpriteName, -1, radialSpritePosNDC, _radialSpriteAR, 1, 0, _radialGridSpriteColor);
-                _radialGradientSprite = Sprite3D.CreateSprite3D(Sprite3D.Sprite3DType.Misc, _radialGradientSpriteName, -1, radialSpritePosNDC, _radialSpriteAR, 1, 0, _radialGradientSpriteColor);
+                _radialGridSprite = Sprite3D.CreateSprite3D(Sprite3D.Sprite3DType.Misc, _radialGridSpriteName, -1, radialSpritePosNDC, _radialSpriteNativeSize, 1, 0, _radialGridSpriteColor);
+                _radialGradientSprite = Sprite3D.CreateSprite3D(Sprite3D.Sprite3DType.Misc, _radialGradientSpriteName, -1, radialSpritePosNDC, _radialSpriteNativeSize, 1, 0, _radialGradientSpriteColor);
 
                 TargetSprites.Clear();
                 MissileSprites.Clear();
@@ -149,13 +114,13 @@ namespace IngameScript
                     Vector3 targetPosNDC = Vector3.Transform(targetPosView, _projectionMatrix);
 
                     float depthScale = _targetSpriteMinScale + (_targetSpriteMaxScale - _targetSpriteMinScale) * (targetPosView.Z - _n) / (_f - _n);
-                    Sprite3D targetSprite = Sprite3D.CreateSprite3D(Sprite3D.Sprite3DType.Target, _targetSpriteName, target.Value.EntityID, targetPosNDC, _targetSpriteAR, depthScale, 0, _targetSpriteColor);
+                    Sprite3D targetSprite = Sprite3D.CreateSprite3D(Sprite3D.Sprite3DType.Target, _targetSpriteName, target.Value.EntityID, targetPosNDC, _targetSpriteNativeSize, depthScale, 0, _targetSpriteColor);
                     TargetSprites.Add(targetSprite);
 
                     Vector3 basePosView = targetPosView - (Vector3.Dot(_gridPlaneView.Normal, targetPosView) + _gridPlaneView.D) * _gridPlaneView.Normal;
                     Vector3 basePosNDC = Vector3.Transform(basePosView, _projectionMatrix);
                     depthScale = _baseSpriteMinScale + (_baseSpriteMaxScale - _baseSpriteMinScale) * (basePosView.Z - _n) / (_f + _n);
-                    Sprite3D baseSprite = Sprite3D.CreateSprite3D(Sprite3D.Sprite3DType.Base, _baseSpriteName, target.Value.EntityID, basePosNDC, _baseSpriteAR, depthScale, 0, _baseSpriteColor);
+                    Sprite3D baseSprite = Sprite3D.CreateSprite3D(Sprite3D.Sprite3DType.Base, _baseSpriteName, target.Value.EntityID, basePosNDC, _baseSpriteNativeSize, depthScale, 0, _baseSpriteColor);
 
                     Sprite3D stemSprite = Sprite3D.CreateVectorSprite3D(basePosNDC, targetPosNDC, _stemSpriteColor);
 

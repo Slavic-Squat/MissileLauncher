@@ -7,6 +7,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using System.Reflection.Emit;
 using System.Text;
 using VRage;
 using VRage.Collections;
@@ -27,11 +28,12 @@ namespace IngameScript
             #region Parts
             private IMyMotorStator _azimuthRotor;
             private IMyMotorStator _elevationRotor;
-            private IMyShipController _controller;
             private List<IMyCameraBlock> _cameraArray = new List<IMyCameraBlock>();
             #endregion
 
             #region State Info
+            private DateTime _time;
+            private DateTime _lastRunTime;
             private Matrix _referenceMatrix;
             private bool _azimuthRotorInverted;
             private bool _elevationRotorInverted;
@@ -43,15 +45,20 @@ namespace IngameScript
             private int _raycastCounter;
             private float _totalAvailRaycastDistance;
             private DateTime _lastUniqueDetectionTime;
+            private TimeSpan _timeSinceLastDetection;
             private int _matchingDetectionCounter;
-            private MyDetectedEntityInfo _detectedEntity;
-            private MyDetectedEntityInfo _previouslyDetectedEntity;            
+            private MyDetectedEntityInfo _previouslyDetectedEntity;
+            private Vector3 _estimatedTargetPosition;
+            private float _estimatedTargetDistance;
             #endregion
 
             #region Controllers
             private PIDControl _azimuthPID;
             private PIDControl _elevationPID;
             #endregion
+
+            private Action LoopedUserAction;
+            private Action SingleUserAction;
 
             #region Properties
             public Program Program { get; private set; }
@@ -60,10 +67,10 @@ namespace IngameScript
             public float RaycastDistanceGrowthSpeed { get; set; }
             public float Sensitivity { get; set; }
             public bool ManualOverride { get; set; }
-            public TargetInfo Target {  get; private set; }
+            public EntityInfo Target {  get; private set; }
             #endregion
 
-            public TargetingLaser(Program program, int id, IMyShipController controller, float sensitivity = 0.05f, float maxRaycastDistance = 5000, float raycastDistanceGrowthSpeed = 200, bool manualOverride = false)
+            public TargetingLaser(Program program, int id, float sensitivity = 0.05f, float maxRaycastDistance = 5000, float raycastDistanceGrowthSpeed = 200, bool manualOverride = false)
             {
                 Program = program;
                 ID = id;
@@ -71,7 +78,6 @@ namespace IngameScript
                 MaxRaycastDistance = maxRaycastDistance;
                 _maxTargetDistance = MaxRaycastDistance * 0.8f;
                 RaycastDistanceGrowthSpeed = raycastDistanceGrowthSpeed;
-                _controller = controller;
 
                 TryGetBlocks();
                 Init();
@@ -123,8 +129,29 @@ namespace IngameScript
 
             public void Run(DateTime time)
             {
-                float timeDeltaMiliseconds = (float)Program.Runtime.TimeSinceLastRun.TotalMilliseconds;
-                float timeDeltaSeconds = (float)Program.Runtime.TimeSinceLastRun.TotalSeconds;
+                if (_time == DateTime.MinValue)
+                {
+                    _time = time;
+                }
+                _lastRunTime = _time;
+                _time = time;
+
+                MoveLaser(0, 0);
+
+                LoopedUserAction?.Invoke();
+                SingleUserAction?.Invoke();
+                SingleUserAction = null;
+
+                if (Target != null && ManualOverride == false)
+                {
+                    AutoTrack();
+                }
+            }
+
+            public void AutoTrack()
+            {
+                float timeDeltaMiliseconds = (float)(_time - _lastRunTime).TotalMilliseconds;
+                float timeDeltaSeconds = (float)(_time - _lastRunTime).TotalSeconds;
 
                 _totalAvailRaycastDistance += 2 * timeDeltaMiliseconds * _cameraArray.Count;
 
@@ -138,66 +165,83 @@ namespace IngameScript
 
                 _referenceMatrix = H2 * H1 * H0;
 
-                TimeSpan timeSinceLastTargetDetection = TimeSpan.Zero;
-                Vector3 estimatedTargetPos = Vector3.Zero;
-                float estimatedTargetDistance = 0;
+                _timeSinceLastDetection = _time - Target.TimeRecorded;
+                _estimatedTargetPosition = Target.Position + Target.Velocity * (float)_timeSinceLastDetection.TotalSeconds;
+                _estimatedTargetDistance = (_estimatedTargetPosition - _referenceMatrix.Translation).Length();
 
-                if (!Target.IsEmpty())
+                if (_estimatedTargetDistance > _maxTargetDistance || _timeSinceLastDetection.TotalSeconds > 5)
                 {
-                    timeSinceLastTargetDetection = time - Target.TimeRecorded;
-                    estimatedTargetPos = Target.Position + Target.Velocity * (float)timeSinceLastTargetDetection.TotalSeconds;
-                    estimatedTargetDistance = (estimatedTargetPos - _referenceMatrix.Translation).Length();
-
-                    if (_controller.MoveIndicator.Y == -1 || estimatedTargetDistance > _maxTargetDistance || timeSinceLastTargetDetection.TotalSeconds > 5)
-                    {
-                        Target = new TargetInfo();
-                        _matchingDetectionCounter = 0;
-                    }
+                    ForgetTarget();
                 }
 
-                if (!Target.IsEmpty())
+                if (Target != null)
                 {
-                    if (ManualOverride == false)
-                    {
-                        Vector3 estimatedTargetDirLocal = Vector3.Normalize(Vector3.TransformNormal(estimatedTargetPos - _referenceMatrix.Translation, Matrix.Transpose(_referenceMatrix)));
-                        _azimuthError = (float)Math.Atan2(-estimatedTargetDirLocal.X, -estimatedTargetDirLocal.Z);
-                        _elevationError = (float)Math.Asin(estimatedTargetDirLocal.Y);
+                    Vector3 estimatedTargetDirLocal = Vector3.Normalize(Vector3.TransformNormal(_estimatedTargetPosition - _referenceMatrix.Translation, Matrix.Transpose(_referenceMatrix)));
+                    _azimuthError = (float)Math.Atan2(-estimatedTargetDirLocal.X, -estimatedTargetDirLocal.Z);
+                    _elevationError = (float)Math.Asin(estimatedTargetDirLocal.Y);
+                    var azimuthInput = _azimuthPID.Run(_azimuthError, timeDeltaSeconds);
+                    var elevationInput = _elevationPID.Run(_elevationError, timeDeltaSeconds);
 
-                        _azimuthRotor.TargetVelocityRad = _azimuthRotorInverted ? -_azimuthPID.Run(_azimuthError, timeDeltaSeconds) : _azimuthPID.Run(_azimuthError, timeDeltaSeconds);
-                        _elevationRotor.TargetVelocityRad = _elevationRotorInverted ? -_elevationPID.Run(_elevationError, timeDeltaSeconds) : _elevationPID.Run(_elevationError, timeDeltaSeconds);
-                    }
-                    else if (ManualOverride == true)
-                    {
-                        _elevationRotor.TargetVelocityRad = _elevationRotorInverted ? _controller.RotationIndicator.X * Sensitivity : -_controller.RotationIndicator.X * Sensitivity;
-                        _azimuthRotor.TargetVelocityRad = _azimuthRotorInverted ? _controller.RotationIndicator.Y * Sensitivity : -_controller.RotationIndicator.Y * Sensitivity;
-                    }
+                    MoveLaser(azimuthInput, elevationInput);
                 }
 
-                else
+                if (Target != null)
                 {
-                    _elevationRotor.TargetVelocityRad = _elevationRotorInverted ? _controller.RotationIndicator.X * Sensitivity : -_controller.RotationIndicator.X * Sensitivity;
-                    _azimuthRotor.TargetVelocityRad = _azimuthRotorInverted ? _controller.RotationIndicator.Y * Sensitivity : -_controller.RotationIndicator.Y * Sensitivity;
+                    FireLaser();
                 }
+            }
 
+            public void UserMoveLaser(float azimuthInput, float elevtionInput)
+            {
+                if (Target == null || ManualOverride == true)
+                {
+                    MoveLaser(azimuthInput, elevtionInput);
+                }
+            }
+
+            private void MoveLaser(float azimuthInput, float elevationInput)
+            {
+                _elevationRotor.TargetVelocityRad = _elevationRotorInverted ? -elevationInput * Sensitivity : elevationInput * Sensitivity;
+                _azimuthRotor.TargetVelocityRad = _azimuthRotorInverted ? -azimuthInput * Sensitivity : azimuthInput * Sensitivity;
+            }
+
+            public void ForgetTarget()
+            {
+                Target = null;
+                _matchingDetectionCounter = 0;
+                _estimatedTargetPosition = Vector3.Zero;
+                _estimatedTargetDistance = 0;
+                _timeSinceLastDetection = TimeSpan.Zero;
+            }
+
+            public void UserFireLaser()
+            {
+                if (Target == null || ManualOverride == true)
+                {
+                    FireLaser();
+                }
+            }
+
+            private void FireLaser()
+            {
                 float baseAvailRaycastDistance = 2 * MaxRaycastDistance * _cameraArray.Count;
 
-                if (_totalAvailRaycastDistance >= baseAvailRaycastDistance && ((!Target.IsEmpty() && ManualOverride == false) || _controller.MoveIndicator.Y == 1))
+                if (_totalAvailRaycastDistance >= baseAvailRaycastDistance)
                 {
                     Vector3 cameraPos = _cameraArray[_raycastCounter].GetPosition();
                     Vector3 raycastTarget = Vector3.Zero;
-                    float raycastDistance;
 
-                    if (_controller.MoveIndicator.Y == 1 && (Target.IsEmpty() || ManualOverride == true))
+                    if (Target == null || ManualOverride == true)
                     {
                         raycastTarget = _referenceMatrix.Forward * _maxTargetDistance + _referenceMatrix.Translation;
                     }
-                    else if (!Target.IsEmpty())
+                    else if (Target != null)
                     {
-                        Vector3 raycastOvershoot = Vector3.Normalize(estimatedTargetPos - cameraPos) * (RaycastDistanceGrowthSpeed * (float)timeSinceLastTargetDetection.TotalSeconds);
-                        raycastTarget = estimatedTargetPos + raycastOvershoot;
+                        Vector3 raycastOvershoot = Vector3.Normalize(_estimatedTargetPosition - cameraPos) * (RaycastDistanceGrowthSpeed * (float)_timeSinceLastDetection.TotalSeconds);
+                        raycastTarget = _estimatedTargetPosition + raycastOvershoot;
                     }
 
-                    raycastDistance = (raycastTarget - cameraPos).Length();
+                    float raycastDistance = (raycastTarget - cameraPos).Length();
                     raycastTarget = raycastDistance > MaxRaycastDistance ? Vector3.Normalize(raycastTarget - cameraPos) * MaxRaycastDistance + cameraPos : raycastTarget;
 
                     if (_cameraArray[_raycastCounter].CanScan(raycastTarget))
@@ -209,36 +253,67 @@ namespace IngameScript
 
                         if (!raycastResult.IsEmpty())
                         {
-                            _detectedEntity = raycastResult;
-
-                            if (!Target.IsEmpty() && _detectedEntity.EntityId == Target.EntityID)
+                            if (Target != null && raycastResult.EntityId == Target.EntityID)
                             {
-                                Target = new TargetInfo(_detectedEntity.EntityId, _detectedEntity.Position, _detectedEntity.Velocity, time);
+                                Target.UpdateFromRaycast(raycastResult, _time);
                             }
 
-                            else if (Target.IsEmpty())
+                            else if (Target == null)
                             {
-                                if (_detectedEntity.EntityId == _previouslyDetectedEntity.EntityId)
+                                if (raycastResult.EntityId == _previouslyDetectedEntity.EntityId)
                                 {
                                     _matchingDetectionCounter += 1;
                                 }
                                 else
                                 {
-                                    _lastUniqueDetectionTime = time;
+                                    _lastUniqueDetectionTime = _time;
                                     _matchingDetectionCounter = 0;
                                 }
 
-                                _previouslyDetectedEntity = _detectedEntity;
+                                _previouslyDetectedEntity = raycastResult;
 
-                                TimeSpan timeSinceLastUniqueDetection = time - _lastUniqueDetectionTime;
+                                TimeSpan timeSinceLastUniqueDetection = _time - _lastUniqueDetectionTime;
                                 if (timeSinceLastUniqueDetection.TotalSeconds > 2 && _matchingDetectionCounter >= 3)
                                 {
-                                    Target = new TargetInfo(_detectedEntity.EntityId, _detectedEntity.Position, _detectedEntity.Velocity, time);
+                                    Target = EntityInfo.CreateFromRaycast(raycastResult, _time);
                                 }
                             }
                         }
                     }
                 }
+            }
+
+            public void SyncTarget(AWACS awacs)
+            {
+                if (awacs != null && Target != null)
+                {
+                    awacs.AddTarget(Target);
+                }
+            }
+
+            public IEnumerator<bool> ControlLaser(ControlStation controlStation)
+            {
+                UserInput input = controlStation.UserInput;
+
+                while (true)
+                {
+                    SingleUserAction += () => UserMoveLaser(input.MouseInput.X, input.MouseInput.Y);
+
+                    if (input.SpacePress == true)
+                    {
+                        SingleUserAction += () => UserFireLaser();
+                    }
+                    if (input.CRelease == true)
+                    {
+                        SingleUserAction += () => ForgetTarget();
+                    }
+                    if (input.CHeld == true)
+                    {
+                        break;
+                    }
+                    yield return true;
+                }
+                yield return false;
             }
         }
     }

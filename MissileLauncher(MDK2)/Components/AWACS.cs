@@ -48,6 +48,9 @@ namespace IngameScript
             private float _totalAvailRaycastDistance;
 
             private int _targetIndex;
+
+            private DateTime _time;
+            private DateTime _lastRunTime;
             #endregion
 
             #region Properties
@@ -55,7 +58,7 @@ namespace IngameScript
             public int ID { get; private set; }
             public float MaxRaycastDistance { get; set; }
             public float RaycastDistanceGrowthSpeed { get; set; }
-            public Dictionary<long, TargetInfo> Targets { get; private set; }
+            public Dictionary<long, EntityInfo> Targets { get; private set; }
             public Dictionary<long, bool> TargetsSyncInfo {  get; private set; }
             public List<long> TargetIDs { get; private set; }
             #endregion
@@ -68,7 +71,7 @@ namespace IngameScript
                 _maxTargetDistance = maxRaycastDistance * 0.8f;
                 RaycastDistanceGrowthSpeed = raycastDistanceGrowthSpeed;
 
-                Targets = new Dictionary<long, TargetInfo>();
+                Targets = new Dictionary<long, EntityInfo>();
                 TargetsSyncInfo = new Dictionary<long, bool>();
                 TargetIDs = new List<long>();
 
@@ -149,7 +152,15 @@ namespace IngameScript
 
             public void Run(DateTime time)
             {
-                float timeDeltaMiliseconds = (float)Program.Runtime.TimeSinceLastRun.TotalMilliseconds;
+                if (_time == DateTime.MinValue)
+                {
+                    _time = time;
+                }
+                _lastRunTime = _time;
+                _time = time;
+                float timeDeltaMiliseconds = (float)(_time - _lastRunTime).TotalMilliseconds;
+                float timeDeltaSeconds = (float)(_time - _lastRunTime).TotalSeconds;
+
                 _totalAvailRaycastDistance += 2 * timeDeltaMiliseconds * (_cameraArray0.Count + _cameraArray1.Count + _cameraArray2.Count + _cameraArray3.Count);
 
                 if (TargetIDs.Count != 0)
@@ -281,14 +292,14 @@ namespace IngameScript
 
                         if (raycastResult.EntityId == targetID)
                         {
-                            Targets[targetID] = new TargetInfo(raycastResult.EntityId, raycastResult.Position, raycastResult.Velocity, time);
+                            Targets[targetID].UpdateFromRaycast(raycastResult, _time);
                             TargetsSyncInfo[targetID] = true;
                         }
                     }
                 }
             }
 
-            public void AddTarget(TargetInfo target)
+            public void AddTarget(EntityInfo target)
             {
                 if (!TargetIDs.Contains(target.EntityID))
                 {
@@ -302,17 +313,20 @@ namespace IngameScript
             public void RemoveTarget(long targetID)
             {
                 int removedIndex = TargetIDs.IndexOf(targetID);
+                if (removedIndex != -1)
+                {
+                    TargetIDs.RemoveAt(removedIndex);
+                    Targets.Remove(targetID);
+                    TargetsSyncInfo.Remove(targetID);
+                }
                 if (_targetIndex > removedIndex)
                 {
                     _targetIndex--;
-                }
-                TargetIDs.Remove(targetID);
+                }                
                 if (_targetIndex >= TargetIDs.Count)
                 {
                     _targetIndex = 0;
                 }
-                Targets.Remove(targetID);
-                TargetsSyncInfo.Remove(targetID);
             }
         }
     }

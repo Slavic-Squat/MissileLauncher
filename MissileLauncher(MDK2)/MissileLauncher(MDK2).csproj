@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>netframework48</TargetFramework>
     <RootNamespace>IngameScript</RootNamespace>
@@ -9,6 +9,8 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Remove="DebugAPI.cs" />
+    <Compile Remove="Sprites\LauncherInfo.cs" />
+    <Compile Remove="Sprites\TargetInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Mal.Mdk2.PbAnalyzers" Version="2.1.11">

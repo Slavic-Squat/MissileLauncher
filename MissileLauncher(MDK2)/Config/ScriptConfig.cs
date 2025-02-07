@@ -22,9 +22,9 @@ namespace IngameScript
 {
     partial class Program
     {
-        public static class ConfigUtilties
+        public static class ScriptConfig
         {
-            
+            private static MyIni config = new MyIni();
         }
     }
 }

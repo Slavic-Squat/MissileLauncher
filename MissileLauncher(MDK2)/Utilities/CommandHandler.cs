@@ -40,6 +40,7 @@ namespace IngameScript
                 if (_storageBlock.CustomData != null || _storageBlock.CustomData != "")
                 {
                     TryRunCommands(_storageBlock.CustomData);
+                    _storageBlock.CustomData = "";
                 }
             }
 

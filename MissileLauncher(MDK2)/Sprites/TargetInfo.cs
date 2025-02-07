@@ -22,34 +22,12 @@ namespace IngameScript
 {
     partial class Program
     {
-        public struct TargetInfo
+        public class TargetInfo : EntityInfo
         {
-            public string Name { get;}
-            public long EntityID { get;}
-            public Vector3 Position { get;}
-            public Vector3 Velocity { get;}
-            public DateTime TimeRecorded { get;}
 
-            public TargetInfo(long entityID, Vector3 position, Vector3 velocity, DateTime timeRecorded, string name = "Unknown")
+            public TargetInfo(long entityID, Vector3 position, Vector3 velocity, DateTime timeRecorded, string name = "Unknown") : base(name, entityID, position, velocity, timeRecorded)
             {
-                Name = name;
-                EntityID = entityID;
-                Position = position;
-                Velocity = velocity;
-                TimeRecorded = timeRecorded;
-            }
 
-            public bool IsEmpty()
-            {
-                return EntityID == 0;
-            }
-
-            public static TargetInfo Transform(TargetInfo targetInfo, Matrix transform)
-            {
-                var Postion = Vector3.Transform(targetInfo.Position, transform);
-                var Velocity = Vector3.Transform(targetInfo.Velocity, transform);
-
-                return new TargetInfo(targetInfo.EntityID, Postion, Velocity, targetInfo.TimeRecorded, name: targetInfo.Name);
             }
 
             public static MyTuple<string, long, Vector3, Vector3, long> ToIGC(TargetInfo targetInfo)

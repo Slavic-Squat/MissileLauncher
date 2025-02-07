@@ -38,18 +38,14 @@ namespace IngameScript
         private bool listeningForClock = false;
         #endregion
 
-        MissileLauncher missileLauncher;
+        SystemCoordinator systemCoordinator;
 
         public Program()
         {
             Runtime.UpdateFrequency = UpdateFrequency.Update1;
 
-            missileLauncher = new MissileLauncher(this, 0, "JombieLauncher", "Jombie268", 1);
-            commands["SelectNextTarget"] = (args) => missileLauncher.SelectNextTarget();
-            commands["SelectPrevTarget"] = (args) => missileLauncher.SelectPreviousTarget();
-            commands["QuickInit"] = (args) => missileLauncher.InitNextAvailableMissile();
-            commands["QuickLaunch"] = (args) => missileLauncher.LaunchNextAvailableMissile();
-            commands["SyncTarget"] = (args) => missileLauncher.SyncTarget();
+            systemCoordinator = new SystemCoordinator(this, 1, 1);
+
             commands["SyncClock"] = (args) => SyncClock(args[0]);
             commands["RecieveClock"] = (args) => RecieveClock(args[0]);
             commands["BroadcastClock"] = (args) => BroadcastClock(args[0]);
@@ -85,7 +81,6 @@ namespace IngameScript
                 }
             }
             Echo(time.ToString());
-            missileLauncher.Run(time);
         }
 
         public void SyncClock(string ticksString)
