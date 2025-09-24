@@ -25,34 +25,31 @@ namespace IngameScript
         public class MissileLauncher
         {
             #region Properties
-            public Program Program { get; private set; }
             public int ID { get; private set; }
-            public string Name { get; private set; }
-            public string LauncherTag { get; private set; }
             #endregion
 
             #region Components
             public List<MissileBay> MissileBays { get; private set; }
             #endregion
 
-            public MissileLauncher(Program program, int id, string name, string launcherTag, int numberOfMissileBays)
+            private Program _program;
+
+            public MissileLauncher(Program program, int id, int numberOfMissileBays)
             {
-                Program = program;
+                _program = program;
                 ID = id;
-                Name = name;
-                LauncherTag = launcherTag;
 
                 MissileBays = new List<MissileBay>();
                 for (int i = 0; i < numberOfMissileBays; i++)
                 {
-                    MissileBays.Add(new MissileBay(Program, i));
+                    MissileBays.Add(new MissileBay(_program, i));
                 }
             }
 
             public void InitNextAvailableMissile()
             {
                 MissileBay missileBay = MissileBays.Find(x => x.State == MissileBay.Status.Exists);
-                missileBay?.InitMissile(LauncherTag);
+                missileBay?.InitMissile();
             }
 
             public void LaunchNextAvailableMissile(long targetID)

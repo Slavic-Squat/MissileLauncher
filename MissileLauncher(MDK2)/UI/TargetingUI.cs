@@ -24,7 +24,7 @@ namespace IngameScript
     {
         public class TargetingUI
         {
-            private static Dictionary<ControlStation, long> _selectedEntities = new Dictionary<ControlStation, long>();
+            /* private static Dictionary<ControlStation, long> _selectedEntities = new Dictionary<ControlStation, long>();
             private ControlStation _controlStation;
             private Color _userColor;
             private TargetingSpriteBuilder _targetingSpriteBuilder;
@@ -153,7 +153,7 @@ namespace IngameScript
                     Sprite3D selectorSprite = Sprite3D.CreateSprite3D(Sprite3D.Sprite3DType.Selector, _selectorSpriteName, selectorEntityID, selectorPos, _selectorSpriteNativeSize, selectorScale, 0, _selectorSpriteColor);
                     frame.Add(selectorSprite.ToMySprite(screenSize));
                 }
-            }
+            } */
         }
     }
 }

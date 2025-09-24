@@ -25,6 +25,7 @@ namespace IngameScript
         public class MissileBay
         {
             #region Fields
+            private Program _program;
             private int _missileCounter;
             #endregion
 
@@ -33,7 +34,6 @@ namespace IngameScript
             #endregion
 
             #region Properties
-            public Program Program { get; private set; }
             public int ID {  get; private set; }      
             public Status State { get; private set; }
             #endregion
@@ -43,9 +43,9 @@ namespace IngameScript
                 Empty, Exists, Building, Fueling, Ready, Firing, Error
             }
 
-            public MissileBay(Program Program, int ID)
+            public MissileBay(Program program, int ID)
             {
-                this.Program = Program;
+                _program = program;
                 this.ID = ID;
 
                 RegisterMissile();
@@ -57,7 +57,7 @@ namespace IngameScript
                 {
                     case Status.Firing:
 
-                        while (Program.GridTerminalSystem.CanAccess(_missileComputer))
+                        while (_program.GridTerminalSystem.CanAccess(_missileComputer))
                         {
                             yield return Status.Firing;
                         }
@@ -69,7 +69,7 @@ namespace IngameScript
 
             public void RegisterMissile()
             {
-                _missileComputer = Program.GridTerminalSystem.GetBlockWithName($"Missile Computer [{ID}]") as IMyProgrammableBlock;
+                _missileComputer = _program.GridTerminalSystem.GetBlockWithName($"Missile Computer [{ID}]") as IMyProgrammableBlock;
 
                 if (_missileComputer != null)
                 {
@@ -77,14 +77,21 @@ namespace IngameScript
                 }
             }
 
-            public void InitMissile(string launcherTag)
+            public void InitMissile()
             {
                 if (State == Status.Exists)
                 {
-                    if (ConfigUtilties.TryQueueExternalCommand(_missileComputer, $"InitMissile {launcherTag} {ID}_{_missileCounter} {Program.time.Ticks}"))
+                    long launcherAddress = _program.IGC.Me;
+                    long launcherEntityID = _program.Me.EntityId;
+
+                    _missileComputer.CustomData = $"InitMissile {launcherAddress} {launcherEntityID}";
+                    if (_missileComputer.TryRun("-CommandSent"))
                     {
-                        _missileComputer.TryRun("-ConfigUpdated");
                         State = Status.Ready;
+                    }
+                    else
+                    {
+                        _missileComputer.CustomData = "";
                     }
                 }
             }
@@ -93,10 +100,14 @@ namespace IngameScript
             {
                 if (State == Status.Ready)
                 {
-                    if (ConfigUtilties.TryQueueExternalCommand(_missileComputer, $"Launch {targetID}"))
+                    _missileComputer.CustomData = $"Launch {targetID}";
+                    if (_missileComputer.TryRun("-CommandSent"))
                     {
-                        _missileComputer.TryRun("-ConfigUpdated");
                         State = Status.Firing;
+                    }
+                    else
+                    {
+                        _missileComputer.CustomData = "";
                     }
                 }
             }

@@ -26,208 +26,155 @@ namespace IngameScript
         {
             #region Parts
             private IMyCubeGrid _referenceGrid;
-            private IMyBroadcastListener _missilesInfoListener;
+            private CommunicationHandler _communicationHandler;
             #endregion
 
             #region Fields
-            private Dictionary<long, MyTuple<string, long, Vector3, Vector3, long>> _targetsIGC = new Dictionary<long, MyTuple<string, long, Vector3, Vector3, long>>();
+
             #endregion
 
             #region Properties
-            public Program Program { get; private set; }
             public int ID { get; private set; }
-            public string Name { get; private set; }
-            public string CoordinatorTag { get; private set; }
-            public EntityInfo Launcher {  get; private set; }
-            public Dictionary<long, EntityInfo> Entities {  get; private set; }
-            public HashSet<long> NeutralTargetIDs { get; private set; }
-            public HashSet<long> HostileTargetIDs { get; private set; }
-            public HashSet<long> FriendlyTargetIDs { get; private set; }
-            public Dictionary<long, HashSet<long>> MissileRelationMap {  get; private set; }
+            public Dictionary<long, EntityInfo> EntitiesLocal { get; private set; }
+            public Dictionary<long, EntityInfo> EntitiesRemote { get; private set; }
+            public HashSet<long> NeutralIDs { get; private set; }
+            public HashSet<long> HostileIDs { get; private set; }
+            public HashSet<long> FriendlyIDs { get; private set; }
             #endregion
 
-            public TargetCoordinator(IMyCubeGrid referenceGrid, string coordinatorTag)
+            public enum TargetRelation : byte
+            {
+                Neutral, Friendly, Hostile
+            }
+
+            public TargetCoordinator(IMyCubeGrid referenceGrid, CommunicationHandler communicationHandler)
             {
                 _referenceGrid = referenceGrid;
-                Name = _referenceGrid.Name;
-                CoordinatorTag = coordinatorTag;
+                _communicationHandler = communicationHandler;
+                _communicationHandler.RegisterBroadcastListener("EntityInfo");
 
-                Launcher = new EntityInfo();
-                Entities = new Dictionary<long, EntityInfo>();
-
-
-                _missilesInfoListener = Program.IGC.RegisterBroadcastListener($"[{CoordinatorTag}]_MissilesInfo");
+                EntitiesLocal = new Dictionary<long, EntityInfo>();
+                EntitiesRemote = new Dictionary<long, EntityInfo>();
             }
 
             public void Run(DateTime time)
             {
-                while (_missilesInfoListener.HasPendingMessage)
+                MyIGCMessage message;
+                if (_communicationHandler.TryRetrieveMessage("EntityInfo", out message))
                 {
-                    var messageIn = _missilesInfoListener.AcceptMessage();
-                    if (messageIn.Data is MyTuple<MyTuple<long, Vector3, Vector3, long, string>, MyTuple<long, long, string>>)
+                    object messageObject = Deserializer.Deserialize(message.Data as string);
+                    if (messageObject is EntityInfo)
                     {
-                        var missileInfo = messageIn.As<MyTuple<MyTuple<long, Vector3, Vector3, long, string>, MyTuple<long, long, string>>>();
-                        AddEntity(MissileInfo.CreateFromIGC(missileInfo));
+                        AddEntity(messageObject as EntityInfo, true);
                     }
                 }
 
-                for (int i = MissileIDs.Count - 1; i >= 0; i--)
+                foreach (var entityKVP in EntitiesLocal)
                 {
-                    var missileID = MissileIDs[i];
-                    TimeSpan timeSinceLastUpdate = time - Missiles[missileID].TimeRecorded;
-
-                    if (timeSinceLastUpdate.TotalSeconds > 5)
-                    {
-                        RemoveMissile(missileID);
-                    }
-                }
-                for (int i = TargetIDs.Count - 1; i >= 0; i--)
-                {
-                    var targetID = TargetIDs[i];
-                    TimeSpan timeSinceLastDetection = time - Targets[targetID].TimeRecorded;
+                    TimeSpan timeSinceLastDetection = time - entityKVP.Value.TimeRecorded;
 
                     if (timeSinceLastDetection.TotalSeconds > 5)
                     {
-                        RemoveTarget(targetID);
+                        RemoveEntity(entityKVP.Key, false);
                     }
                 }
 
-                Launcher.Name = _referenceGrid.Name;
-                Launcher.EntityID = _referenceGrid.EntityId;
-                Launcher.Position = _referenceGrid.GetPosition();
-                Launcher.Velocity = _referenceGrid.LinearVelocity;
-
-                _targetsIGC.Clear();
-                foreach (var target in Targets)
+                foreach (var entityKVP in EntitiesRemote)
                 {
-                    _targetsIGC.Add(target.Key, TargetInfo.ToIGC(target.Value));
+                    TimeSpan timeSinceLastDetection = time - entityKVP.Value.TimeRecorded;
+
+                    if (timeSinceLastDetection.TotalSeconds > 5)
+                    {
+                        RemoveEntity(entityKVP.Key, true);
+                    }
                 }
-                var messageOut0 = _targetsIGC.ToImmutableDictionary();
-                var messageOut1 = EntityInfo.ToIGC(Launcher);
-                Program.IGC.SendBroadcastMessage($"[{CoordinatorTag}]_TargetsInfo", messageOut0);
-                Program.IGC.SendBroadcastMessage($"[{CoordinatorTag}]_LauncherInfo", messageOut1);
+
+                foreach (var entity in EntitiesLocal.Values)
+                {
+                    byte[] data = entity.Serialize();
+                    _communicationHandler.SendBroadcast(data, "EntityInfo");
+                }
             }
 
-            public void AddEntity(EntityInfo entity)
+            public void AddEntity(EntityInfo entity, bool remote)
             {
                 var entityID = entity.EntityID;
-                var relationIDKey = entityID;
 
-                if (entity is MissileInfo)
-                {
-                    var missile = entity as MissileInfo;
-                    var missileID = entity.EntityID;
-                    var launcherID = missile.LauncherID;
-                    relationIDKey = launcherID;
+                var dictionary = remote ? EntitiesRemote : EntitiesLocal;
 
-                    if (!MissileRelationMap.ContainsKey(launcherID))
-                    {
-                        MissileRelationMap.Add(launcherID, new HashSet<long> { missileID });
-                    }
-                    else if (!MissileRelationMap[launcherID].Contains(missileID))
-                    {
-                        MissileRelationMap[launcherID].Add(missileID);
-                    }
-                }
-
-                if (NeutralTargetIDs.Contains(relationIDKey))
+                if (!dictionary.ContainsKey(entityID))
                 {
-                    entity.Relation = EntityInfo.EntityRelation.Neutral;
+                    dictionary.Add(entityID, entity);
                 }
-                else if (HostileTargetIDs.Contains(relationIDKey))
+                else if (dictionary[entityID].TimeRecorded < entity.TimeRecorded)
                 {
-                    entity.Relation = EntityInfo.EntityRelation.Hostile;
-                }
-                else if (FriendlyTargetIDs.Contains(relationIDKey))
-                {
-                    entity.Relation = EntityInfo.EntityRelation.Friendly;
-                }
-                else
-                {
-                    entity.Relation = EntityInfo.EntityRelation.Unknown;
-                }
-
-                if (!Entities.ContainsKey(entityID))
-                {
-                    Entities.Add(entityID, entity);
-                }
-                else if (Entities[entityID].TimeRecorded < entity.TimeRecorded)
-                {
-                    var storedEntity = Entities[entityID];
-                    storedEntity.TimeRecorded = entity.TimeRecorded;
-                    storedEntity.Position = entity.Position;
-                    storedEntity.Velocity = entity.Velocity;
+                    var storedEntity = dictionary[entityID];
+                    storedEntity.UpdateFromEntityInfo(entity);
                 }
             }
 
-            public void RemoveEntity(long entityID)
+            public void RemoveEntity(long entityID, bool remote)
             {
-                EntityInfo entity = null;
-                if (Entities.ContainsKey(entityID))
+                var dictionary = remote ? EntitiesRemote : EntitiesLocal;
+                if (dictionary.ContainsKey(entityID))
                 {
-                    entity = Entities[entityID];
-                    Entities.Remove(entityID);
-                }
-
-                if (entity is MissileInfo)
-                {
-                    var missile = entity as MissileInfo;
-                    var missileID = missile.EntityID;
-                    var launcherID = missile.LauncherID;
-
-                    if (MissileRelationMap.ContainsKey(launcherID))
-                    {
-                        MissileRelationMap[launcherID].Remove(missileID);
-                    }                    
-                }
-                else
-                {
-                    MissileRelationMap.Remove(entityID);
+                    dictionary.Remove(entityID);
                 }
             }
 
-            public void SetTargetRelation(long entityID, EntityInfo.EntityRelation relation)
+            public void SetTargetRelation(long entityID, TargetRelation relation)
             {
-                if (!Entities.ContainsKey(entityID))
-                {
-                    return;
-                }
-
-                var entity = Entities[entityID];
-                entity.Relation = relation;
-
                 switch (relation)
                 {
-                    case EntityInfo.EntityRelation.Neutral:
-                        HostileTargetIDs.Remove(entityID);
-                        FriendlyTargetIDs.Remove(entityID);
+                    case TargetRelation.Neutral:
+                        HostileIDs.Remove(entityID);
+                        FriendlyIDs.Remove(entityID);
 
-                        if (!NeutralTargetIDs.Contains(entityID))
+                        if (!NeutralIDs.Contains(entityID))
                         {
-                            NeutralTargetIDs.Add(entityID);
+                            NeutralIDs.Add(entityID);
                         }
                         break;
 
-                    case EntityInfo.EntityRelation.Friendly:
-                        NeutralTargetIDs.Remove(entityID);
-                        HostileTargetIDs.Remove(entityID);
+                    case TargetRelation.Friendly:
+                        NeutralIDs.Remove(entityID);
+                        HostileIDs.Remove(entityID);
 
-                        if (!FriendlyTargetIDs.Contains(entityID))
+                        if (!FriendlyIDs.Contains(entityID))
                         {
-                            FriendlyTargetIDs.Add(entityID);
+                            FriendlyIDs.Add(entityID);
                         }
                         break;
 
-                    case EntityInfo.EntityRelation.Hostile:
-                        NeutralTargetIDs.Remove(entityID);
-                        FriendlyTargetIDs.Remove(entityID);
+                    case TargetRelation.Hostile:
+                        NeutralIDs.Remove(entityID);
+                        FriendlyIDs.Remove(entityID);
 
-                        if (!HostileTargetIDs.Contains(entityID))
+                        if (!HostileIDs.Contains(entityID))
                         {
-                            HostileTargetIDs.Add(entityID);
+                            HostileIDs.Add(entityID);
                         }
                         break;
                 }
+            }
+
+            public Dictionary<long, EntityInfo> GetAllEntities()
+            {
+                var allEntities = new Dictionary<long, EntityInfo>(EntitiesLocal);
+
+                foreach (var entityKVP in EntitiesRemote)
+                {
+                    if (!allEntities.ContainsKey(entityKVP.Key))
+                    {
+                        allEntities.Add(entityKVP.Key, entityKVP.Value);
+                    }
+                    else if (allEntities[entityKVP.Key].TimeRecorded < entityKVP.Value.TimeRecorded)
+                    {
+                        allEntities[entityKVP.Key] = entityKVP.Value;
+                    }
+                }
+
+                return allEntities;
             }
         }
     }

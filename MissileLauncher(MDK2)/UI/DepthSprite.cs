@@ -22,13 +22,19 @@ namespace IngameScript
 {
     partial class Program
     {
-        public abstract class Sprite3D
+        public struct DepthSprite
         {
-            public float Z { get; set; }
-            public Vector3 Position { get; set; }
-            public Color SpriteColor { get; set; }
-            public float Rotation { get; set; }
-            public abstract MySprite ToMySprite(Vector2 screenSize);
+            public MySprite Sprite { get; private set; }
+            public Vector3 PosView { get; private set; }
+            public float Depth
+            {
+                get { return PosView.Z; }
+            }
+            public DepthSprite(MySprite sprite, Vector3 posView)
+            {
+                Sprite = sprite;
+                PosView = posView;
+            }
         }
     }
 }

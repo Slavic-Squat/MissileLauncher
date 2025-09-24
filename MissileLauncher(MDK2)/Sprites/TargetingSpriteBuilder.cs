@@ -25,12 +25,8 @@ namespace IngameScript
         public class TargetingSpriteBuilder
         {
             #region Properties
-            public TargetCoordinator TargetCoordinator;
-            public Dictionary<long, EntityInfo> Targets { get; set; }
-            public List<EntitySprite3D> TargetSprites { get; private set; }
-            public Dictionary<long, EntityInfo> Missiles { get; set; }
-            public List<EntitySprite3D> MissileSprites { get; private set; }
-            public List<ISprite3D> FinalSprites { get; private set; }
+            public Dictionary<long, DepthSprite> EntitySprites { get; private set; }
+            public List<DepthSprite> FinalSprites { get; private set; }
             #endregion
 
             #region Parts
@@ -46,34 +42,61 @@ namespace IngameScript
             private float _AR = 1;
             private float _n = 100;
             private float _f = 100000;
+            private float _minScale = 0.5f;
+            private float _maxScale = 1.5f;
 
-            private Sprite3D _radialGridSprite;
-            private Sprite3D _radialGradientSprite;
+            private Dictionary<long, EntityInfo> _entities;
+            private HashSet<long> _neutralIDs;
+            private HashSet<long> _friendlyIDs;
+            private HashSet<long> _hostileIDs;
+            private HashSet<long> _localIDs;
+            private HashSet<long> _remoteIDs;
+            private long _selfID = -1;
 
-            private List<Sprite3D> _spritesBeforePlane = new List<Sprite3D>();
-            private List<Sprite3D> _spritesAfterPlane = new List<Sprite3D>();
+            private MySprite _radialGridSprite;
+            private MySprite _radialGradientSprite;
+
+            private List<DepthSprite> _spritesBeforePlane = new List<DepthSprite>();
+            private List<DepthSprite> _spritesAfterPlane = new List<DepthSprite>();
+
             private Matrix _worldMatrix = Matrix.Identity;
             private Matrix _viewMatrix = Matrix.Identity;
             private Matrix _projectionMatrix = Matrix.Identity;
             private Plane _gridPlaneView = new Plane();
+            private Vector3 _cameraTargetView = Vector3.Zero;
             #endregion
 
-            public TargetingSpriteBuilder(TargetCoordinator targetCoordinator, IMyCubeGrid referenceGrid, float FOV, float AR, float n, float f)
+            public TargetingSpriteBuilder(IMyCubeGrid referenceGrid, Dictionary<long, EntityInfo> entities, HashSet<long> neutralIDs, HashSet<long> friendlyIDs, HashSet<long> hostileIDs, HashSet<long> localIDs, HashSet<long> remoteIDs, long selfID)
             {
-                TargetCoordinator = targetCoordinator;
-                Missiles = TargetCoordinator.Missiles;
-                Targets = TargetCoordinator.Targets;
-
                 _referenceGrid = referenceGrid;
-                _FOV = FOV;
-                _AR = AR;
-                _n = n;
-                _f = f;
+                _entities = entities;
+                _selfID = selfID;
 
                 _projectionMatrix = Matrix.CreatePerspectiveFieldOfView(MathHelper.ToRadians(_FOV), _AR, _n, _f);
-                TargetSprites = new List<Sprite3D>();
-                MissileSprites = new List<Sprite3D>();
-                FinalSprites = new List<Sprite3D>();
+                EntitySprites = new Dictionary<long, DepthSprite>();
+                FinalSprites = new List<DepthSprite>();
+
+                _radialGridSprite = new MySprite()
+                {
+                    Type = SpriteType.TEXTURE,
+                    Data = "Radial_Grid_0",
+                    Position = new Vector2(511, 511),
+                    Size = new Vector2(1024, 1024),
+                    Color = Color.White,
+                    Alignment = TextAlignment.CENTER,
+                    RotationOrScale = 0f
+                };
+
+                _radialGradientSprite = new MySprite()
+                {
+                    Type = SpriteType.TEXTURE,
+                    Data = "Radial_Grad_0",
+                    Position = new Vector2(511, 511),
+                    Size = new Vector2(1024, 1024),
+                    Color = Color.White,
+                    Alignment = TextAlignment.CENTER,
+                    RotationOrScale = 0f
+                };
             }
 
             public void Run()
@@ -83,12 +106,17 @@ namespace IngameScript
 
                 if (_runCounter == 9)
                 {
-                    BuildSprite3Ds();
+                    BuildSprites();
                 }
             }
 
-            public void BuildSprite3Ds()
+            public void BuildSprites()
             {
+                EntitySprites.Clear();
+                FinalSprites.Clear();
+                _spritesBeforePlane.Clear();
+                _spritesAfterPlane.Clear();
+
                 _worldMatrix = _referenceGrid.WorldMatrix;
 
                 Vector3 cameraPositionLocal = new Vector3(17861, 14241, 30238);
@@ -97,57 +125,151 @@ namespace IngameScript
                 _viewMatrix = Matrix.CreateLookAt(cameraPositionWorld, _worldMatrix.Translation, _worldMatrix.Up);
 
                 _gridPlaneView = Plane.Transform(new Plane(_worldMatrix.Translation, _worldMatrix.Up), _viewMatrix);
+                _cameraTargetView = Vector3.Transform(_worldMatrix.Translation, _viewMatrix);
 
-                Vector3 radialSpritePosView = Vector3.Transform(_worldMatrix.Translation, _viewMatrix);
-                Vector3 radialSpritePosNDC = Vector3.Transform(radialSpritePosView, _projectionMatrix);
-                _radialGridSprite = Sprite3D.CreateSprite3D(Sprite3D.Sprite3DType.Misc, _radialGridSpriteName, -1, radialSpritePosNDC, _radialSpriteNativeSize, 1, 0, _radialGridSpriteColor);
-                _radialGradientSprite = Sprite3D.CreateSprite3D(Sprite3D.Sprite3DType.Misc, _radialGradientSpriteName, -1, radialSpritePosNDC, _radialSpriteNativeSize, 1, 0, _radialGradientSpriteColor);
+                DepthSprite radialGridDepthSprite = new DepthSprite(_radialGridSprite, _cameraTargetView);
+                DepthSprite radialGradientDepthSprite = new DepthSprite(_radialGradientSprite, _cameraTargetView);
+                DepthSprite selfDepthSprite = new DepthSprite(_selfSprite, _cameraTargetView);
 
-                TargetSprites.Clear();
-                MissileSprites.Clear();
-                _spritesBeforePlane.Clear();
-                _spritesAfterPlane.Clear();
-
-                foreach(var target in Targets)
+                foreach (var entity in _entities.Values)
                 {
-                    Vector3 targetPosView = Vector3.Transform(target.Value.Position, _viewMatrix);
-                    Vector3 targetPosNDC = Vector3.Transform(targetPosView, _projectionMatrix);
+                    Vector3 entityPosView = Vector3.Transform(entity.Position, _viewMatrix);
+                    Vector3 entityPosNDC = Vector3.Transform(entityPosView, _projectionMatrix);
 
-                    float depthScale = _targetSpriteMinScale + (_targetSpriteMaxScale - _targetSpriteMinScale) * (targetPosView.Z - _n) / (_f - _n);
-                    Sprite3D targetSprite = Sprite3D.CreateSprite3D(Sprite3D.Sprite3DType.Target, _targetSpriteName, target.Value.EntityID, targetPosNDC, _targetSpriteNativeSize, depthScale, 0, _targetSpriteColor);
-                    TargetSprites.Add(targetSprite);
+                    float depthScale = _minScale + (_maxScale - _minScale) * (entityPosView.Z - _n) / (_f - _n);
 
-                    Vector3 basePosView = targetPosView - (Vector3.Dot(_gridPlaneView.Normal, targetPosView) + _gridPlaneView.D) * _gridPlaneView.Normal;
-                    Vector3 basePosNDC = Vector3.Transform(basePosView, _projectionMatrix);
-                    depthScale = _baseSpriteMinScale + (_baseSpriteMaxScale - _baseSpriteMinScale) * (basePosView.Z - _n) / (_f + _n);
-                    Sprite3D baseSprite = Sprite3D.CreateSprite3D(Sprite3D.Sprite3DType.Base, _baseSpriteName, target.Value.EntityID, basePosNDC, _baseSpriteNativeSize, depthScale, 0, _baseSpriteColor);
+                    string spriteName = default(string);
+                    Vector2 spriteSize = default(Vector2);
+                    Color spriteColor = default(Color);
 
-                    Sprite3D stemSprite = Sprite3D.CreateVectorSprite3D(basePosNDC, targetPosNDC, _stemSpriteColor);
-
-                    if (Vector3.Dot(targetPosView, _gridPlaneView.Normal) + _gridPlaneView.D > 0)
+                    if (entity is MissileInfo)
                     {
-                        _spritesAfterPlane.Add(targetSprite);
-                        _spritesAfterPlane.Add(baseSprite);
-                        _spritesAfterPlane.Add(stemSprite);
+                        spriteName = "Missile";
+                        spriteSize = new Vector2(64, 64);
+
+                        var missile = entity as MissileInfo;
+
+                        if (missile.LauncherID == _selfID)
+                        {
+                            spriteColor = Color.Cyan;
+                        }
+                        else if (_neutralIDs.Contains(missile.LauncherID))
+                        {
+                            spriteColor = Color.Orange;
+                        }
+                        else if (_friendlyIDs.Contains(missile.LauncherID))
+                        {
+                            spriteColor = Color.Lime;
+                        }
+                        else if (_hostileIDs.Contains(missile.LauncherID))
+                        {
+                            spriteColor = Color.OrangeRed;
+                        }
                     }
                     else
                     {
-                        _spritesBeforePlane.Add(targetSprite);
-                        _spritesBeforePlane.Add(baseSprite);
-                        _spritesBeforePlane.Add(stemSprite);
+                        if (_localIDs.Contains(entity.EntityID) && _remoteIDs.Contains(entity.EntityID))
+                        {
+                            spriteName = "Target2";
+                            spriteSize = new Vector2(128, 128);
+                        }
+                        else if (_localIDs.Contains(entity.EntityID))
+                        {
+                            spriteName = "Target0";
+                            spriteSize = new Vector2(128, 128);
+                        }
+                        else if (_remoteIDs.Contains(entity.EntityID))
+                        {
+                            spriteName = "Target1";
+                            spriteSize = new Vector2(128, 128);
+                        }
+
+                        if (_neutralIDs.Contains(entity.EntityID))
+                        {
+                            spriteColor = Color.Orange;
+                        }
+                        else if (_friendlyIDs.Contains(entity.EntityID))
+                        {
+                            spriteColor = Color.Lime;
+                        }
+                        else if (_hostileIDs.Contains(entity.EntityID))
+                        {
+                            spriteColor = Color.OrangeRed;
+                        }
+                    }
+
+                    MySprite sprite = new MySprite()
+                    {
+                        Type = SpriteType.TEXTURE,
+                        Data = spriteName,
+                        Position = new Vector2((1 + entityPosNDC.X) * 511, (1 - entityPosNDC.Y) * 511),
+                        Size = spriteSize * depthScale,
+                        Color = spriteColor,
+                        Alignment = TextAlignment.CENTER,
+                        RotationOrScale = 0f,
+                    };
+
+                    DepthSprite entityDepthSprite = new DepthSprite(sprite, entityPosView);
+
+                    EntitySprites.Add(entity.EntityID, entityDepthSprite);
+
+                    Vector3 basePosView = entityPosView - (Vector3.Dot(_gridPlaneView.Normal, entityPosView) + _gridPlaneView.D) * _gridPlaneView.Normal;
+                    Vector3 basePosNDC = Vector3.Transform(basePosView, _projectionMatrix);
+
+                    depthScale = _minScale + (_maxScale - _minScale) * (basePosView.Z - _n) / (_f + _n);
+
+                    sprite = new MySprite()
+                    {
+                        Type = SpriteType.TEXTURE,
+                        Data = "Sprite_Base",
+                        Position = new Vector2((1 + basePosNDC.X) * 511, (1 - basePosNDC.Y) * 511),
+                        Size = new Vector2(32, 32) * depthScale,
+                        Color = Color.White,
+                        Alignment = TextAlignment.CENTER,
+                        RotationOrScale = 0f,
+                    };
+
+                    DepthSprite baseDepthSprite = new DepthSprite(sprite, basePosView);
+
+                    Vector3 stemPosView = 0.5f * (entityPosView + basePosView);
+                    Vector3 stemPosNDC = Vector3.Transform(stemPosView, _projectionMatrix);
+
+                    Vector2 stemVector = new Vector2(entityPosNDC.X - basePosNDC.X, entityPosNDC.Y - basePosNDC.Y) * new Vector2(1024, 615);
+                    float stemLength = stemVector.Length();
+                    float stemAngle = (float)Math.Atan2(stemVector.Y, stemVector.X);
+
+                    sprite = new MySprite()
+                    {
+                        Type = SpriteType.TEXTURE,
+                        Data = "SquareSimple",
+                        Position = new Vector2((1 + stemPosNDC.X) * 511, (1 - stemPosNDC.Y) * 511),
+                        Size = new Vector2(stemLength, 1),
+                        Color = Color.White,
+                        Alignment = TextAlignment.CENTER,
+                        RotationOrScale = stemAngle,
+                    };
+
+                    DepthSprite stemDepthSprite = new DepthSprite(sprite, stemPosView);
+
+                    if (_gridPlaneView.D * (Vector3.Dot(entityPosView, _gridPlaneView.Normal) + _gridPlaneView.D) > 0)
+                    {
+                        _spritesAfterPlane.Add(entityDepthSprite);
+                        _spritesAfterPlane.Add(baseDepthSprite);
+                        _spritesAfterPlane.Add(stemDepthSprite);
+                    }
+                    else
+                    {
+                        _spritesBeforePlane.Add(entityDepthSprite);
+                        _spritesBeforePlane.Add(baseDepthSprite);
+                        _spritesBeforePlane.Add(stemDepthSprite);
                     }
                 }
 
-                foreach(var missile in Missiles)
-                {
-
-                }
-
-                _spritesBeforePlane = _spritesBeforePlane.OrderBy(x => x.Z).ThenBy(x => x.Type3D).ToList();
-                _spritesBeforePlane.Add(_radialGradientSprite);
-                _spritesBeforePlane.Add(_radialGridSprite);
-                _spritesAfterPlane = _spritesAfterPlane.OrderBy(x => x.Z).ThenBy(x => x.Type3D).ToList();
-                FinalSprites = _spritesBeforePlane.Concat(_spritesAfterPlane).ToList();
+                FinalSprites.AddRange(_spritesBeforePlane.OrderBy(x => x.Depth));
+                FinalSprites.Add(selfDepthSprite);
+                FinalSprites.Add(radialGridDepthSprite);
+                FinalSprites.Add(radialGradientDepthSprite);
+                FinalSprites.AddRange(_spritesAfterPlane.OrderBy(x => x.Depth));
             }
         }
     }

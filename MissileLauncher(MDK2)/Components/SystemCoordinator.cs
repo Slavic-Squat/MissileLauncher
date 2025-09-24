@@ -24,26 +24,29 @@ namespace IngameScript
     {
         public class SystemCoordinator
         {
-            public Program Program { get; private set; }
             public List<ControlStation> ControlStations { get; private set; }
             public List<TargetingLaser> TargetingLasers { get; private set; }
             public AWACS AWACS { get; private set; }
             public TargetCoordinator TargetCoordinator { get; private set; }
             public MissileLauncher MissileLauncher { get; private set; }
-
+            public CommunicationHandler CommunicationHandler { get; private set; }
             public TargetingSpriteBuilder TargetingSpriteBuilder { get; private set; }
 
-            public IMyCubeGrid ReferenceGrid { get; private set; }
-
+            private IMyCubeGrid _referenceGrid;
+            private Program _program;
             private List<IEnumerator<bool>> _coroutines = new List<IEnumerator<bool>>(); 
 
             public SystemCoordinator(Program program, int numOfControlStations, int numOfTargetingLasers)
             {
-                Program = program;
+                _program = program;
+                _referenceGrid = program.Me.CubeGrid;
+
+                ControlStations = new List<ControlStation>();
+                TargetingLasers = new List<TargetingLaser>();
 
                 for (int i = 0; i < numOfControlStations; i++)
                 {
-                    ControlStations.Add(new ControlStation(program, i, this));
+                    ControlStations.Add(new ControlStation(program, i));
                 }
 
                 for (int i = 0; i < numOfTargetingLasers;  i++)
@@ -51,10 +54,11 @@ namespace IngameScript
                     TargetingLasers.Add(new TargetingLaser(program, i));
                 }
 
+                CommunicationHandler = new CommunicationHandler(program, 0);
                 AWACS = new AWACS(program, 0);
-                TargetCoordinator = new TargetCoordinator(ReferenceGrid, "Coordinator0");
-                MissileLauncher = new MissileLauncher(program, 0, ReferenceGrid.Name, "Launcher0", 1);
-                TargetingSpriteBuilder = new TargetingSpriteBuilder(TargetCoordinator, ReferenceGrid, 30, 1, 100, 100000);
+                TargetCoordinator = new TargetCoordinator(_referenceGrid, CommunicationHandler);
+                //MissileLauncher = new MissileLauncher(program, 0, 1);
+                //TargetingSpriteBuilder = new TargetingSpriteBuilder(_referenceGrid, TargetCoordinator.AllEntities, TargetCoordinator.FriendlyIDs, TargetCoordinator.HostileIDs, TargetCoordinator.NeutralIDs, _referenceGrid.EntityId);
             }
 
             public void Run(DateTime time)
@@ -69,7 +73,7 @@ namespace IngameScript
                 }
                 foreach (var controlStation in ControlStations)
                 {
-
+                    controlStation.Run(time);
                 }
 
                 foreach (var targetingLaser in TargetingLasers)
@@ -79,28 +83,16 @@ namespace IngameScript
 
                 AWACS.Run(time);
                 TargetCoordinator.Run(time);
-                TargetingSpriteBuilder.Run();
+                //TargetingSpriteBuilder.Run();
             }
 
-            public IEnumerator<bool> ControlLaser(int laserID, ControlStation station)
+            public void SyncTarget(int laserID)
             {
-                TargetingLaser laser = TargetingLasers[laserID];
-                UserInput input = station.UserInput;
+                EntityInfo target = TargetingLasers[laserID].Target;
 
-                while (input.CHeld != true)
-                {
-                    laser.UserMoveLaser(input.MouseInput.X, input.MouseInput.Y);
-
-                    if (input.SpacePress == true)
-                    {
-                        laser.UserFireLaser();
-                    }
-                    yield return true;
-                }
-                yield return false;
+                if (target != null)
+                    AWACS.AddTarget(target);
             }
-
-
         }
     }
 }

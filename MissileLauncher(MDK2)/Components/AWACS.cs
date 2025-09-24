@@ -26,54 +26,57 @@ namespace IngameScript
         {
             #region Parts
             private IMyMotorStator _spinRotor;
-            private List<IMyCameraBlock> _cameraArray0 = new List<IMyCameraBlock>();
-            private List<IMyCameraBlock> _cameraArray1 = new List<IMyCameraBlock>();
-            private List<IMyCameraBlock> _cameraArray2 = new List<IMyCameraBlock>();
-            private List<IMyCameraBlock> _cameraArray3 = new List<IMyCameraBlock>();
+            private CameraArray _cameraArray0;
+            private CameraArray _cameraArray1;
+            private CameraArray _cameraArray2;
+            private CameraArray _cameraArray3;
             #endregion
 
             #region State Info
             private Matrix _referenceMatrix;
 
-            private float _maxTargetDistance;
-
             private float _spinRotorAngle;
             private bool _spinRotorInverted;
 
-            private int _raycastCounter0;
-            private int _raycastCounter1;
-            private int _raycastCounter2;
-            private int _raycastCounter3;
-
-            private float _totalAvailRaycastDistance;
-
-            private int _targetIndex;
-
-            private DateTime _time;
             private DateTime _lastRunTime;
             #endregion
 
             #region Properties
-            public Program Program { get; private set; }
             public int ID { get; private set; }
-            public float MaxRaycastDistance { get; set; }
+            public float MaxRaycastDistance
+            {
+                get
+                {
+                    return _cameraArray0.MaxRaycastDistance;
+                }
+                set
+                {
+                    _cameraArray0.MaxRaycastDistance = value;
+                    _cameraArray1.MaxRaycastDistance = value;
+                    _cameraArray2.MaxRaycastDistance = value;
+                    _cameraArray3.MaxRaycastDistance = value;
+                }
+            }
             public float RaycastDistanceGrowthSpeed { get; set; }
             public Dictionary<long, EntityInfo> Targets { get; private set; }
             public Dictionary<long, bool> TargetsSyncInfo {  get; private set; }
             public List<long> TargetIDs { get; private set; }
             #endregion
 
-            public AWACS(Program program, int id, float maxRaycastDistance = 5000, float raycastDistanceGrowthSpeed = 200)
+            private Program _program;
+            public AWACS(Program program, int id, float maxRaycastDistance = 5000)
             {
-                Program = program;
+                _program = program;
                 ID = id;
-                MaxRaycastDistance = maxRaycastDistance;
-                _maxTargetDistance = maxRaycastDistance * 0.8f;
-                RaycastDistanceGrowthSpeed = raycastDistanceGrowthSpeed;
 
                 Targets = new Dictionary<long, EntityInfo>();
                 TargetsSyncInfo = new Dictionary<long, bool>();
                 TargetIDs = new List<long>();
+
+                _cameraArray0 = new CameraArray(_program, 1, maxRaycastDistance);
+                _cameraArray1 = new CameraArray(_program, 2, maxRaycastDistance);
+                _cameraArray2 = new CameraArray(_program, 3, maxRaycastDistance);
+                _cameraArray3 = new CameraArray(_program, 4, maxRaycastDistance);
 
                 TryGetBlocks();
                 Init();
@@ -83,85 +86,29 @@ namespace IngameScript
             {
                 try
                 {
-                    _spinRotor = Program.GridTerminalSystem.GetBlockWithName($"Spin Rotor [{ID}]") as IMyMotorStator;
+                    _spinRotor = _program.GridTerminalSystem.GetBlockWithName($"Spin Rotor [{ID}]") as IMyMotorStator;
                     if (_spinRotor == null)
                     {
                         throw new Exception();
                     }
-                    var cameraGroup0 = Program.GridTerminalSystem.GetBlockGroupWithName($"Camera Array0 [{ID}]");
-                    if (cameraGroup0 == null)
-                    {
-                        throw new Exception();
-                    }
-                    cameraGroup0.GetBlocksOfType<IMyCameraBlock>(_cameraArray0);
-                    var cameraGroup1 = Program.GridTerminalSystem.GetBlockGroupWithName($"Camera Array1 [{ID}]");
-                    if (cameraGroup1 == null)
-                    {
-                        throw new Exception();
-                    }
-                    cameraGroup1.GetBlocksOfType<IMyCameraBlock>(_cameraArray1);
-                    var cameraGroup2 = Program.GridTerminalSystem.GetBlockGroupWithName($"Camera Array2 [{ID}]");
-                    if (cameraGroup2 == null)
-                    {
-                        throw new Exception();
-                    }
-                    cameraGroup2.GetBlocksOfType<IMyCameraBlock>(_cameraArray2);
-                    var cameraGroup3 = Program.GridTerminalSystem.GetBlockGroupWithName($"Camera Array3 [{ID}]");
-                    if (cameraGroup3 == null)
-                    {
-                        throw new Exception();
-                    }
-                    cameraGroup3.GetBlocksOfType<IMyCameraBlock>(_cameraArray3);
                     return true;
                 }
                 catch (Exception ex)
                 {
-                    Program.Echo("Error in AWACS construction");
+                    _program.Echo("Error in AWACS construction");
                     return false;
                 }
             }
 
             public void Init()
             {
-                foreach (IMyCameraBlock camera in _cameraArray0)
-                {
-                    camera.EnableRaycast = true;
-                    _totalAvailRaycastDistance += (float)camera.AvailableScanRange;
-                }
-
-                foreach (IMyCameraBlock camera in _cameraArray1)
-                {
-                    camera.EnableRaycast = true;
-                    _totalAvailRaycastDistance += (float)camera.AvailableScanRange;
-                }
-
-                foreach (IMyCameraBlock camera in _cameraArray2)
-                {
-                    camera.EnableRaycast = true;
-                    _totalAvailRaycastDistance += (float)camera.AvailableScanRange;
-                }
-
-                foreach (IMyCameraBlock camera in _cameraArray3)
-                {
-                    camera.EnableRaycast = true;
-                    _totalAvailRaycastDistance += (float)camera.AvailableScanRange;
-                }
-
                 _spinRotorInverted = _spinRotor.CustomData.Contains("Inverted");
             }
 
             public void Run(DateTime time)
             {
-                if (_time == DateTime.MinValue)
-                {
-                    _time = time;
-                }
-                _lastRunTime = _time;
-                _time = time;
-                float timeDeltaMiliseconds = (float)(_time - _lastRunTime).TotalMilliseconds;
-                float timeDeltaSeconds = (float)(_time - _lastRunTime).TotalSeconds;
-
-                _totalAvailRaycastDistance += 2 * timeDeltaMiliseconds * (_cameraArray0.Count + _cameraArray1.Count + _cameraArray2.Count + _cameraArray3.Count);
+                if (_lastRunTime == default(DateTime))
+                    _lastRunTime = time;
 
                 if (TargetIDs.Count != 0)
                 {
@@ -181,122 +128,55 @@ namespace IngameScript
                         Vector3 estimatedTargetPos = Targets[targetID].Position + Targets[targetID].Velocity * (float)timeSinceLastDetection.TotalSeconds;
                         Vector3 estimatedTargetDirLocal = Vector3.Normalize(Vector3.TransformNormal(estimatedTargetPos - _referenceMatrix.Translation, Matrix.Transpose(_referenceMatrix)));
                         float estimatedTargetDistance = (estimatedTargetPos - _referenceMatrix.Translation).Length();
-                        float targetElevationLocal = MathHelper.ToDegrees((float)Math.Asin(estimatedTargetDirLocal.Y));
+                        float targetElevation = MathHelper.ToDegrees((float)Math.Asin(estimatedTargetDirLocal.Y));
 
-                        if (timeSinceLastDetection.TotalSeconds > 5 || estimatedTargetDistance >= _maxTargetDistance || targetElevationLocal >= 45)
+                        if (timeSinceLastDetection.TotalSeconds > 5 || estimatedTargetDistance >= MaxRaycastDistance * 0.8f || targetElevation >= 45)
                         {
                             RemoveTarget(targetID);
                         }
                     }
 
-                    float baseAvailRaycastDistance = 2 * MaxRaycastDistance * (_cameraArray0.Count + _cameraArray1.Count + _cameraArray2.Count + _cameraArray3.Count);
+                    var OrderedTargetIDs = TargetIDs.OrderBy(id => Targets[id].TimeRecorded);
 
-                    if (TargetIDs.Count != 0)
+                    foreach (long targetID in OrderedTargetIDs)
                     {
-                        _targetIndex %= TargetIDs.Count;
-                    }
-                    for (; (_targetIndex < TargetIDs.Count) && (_totalAvailRaycastDistance >= baseAvailRaycastDistance); _targetIndex++)
-                    {
-                        long targetID = TargetIDs[_targetIndex];
-                        MyDetectedEntityInfo raycastResult;
-                        TimeSpan timeSinceLastDetection = time - Targets[targetID].TimeRecorded;
-                        Vector3 estimatedTargetPos = Targets[targetID].Position + Targets[targetID].Velocity * (float)timeSinceLastDetection.TotalSeconds;
-                        Vector3 estimatedTargetDirLocal = Vector3.Normalize(Vector3.TransformNormal(estimatedTargetPos - _referenceMatrix.Translation, Matrix.Transpose(_referenceMatrix)));
-                        float targetAzimuthLocal = MathHelper.ToDegrees((float)Math.Atan2(-estimatedTargetDirLocal.X, -estimatedTargetDirLocal.Z));
-
-                        if (targetAzimuthLocal > -45 && targetAzimuthLocal < 45)
-                        {
-                            Vector3 cameraPos = _cameraArray0[_raycastCounter0].GetPosition();
-                            Vector3 raycastOvershoot = Vector3.Normalize(estimatedTargetPos - cameraPos) * (RaycastDistanceGrowthSpeed * (float)timeSinceLastDetection.TotalSeconds);
-                            Vector3 raycastTarget = estimatedTargetPos + raycastOvershoot;
-                            float raycastDistance = (raycastTarget - cameraPos).Length();
-                            raycastTarget = raycastDistance > MaxRaycastDistance ? Vector3.Normalize(raycastTarget - cameraPos) * MaxRaycastDistance + cameraPos : raycastTarget;
-
-                            if (_cameraArray0[_raycastCounter0].CanScan(raycastTarget))
-                            {
-                                raycastResult = _cameraArray0[_raycastCounter0].Raycast(raycastTarget);
-                                _totalAvailRaycastDistance -= raycastDistance;
-                                _raycastCounter0++;
-                                _raycastCounter0 %= _cameraArray0.Count;
-                            }
-                            else
-                            {
-                                break;
-                            }
-                        }
-                        else if (targetAzimuthLocal > 45 && targetAzimuthLocal < 135)
-                        {
-                            Vector3 cameraPos = _cameraArray1[_raycastCounter1].GetPosition();
-                            Vector3 raycastOvershoot = Vector3.Normalize(estimatedTargetPos - cameraPos) * (RaycastDistanceGrowthSpeed * (float)timeSinceLastDetection.TotalSeconds);
-                            Vector3 raycastTarget = estimatedTargetPos + raycastOvershoot;
-                            float raycastDistance = (raycastTarget - cameraPos).Length();
-                            raycastTarget = raycastDistance > MaxRaycastDistance ? Vector3.Normalize(raycastTarget - cameraPos) * MaxRaycastDistance + cameraPos : raycastTarget;
-
-                            if (_cameraArray1[_raycastCounter1].CanScan(raycastTarget))
-                            {
-                                raycastResult = _cameraArray1[_raycastCounter1].Raycast(raycastTarget);
-                                _totalAvailRaycastDistance -= raycastDistance;
-                                _raycastCounter1++;
-                                _raycastCounter1 %= _cameraArray1.Count;
-                            }
-                            else
-                            {
-                                break;
-                            }
-                        }
-                        else if (targetAzimuthLocal > 135 || targetAzimuthLocal < -135)
-                        {
-                            Vector3 cameraPos = _cameraArray2[_raycastCounter2].GetPosition();
-                            Vector3 raycastOvershoot = Vector3.Normalize(estimatedTargetPos - cameraPos) * (RaycastDistanceGrowthSpeed * (float)timeSinceLastDetection.TotalSeconds);
-                            Vector3 raycastTarget = estimatedTargetPos + raycastOvershoot;
-                            float raycastDistance = (raycastTarget - cameraPos).Length();
-                            raycastTarget = raycastDistance > MaxRaycastDistance ? Vector3.Normalize(raycastTarget - cameraPos) * MaxRaycastDistance + cameraPos : raycastTarget;
-
-                            if (_cameraArray2[_raycastCounter2].CanScan(raycastTarget))
-                            {
-                                raycastResult = _cameraArray2[_raycastCounter2].Raycast(raycastTarget);
-                                _totalAvailRaycastDistance -= raycastDistance;
-                                _raycastCounter2++;
-                                _raycastCounter2 %= _cameraArray2.Count;
-                            }
-                            else
-                            {
-                                break;
-                            }
-                        }
-                        else if (targetAzimuthLocal > -135 && targetAzimuthLocal < -45)
-                        {
-                            Vector3 cameraPos = _cameraArray3[_raycastCounter3].GetPosition();
-                            Vector3 raycastOvershoot = Vector3.Normalize(estimatedTargetPos - cameraPos) * (RaycastDistanceGrowthSpeed * (float)timeSinceLastDetection.TotalSeconds);
-                            Vector3 raycastTarget = estimatedTargetPos + raycastOvershoot;
-                            float raycastDistance = (raycastTarget - cameraPos).Length();
-                            raycastTarget = raycastDistance > MaxRaycastDistance ? Vector3.Normalize(raycastTarget - cameraPos) * MaxRaycastDistance + cameraPos : raycastTarget;
-
-                            if (_cameraArray3[_raycastCounter3].CanScan(raycastTarget))
-                            {
-                                raycastResult = _cameraArray3[_raycastCounter3].Raycast(raycastTarget);
-                                _totalAvailRaycastDistance -= raycastDistance;
-                                _raycastCounter3++;
-                                _raycastCounter3 %= _cameraArray3.Count;
-
-                            }
-                            else
-                            {
-                                break;
-                            }
-                        }
-                        else
+                        if (_cameraArray0.Recharging && _cameraArray1.Recharging && _cameraArray2.Recharging && _cameraArray3.Recharging)
                         {
                             break;
                         }
 
+                        EntityInfo target = Targets[targetID];
+                        MyDetectedEntityInfo raycastResult = default(MyDetectedEntityInfo);
+                        TimeSpan timeSinceLastDetection = time - Targets[targetID].TimeRecorded;
+                        Vector3 estimatedTargetPos = Targets[targetID].Position + Targets[targetID].Velocity * (float)timeSinceLastDetection.TotalSeconds;
+                        Vector3 estimatedTargetDirLocal = Vector3.Normalize(Vector3.TransformNormal(estimatedTargetPos - _referenceMatrix.Translation, Matrix.Transpose(_referenceMatrix)));
+                        float targetAzimuth = MathHelper.ToDegrees((float)Math.Atan2(-estimatedTargetDirLocal.X, -estimatedTargetDirLocal.Z));
+
+                        if (targetAzimuth > -45 && targetAzimuth < 45)
+                        {
+                            raycastResult = _cameraArray0.Raycast(estimatedTargetPos, time, 0.1f);
+                        }
+                        else if (targetAzimuth > 45 && targetAzimuth < 135)
+                        {
+                            raycastResult = _cameraArray1.Raycast(estimatedTargetPos, time, 0.1f);
+                        }
+                        else if (targetAzimuth > 135 || targetAzimuth < -135)
+                        {
+                            raycastResult = _cameraArray2.Raycast(estimatedTargetPos, time, 0.1f);
+                        }
+                        else if (targetAzimuth > -135 && targetAzimuth < -45)
+                        {
+                            raycastResult = _cameraArray3.Raycast(estimatedTargetPos, time, 0.1f);
+                        }
+
                         if (raycastResult.EntityId == targetID)
                         {
-                            Targets[targetID].UpdateFromRaycast(raycastResult, _time);
+                            Targets[targetID].UpdateFromRaycast(raycastResult, time);
                             TargetsSyncInfo[targetID] = true;
                         }
                     }
                 }
+                _lastRunTime = time;
             }
 
             public void AddTarget(EntityInfo target)
@@ -312,21 +192,9 @@ namespace IngameScript
 
             public void RemoveTarget(long targetID)
             {
-                int removedIndex = TargetIDs.IndexOf(targetID);
-                if (removedIndex != -1)
-                {
-                    TargetIDs.RemoveAt(removedIndex);
-                    Targets.Remove(targetID);
-                    TargetsSyncInfo.Remove(targetID);
-                }
-                if (_targetIndex > removedIndex)
-                {
-                    _targetIndex--;
-                }                
-                if (_targetIndex >= TargetIDs.Count)
-                {
-                    _targetIndex = 0;
-                }
+                Targets.Remove(targetID);
+                TargetsSyncInfo.Remove(targetID);
+                TargetIDs.Remove(targetID);
             }
         }
     }

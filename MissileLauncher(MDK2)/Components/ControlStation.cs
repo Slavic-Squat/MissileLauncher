@@ -26,14 +26,12 @@ namespace IngameScript
         {
             public UserInput UserInput { get; private set; }
             public int ID { get; private set; }
-            public List<IMyTextSurface> Displays { get; private set; }
 
+            private List<IMyTextSurface> _displays = new List<IMyTextSurface>();
             private IMyShipController _controller;
+            private TargetingLaser _controlable;
             private Program _program;
-            private SystemCoordinator _systemCoordinator;
-
-            Stack<IEnumerator<bool>> _coroutines;
-            public ControlStation(Program program, int iD, SystemCoordinator systemCoordinator)
+            public ControlStation(Program program, int iD)
             {
                 _program = program;
                 ID = iD;
@@ -41,7 +39,6 @@ namespace IngameScript
                 TryGetBlocks();
 
                 UserInput = new UserInput(_controller);
-                _systemCoordinator = systemCoordinator;
             }
 
             public bool TryGetBlocks()
@@ -53,7 +50,12 @@ namespace IngameScript
                     {
                         throw new Exception();
                     }
-                    _program.GridTerminalSystem.GetBlockGroupWithName($"Control Station [{ID}] Displays").GetBlocksOfType(Displays);
+                    float internalSurfaceCount = (_controller as IMyTextSurfaceProvider)?.SurfaceCount ?? 0;
+                    for (int i = 0; i < internalSurfaceCount; i++)
+                    {
+                        _displays.Add((_controller as IMyTextSurfaceProvider).GetSurface(i));
+                    }
+                    _program.GridTerminalSystem.GetBlockGroupWithName($"Control Station [{ID}] Displays")?.GetBlocksOfType(_displays);
                     return true;
                 }
                 catch (Exception ex)
@@ -62,6 +64,17 @@ namespace IngameScript
                     return false;
                     throw;
                 }
+            }
+
+            public void Run(DateTime time)
+            {
+                UserInput.Run(time);
+            }
+
+            public void TakeControl(TargetingLaser controlable)
+            {
+                _controlable = controlable;
+                _controlable.TakeControl(this);
             }
         }
     }

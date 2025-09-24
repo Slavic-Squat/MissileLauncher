@@ -24,10 +24,18 @@ namespace IngameScript
     {
         public static class MiscUtilities
         {
-            public static float LoopInRange(float number, float min, float max)
+            public static float LoopInRange(float value, float min, float max)
             {
-                float range = max - min + 1;
-                return ((number - min) % range + range) % range + min;
+                if (min >= max)
+                    throw new ArgumentException("min must be less than max");
+
+                if (value >= min && value <= max)
+                    return value;
+
+                float range = max - min;
+                float shifted = value - min;
+                shifted -= range * (float)Math.Floor(shifted / range);
+                return min + shifted;
             }
         }
     }

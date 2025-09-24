@@ -22,30 +22,20 @@ namespace IngameScript
 {
     partial class Program
     {
-        public abstract class EntityInfo
+        public class EntityInfo
         {
-            public string Name { get; set; }
-            public string FactionTag { get; set; }
-            public long EntityID { get; set; }
-            public Vector3 Position { get; set;  }
-            public Vector3 Velocity { get; set; }
-            public DateTime TimeRecorded { get; set; }
-            public EntityRelation Relation {  get; set; }
+            public long EntityID { get; private set; }
+            public Vector3 Position { get; private set;  }
+            public Vector3 Velocity { get; private set; }
+            public DateTime TimeRecorded { get; private set; }
 
-            public enum EntityRelation : byte
+            public EntityInfo(long entityID, Vector3 position, Vector3 velocity, DateTime timeRecorded)
             {
-                Unknown, Neutral, Friendly, Hostile
-            }
-
-            public EntityInfo(long entityID, Vector3 position, Vector3 velocity, DateTime timeRecorded, string name = "Unknown", string factionTag = "Unknown", EntityRelation relation = EntityRelation.Unknown)
-            {
-                Name = name;
                 EntityID = entityID;
                 Position = position;
                 Velocity = velocity;
                 TimeRecorded = timeRecorded;
-                Relation = relation;
-                
+
             }
 
             public void Transform(Matrix transform)
@@ -57,6 +47,23 @@ namespace IngameScript
                 Velocity = velocity;
             }
 
+            public static EntityInfo CreateFromRaycast(MyDetectedEntityInfo entityInfo, DateTime timeRecorded)
+            {
+                long entityID = entityInfo.EntityId;
+                Vector3 position = entityInfo.Position;
+                Vector3 velocity = entityInfo.Velocity;
+
+                return new EntityInfo(entityID, position, velocity, timeRecorded);
+            }
+
+            public void UpdateFromEntityInfo(EntityInfo entityInfo)
+            {
+                EntityID = entityInfo.EntityID;
+                Position = entityInfo.Position;
+                Velocity = entityInfo.Velocity;
+                TimeRecorded = entityInfo.TimeRecorded;
+            }
+
             public void UpdateFromRaycast(MyDetectedEntityInfo entityInfo, DateTime timeRecorded)
             {
                 EntityID = entityInfo.EntityId;
@@ -65,11 +72,61 @@ namespace IngameScript
                 TimeRecorded = timeRecorded;
             }
 
-            public abstract string Serialize();
+            public virtual byte[] Serialize()
+            {
+                List<byte> entityData = new List<byte>();
+                entityData.Add((byte)Deserializer.ObjectTypes.EntityInfo);
+
+                entityData.AddRange(BitConverter.GetBytes(EntityID));
+
+                entityData.AddRange(BitConverter.GetBytes(Position.X));
+                entityData.AddRange(BitConverter.GetBytes(Position.Y));
+                entityData.AddRange(BitConverter.GetBytes(Position.Z));
+
+                entityData.AddRange(BitConverter.GetBytes(Velocity.X));
+                entityData.AddRange(BitConverter.GetBytes(Velocity.Y));
+                entityData.AddRange(BitConverter.GetBytes(Velocity.Z));
+
+                entityData.AddRange(BitConverter.GetBytes(TimeRecorded.Ticks));
+
+                return entityData.ToArray();
+            }
 
             public static EntityInfo Deserialize(byte[] data)
             {
+                int index = 1;
 
+                long entityID = BitConverter.ToInt64(data, index);
+                index += 8;
+
+                float xPos = BitConverter.ToSingle(data, index);
+                index += 4;
+
+                float yPos = BitConverter.ToSingle(data, index);
+                index += 4;
+
+                float zPos = BitConverter.ToSingle(data, index);
+                index += 4;
+
+                Vector3 pos = new Vector3(xPos, yPos, zPos);
+
+                float xVel = BitConverter.ToSingle(data, index);
+                index += 4;
+
+                float yVel = BitConverter.ToSingle(data, index);
+                index += 4;
+
+                float zVel = BitConverter.ToSingle(data, index);
+                index += 4;
+
+                Vector3 vel = new Vector3(xVel, yVel, zVel);
+
+                long ticks = BitConverter.ToInt64(data, index);
+                index += 8;
+
+                DateTime timeRecorded = new DateTime(ticks);
+
+                return new EntityInfo(entityID, pos, vel, timeRecorded);
             }
         }
     }

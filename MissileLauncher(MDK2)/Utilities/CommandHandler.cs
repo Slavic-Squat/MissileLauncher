@@ -48,7 +48,7 @@ namespace IngameScript
             {
                 try
                 {
-                    string[] separatedCommandStrings = commandsString.Split(new char[] { '|', '\n' });
+                    string[] separatedCommandStrings = commandsString.Split('|', '\n');
                     foreach (string commandString in separatedCommandStrings)
                     {
                         commandsString = commandString.Trim();
