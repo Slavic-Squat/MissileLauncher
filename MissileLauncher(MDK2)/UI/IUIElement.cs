@@ -22,15 +22,11 @@ namespace IngameScript
 {
     partial class Program
     {
-        public struct DepthSprite
+        public interface IUIElement
         {
-            public MySprite Sprite { get; private set; }
-            public float Depth { get; private set; }
-            public DepthSprite(MySprite sprite, float depth)
-            {
-                Sprite = sprite;
-                Depth = depth;
-            }
+            Vector2 Pos { get; }
+            Vector2 Size { get; }
+            void Draw(MySpriteDrawFrame frame);
         }
     }
 }

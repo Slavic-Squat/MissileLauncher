@@ -22,15 +22,18 @@ namespace IngameScript
 {
     partial class Program
     {
-        public struct DepthSprite
+        public interface IMenu : IUIElement
         {
-            public MySprite Sprite { get; private set; }
-            public float Depth { get; private set; }
-            public DepthSprite(MySprite sprite, float depth)
-            {
-                Sprite = sprite;
-                Depth = depth;
-            }
+            IWindow Window { get; }
+            void RequestClose();
+            void OnClose();
+            void OnFocus();
+            void OnUnfocus();
+            void HighlightButton(ButtonElement button);
+            void UnhighlightButton();
+            void PressButton(ButtonElement button, DateTime time);
+            void Update(DateTime time);
+            void Navigate(UserInput input, DateTime time);
         }
     }
 }

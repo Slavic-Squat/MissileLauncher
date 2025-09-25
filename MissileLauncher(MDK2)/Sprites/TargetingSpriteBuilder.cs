@@ -53,17 +53,11 @@ namespace IngameScript
             private HashSet<long> _remoteIDs;
             private long _selfID = -1;
 
-            private MySprite _radialGridSprite;
-            private MySprite _radialGradientSprite;
-
             private List<DepthSprite> _spritesBeforePlane = new List<DepthSprite>();
             private List<DepthSprite> _spritesAfterPlane = new List<DepthSprite>();
+            private List<DepthSprite> _staticSpritesAfterPlane = new List<DepthSprite>();
 
-            private Matrix _worldMatrix = Matrix.Identity;
-            private Matrix _viewMatrix = Matrix.Identity;
             private Matrix _projectionMatrix = Matrix.Identity;
-            private Plane _gridPlaneView = new Plane();
-            private Vector3 _cameraTargetView = Vector3.Zero;
             #endregion
 
             public TargetingSpriteBuilder(IMyCubeGrid referenceGrid, Dictionary<long, EntityInfo> entities, HashSet<long> neutralIDs, HashSet<long> friendlyIDs, HashSet<long> hostileIDs, HashSet<long> localIDs, HashSet<long> remoteIDs, long selfID)
@@ -76,7 +70,81 @@ namespace IngameScript
                 EntitySprites = new Dictionary<long, DepthSprite>();
                 FinalSprites = new List<DepthSprite>();
 
-                _radialGridSprite = new MySprite()
+                BuildStaticSprites();
+            }
+
+            private void BuildStaticSprites()
+            {
+                Matrix cameraTargetWorld = _referenceGrid.WorldMatrix;
+                Vector3 cameraPositionLocal = new Vector3(17861, 14241, 30238);
+                Vector3 cameraPositionWorld = Vector3.Transform(cameraPositionLocal, cameraTargetWorld);
+
+                Matrix viewMatrix = Matrix.CreateLookAt(cameraPositionWorld, cameraTargetWorld.Translation, cameraTargetWorld.Up);
+                Matrix totalMatrix = viewMatrix * _projectionMatrix;
+
+                Plane gridPlaneWorld = new Plane(cameraTargetWorld.Translation, cameraTargetWorld.Up);
+
+                Vector3 selfPosLocal = new Vector3(0, 767, 0);
+                Vector3 selfPosWorld = Vector3.Transform(selfPosLocal, cameraTargetWorld);
+                Vector3 selfPosNDC = Vector3.Transform(selfPosWorld, _projectionMatrix);
+                Vector2 selfPosPixel = new Vector2((1 + selfPosNDC.X) * 511, (1 - selfPosNDC.Y) * 511);
+
+                MySprite selfSprite = new MySprite()
+                {
+                    Type = SpriteType.TEXTURE,
+                    Data = "Self_0",
+                    Position = selfPosPixel,
+                    Size = new Vector2(256, 256),
+                    Color = Color.White,
+                    Alignment = TextAlignment.CENTER,
+                    RotationOrScale = 0f
+                };
+
+                DepthSprite selfDepthSprite = new DepthSprite(selfSprite, selfPosNDC.Z);
+
+                Vector3 basePosWorld = selfPosWorld - (Vector3.Dot(gridPlaneWorld.Normal, selfPosWorld) + gridPlaneWorld.D) * gridPlaneWorld.Normal;
+                Vector3 basePosNDC = Vector3.Transform(basePosWorld, _projectionMatrix);
+                Vector2 basePosPixel = new Vector2((1 + basePosNDC.X) * 511, (1 - basePosNDC.Y) * 511);
+                float basePosZView = (_f * _n) / (_f - basePosNDC.Z * (_f - _n));
+                float baseDepthScale = _minScale + (_maxScale - _minScale) * (basePosNDC.Z - _n) / (_f - _n);
+
+                MySprite baseSprite = new MySprite()
+                {
+                    Type = SpriteType.TEXTURE,
+                    Data = "Base_0",
+                    Position = basePosPixel,
+                    Size = new Vector2(32, 32) * baseDepthScale,
+                    Color = Color.White,
+                    Alignment = TextAlignment.CENTER,
+                    RotationOrScale = 0f
+                };
+
+                DepthSprite baseDepthSprite = new DepthSprite(baseSprite, basePosNDC.Z);
+
+                Vector3 stemPosWorld = 0.5f * (selfPosWorld + basePosWorld);
+                Vector3 stemPosNDC = Vector3.Transform(stemPosWorld, totalMatrix);
+                Vector2 stemPosPixel = new Vector2((1 + stemPosNDC.X) * 511, (1 - stemPosNDC.Y) * 511);
+
+                Vector2 stemVector = new Vector2(selfPosPixel.X - basePosPixel.X, selfPosPixel.Y - basePosPixel.Y);
+                float stemLength = stemVector.Length();
+                float stemAngle = (float)Math.Atan2(stemVector.Y, stemVector.X);
+
+                MySprite stemSprite = new MySprite()
+                {
+                    Type = SpriteType.TEXTURE,
+                    Data = "SquareSimple",
+                    Position = stemPosPixel,
+                    Size = new Vector2(stemLength, 1),
+                    Color = Color.White,
+                    Alignment = TextAlignment.CENTER,
+                    RotationOrScale = stemAngle,
+                };
+
+                DepthSprite stemDepthSprite = new DepthSprite(stemSprite, stemPosNDC.Z);
+
+                Vector3 cameraTargetNDC = Vector3.Transform(cameraTargetWorld.Translation, totalMatrix);
+
+                MySprite gridSprite = new MySprite()
                 {
                     Type = SpriteType.TEXTURE,
                     Data = "Radial_Grid_0",
@@ -87,7 +155,9 @@ namespace IngameScript
                     RotationOrScale = 0f
                 };
 
-                _radialGradientSprite = new MySprite()
+                DepthSprite gridDepthSprite = new DepthSprite(gridSprite, cameraTargetNDC.Z);
+
+                MySprite gradSprite = new MySprite()
                 {
                     Type = SpriteType.TEXTURE,
                     Data = "Radial_Grad_0",
@@ -97,17 +167,15 @@ namespace IngameScript
                     Alignment = TextAlignment.CENTER,
                     RotationOrScale = 0f
                 };
-            }
 
-            public void Run()
-            {
-                _runCounter++;
-                _runCounter %= 10;
+                DepthSprite gradDepthSprite = new DepthSprite(gradSprite, cameraTargetNDC.Z);
 
-                if (_runCounter == 9)
-                {
-                    BuildSprites();
-                }
+                _staticSpritesAfterPlane.Clear();
+                _staticSpritesAfterPlane.Add(selfDepthSprite);
+                _staticSpritesAfterPlane.Add(baseDepthSprite);
+                _staticSpritesAfterPlane.Add(stemDepthSprite);
+                _staticSpritesAfterPlane.Add(gridDepthSprite);
+                _staticSpritesAfterPlane.Add(gradDepthSprite);
             }
 
             public void BuildSprites()
@@ -117,26 +185,23 @@ namespace IngameScript
                 _spritesBeforePlane.Clear();
                 _spritesAfterPlane.Clear();
 
-                _worldMatrix = _referenceGrid.WorldMatrix;
-
+                Matrix cameraTargetWorld = _referenceGrid.WorldMatrix;
                 Vector3 cameraPositionLocal = new Vector3(17861, 14241, 30238);
-                Vector3 cameraPositionWorld = Vector3.Transform(cameraPositionLocal, _worldMatrix);
+                Vector3 cameraPositionWorld = Vector3.Transform(cameraPositionLocal, cameraTargetWorld);
 
-                _viewMatrix = Matrix.CreateLookAt(cameraPositionWorld, _worldMatrix.Translation, _worldMatrix.Up);
+                Matrix viewMatrix = Matrix.CreateLookAt(cameraPositionWorld, cameraTargetWorld.Translation, cameraTargetWorld.Up);
+                Matrix totalMatrix = viewMatrix * _projectionMatrix;
 
-                _gridPlaneView = Plane.Transform(new Plane(_worldMatrix.Translation, _worldMatrix.Up), _viewMatrix);
-                _cameraTargetView = Vector3.Transform(_worldMatrix.Translation, _viewMatrix);
-
-                DepthSprite radialGridDepthSprite = new DepthSprite(_radialGridSprite, _cameraTargetView);
-                DepthSprite radialGradientDepthSprite = new DepthSprite(_radialGradientSprite, _cameraTargetView);
-                DepthSprite selfDepthSprite = new DepthSprite(_selfSprite, _cameraTargetView);
+                Plane gridPlaneWorld = new Plane(cameraTargetWorld.Translation, cameraTargetWorld.Up);
 
                 foreach (var entity in _entities.Values)
                 {
-                    Vector3 entityPosView = Vector3.Transform(entity.Position, _viewMatrix);
-                    Vector3 entityPosNDC = Vector3.Transform(entityPosView, _projectionMatrix);
+                    Vector3 entityPosWorld = entity.Position;
+                    Vector3 entityPosNDC = Vector3.Transform(entityPosWorld, totalMatrix);
+                    Vector2 entityPosPixel = new Vector2((1 + entityPosNDC.X) * 511, (1 - entityPosNDC.Y) * 511);
+                    float entityPosZView = (_f * _n) / (_f - entityPosNDC.Z * (_f - _n));
 
-                    float depthScale = _minScale + (_maxScale - _minScale) * (entityPosView.Z - _n) / (_f - _n);
+                    float entityDepthScale = _minScale + (_maxScale - _minScale) * (entityPosZView - _n) / (_f - _n);
 
                     string spriteName = default(string);
                     Vector2 spriteSize = default(Vector2);
@@ -198,60 +263,63 @@ namespace IngameScript
                         }
                     }
 
-                    MySprite sprite = new MySprite()
+                    MySprite entitySprite = new MySprite()
                     {
                         Type = SpriteType.TEXTURE,
                         Data = spriteName,
-                        Position = new Vector2((1 + entityPosNDC.X) * 511, (1 - entityPosNDC.Y) * 511),
-                        Size = spriteSize * depthScale,
+                        Position = entityPosPixel,
+                        Size = spriteSize * entityDepthScale,
                         Color = spriteColor,
                         Alignment = TextAlignment.CENTER,
                         RotationOrScale = 0f,
                     };
 
-                    DepthSprite entityDepthSprite = new DepthSprite(sprite, entityPosView);
+                    DepthSprite entityDepthSprite = new DepthSprite(entitySprite, entityPosZView);
 
                     EntitySprites.Add(entity.EntityID, entityDepthSprite);
 
-                    Vector3 basePosView = entityPosView - (Vector3.Dot(_gridPlaneView.Normal, entityPosView) + _gridPlaneView.D) * _gridPlaneView.Normal;
-                    Vector3 basePosNDC = Vector3.Transform(basePosView, _projectionMatrix);
+                    Vector3 basePosWorld = entityPosWorld - (Vector3.Dot(gridPlaneWorld.Normal, entityPosWorld) + gridPlaneWorld.D) * gridPlaneWorld.Normal;
+                    Vector3 basePosNDC = Vector3.Transform(basePosWorld, totalMatrix);
+                    Vector2 basePosPixel = new Vector2((1 + basePosNDC.X) * 511, (1 - basePosNDC.Y) * 511);
+                    float basePosZView = (_f * _n) / (_f - basePosNDC.Z * (_f - _n));
 
-                    depthScale = _minScale + (_maxScale - _minScale) * (basePosView.Z - _n) / (_f + _n);
+                    float baseDepthScale = _minScale + (_maxScale - _minScale) * (basePosZView - _n) / (_f + _n);
 
-                    sprite = new MySprite()
+                    MySprite baseSprite = new MySprite()
                     {
                         Type = SpriteType.TEXTURE,
                         Data = "Sprite_Base",
-                        Position = new Vector2((1 + basePosNDC.X) * 511, (1 - basePosNDC.Y) * 511),
-                        Size = new Vector2(32, 32) * depthScale,
+                        Position = basePosPixel,
+                        Size = new Vector2(32, 32) * baseDepthScale,
                         Color = Color.White,
                         Alignment = TextAlignment.CENTER,
                         RotationOrScale = 0f,
                     };
 
-                    DepthSprite baseDepthSprite = new DepthSprite(sprite, basePosView);
+                    DepthSprite baseDepthSprite = new DepthSprite(baseSprite, basePosZView);
 
-                    Vector3 stemPosView = 0.5f * (entityPosView + basePosView);
-                    Vector3 stemPosNDC = Vector3.Transform(stemPosView, _projectionMatrix);
+                    Vector3 stemPosWorld = 0.5f * (entityPosWorld + basePosWorld);
+                    Vector3 stemPosNDC = Vector3.Transform(stemPosWorld, totalMatrix);
+                    Vector2 stemPosPixel = new Vector2((1 + stemPosNDC.X) * 511, (1 - stemPosNDC.Y) * 511);
 
-                    Vector2 stemVector = new Vector2(entityPosNDC.X - basePosNDC.X, entityPosNDC.Y - basePosNDC.Y) * new Vector2(1024, 615);
+                    Vector2 stemVector = new Vector2(entityPosPixel.X - basePosPixel.X, entityPosPixel.Y - basePosPixel.Y);
                     float stemLength = stemVector.Length();
                     float stemAngle = (float)Math.Atan2(stemVector.Y, stemVector.X);
 
-                    sprite = new MySprite()
+                    MySprite stemSprite = new MySprite()
                     {
                         Type = SpriteType.TEXTURE,
                         Data = "SquareSimple",
-                        Position = new Vector2((1 + stemPosNDC.X) * 511, (1 - stemPosNDC.Y) * 511),
+                        Position = stemPosPixel,
                         Size = new Vector2(stemLength, 1),
                         Color = Color.White,
                         Alignment = TextAlignment.CENTER,
                         RotationOrScale = stemAngle,
                     };
 
-                    DepthSprite stemDepthSprite = new DepthSprite(sprite, stemPosView);
+                    DepthSprite stemDepthSprite = new DepthSprite(stemSprite, stemPosNDC.Z);
 
-                    if (_gridPlaneView.D * (Vector3.Dot(entityPosView, _gridPlaneView.Normal) + _gridPlaneView.D) > 0)
+                    if (gridPlaneWorld.D * (Vector3.Dot(entityPosWorld, gridPlaneWorld.Normal) + gridPlaneWorld.D) > 0)
                     {
                         _spritesAfterPlane.Add(entityDepthSprite);
                         _spritesAfterPlane.Add(baseDepthSprite);
@@ -265,11 +333,9 @@ namespace IngameScript
                     }
                 }
 
-                FinalSprites.AddRange(_spritesBeforePlane.OrderBy(x => x.Depth));
-                FinalSprites.Add(selfDepthSprite);
-                FinalSprites.Add(radialGridDepthSprite);
-                FinalSprites.Add(radialGradientDepthSprite);
-                FinalSprites.AddRange(_spritesAfterPlane.OrderBy(x => x.Depth));
+                FinalSprites.AddRange(_spritesBeforePlane.OrderBy(x => -x.Depth));
+                FinalSprites.AddRange(_spritesAfterPlane.OrderBy(x => -x.Depth));
+                FinalSprites.AddRange(_staticSpritesAfterPlane.OrderBy(x => -x.Depth));
             }
         }
     }

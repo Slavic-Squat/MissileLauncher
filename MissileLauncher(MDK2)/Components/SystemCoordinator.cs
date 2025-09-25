@@ -32,14 +32,14 @@ namespace IngameScript
             public CommunicationHandler CommunicationHandler { get; private set; }
             public TargetingSpriteBuilder TargetingSpriteBuilder { get; private set; }
 
-            private IMyCubeGrid _referenceGrid;
+            private IMyCubeBlock _referenceBlock;
             private Program _program;
             private List<IEnumerator<bool>> _coroutines = new List<IEnumerator<bool>>(); 
 
-            public SystemCoordinator(Program program, int numOfControlStations, int numOfTargetingLasers)
+            public SystemCoordinator(Program program, IMyCubeBlock referenceBlock, int numOfControlStations, int numOfTargetingLasers)
             {
                 _program = program;
-                _referenceGrid = program.Me.CubeGrid;
+                _referenceBlock = referenceBlock;
 
                 ControlStations = new List<ControlStation>();
                 TargetingLasers = new List<TargetingLaser>();
@@ -56,7 +56,7 @@ namespace IngameScript
 
                 CommunicationHandler = new CommunicationHandler(program, 0);
                 AWACS = new AWACS(program, 0);
-                TargetCoordinator = new TargetCoordinator(_referenceGrid, CommunicationHandler);
+                TargetCoordinator = new TargetCoordinator(_referenceBlock, CommunicationHandler);
                 //MissileLauncher = new MissileLauncher(program, 0, 1);
                 //TargetingSpriteBuilder = new TargetingSpriteBuilder(_referenceGrid, TargetCoordinator.AllEntities, TargetCoordinator.FriendlyIDs, TargetCoordinator.HostileIDs, TargetCoordinator.NeutralIDs, _referenceGrid.EntityId);
             }

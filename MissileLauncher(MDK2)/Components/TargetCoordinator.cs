@@ -25,7 +25,7 @@ namespace IngameScript
         public class TargetCoordinator
         {
             #region Parts
-            private IMyCubeGrid _referenceGrid;
+            private IMyCubeBlock _referenceBlock;
             private CommunicationHandler _communicationHandler;
             #endregion
 
@@ -47,9 +47,9 @@ namespace IngameScript
                 Neutral, Friendly, Hostile
             }
 
-            public TargetCoordinator(IMyCubeGrid referenceGrid, CommunicationHandler communicationHandler)
+            public TargetCoordinator(IMyCubeBlock referenceBlock, CommunicationHandler communicationHandler)
             {
-                _referenceGrid = referenceGrid;
+                _referenceBlock = referenceBlock;
                 _communicationHandler = communicationHandler;
                 _communicationHandler.RegisterBroadcastListener("EntityInfo");
 
