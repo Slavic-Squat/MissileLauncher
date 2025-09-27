@@ -22,9 +22,11 @@ namespace IngameScript
 {
     partial class Program
     {
-        public interface IMenu : IUIElement, IEnterable, IUpdatable
+        public interface IButton : IUIElement, IHighlightable, IUpdatable
         {
-            IWindow Window { get; }
+            bool IsPressed { get; }
+            void Press(DateTime time);
+            void Release();
         }
     }
 }

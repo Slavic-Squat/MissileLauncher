@@ -22,9 +22,14 @@ namespace IngameScript
 {
     partial class Program
     {
-        public interface IMenu : IUIElement, IEnterable, IUpdatable
+        public interface IController
         {
-            IWindow Window { get; }
+            IControllable Controllable { get; }
+            UserInput Input { get; }
+            bool IsControlling { get; }
+
+            void TakeControl(IControllable controllable);
+            void ReleaseControl();
         }
     }
 }

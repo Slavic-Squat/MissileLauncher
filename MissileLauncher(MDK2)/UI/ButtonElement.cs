@@ -22,15 +22,18 @@ namespace IngameScript
 {
     partial class Program
     {
-        public class ButtonElement : IUIElement
+        public class ButtonElement : IButton
         {
             public string Name { get; private set; }
             public Vector2 Pos { get; private set; }
             public Vector2 Size { get; private set; }
-            private Action _action;
+            public bool IsPressed => _state.HasFlag(ButtonState.Pressed);
+            public bool IsHighlighted => _state.HasFlag(ButtonState.Highlighted);
+
+            private Func<bool> _func;
             private ButtonState _state = ButtonState.None;
             private DateTime _timePressed = DateTime.MinValue;
-            private Func<bool> _isActive;
+            private Func<bool> _isPressed;
 
             private MySprite _baseSprite;
             private MySprite _borderSprite;
@@ -43,13 +46,13 @@ namespace IngameScript
                 None = 0, Highlighted = 1, Pressed = 1 << 1,
             }
 
-            public ButtonElement(string name, Vector2 pos, Vector2 size, string text, float textScale, Action action, Func<bool> isActive = null)
+            public ButtonElement(string name, Vector2 pos, Vector2 size, string text, float textScale, Func<bool> func, Func<bool> isPressed = null)
             {
                 Name = name;
                 Pos = pos;
                 Size = size;
-                _action = action;
-                _isActive = isActive;
+                _func = func;
+                _isPressed = isPressed;
 
                 _baseSprite = new MySprite()
                 {
@@ -87,11 +90,16 @@ namespace IngameScript
             public void Press(DateTime updateTime)
             {
                 _timePressed = updateTime;
-                _action?.Invoke();
+                _func?.Invoke();
                 SetPressed();
             }
 
-            public void SetPressed()
+            public void Release()
+            {
+                SetReleased();
+            }
+
+            private void SetPressed()
             {
                 _state |= ButtonState.Pressed;
                 _baseSprite.Color = UIConfig.ButtonBackgroundColorPressed;
@@ -99,7 +107,7 @@ namespace IngameScript
                 _textSprite.Color = UIConfig.ButtonTextColorPressed;
             }
 
-            public void SetReleased()
+            private void SetReleased()
             {
                 _state &= ~ButtonState.Pressed;
                 _baseSprite.Color = UIConfig.ButtonBackgroundColor;
@@ -107,7 +115,7 @@ namespace IngameScript
                 _textSprite.Color = UIConfig.ButtonTextColor;
             }
 
-            public void OnHighlight()
+            public void Highlight()
             {
                 _state |= ButtonState.Highlighted;
                 _baseSprite.Size *= 1.1f;
@@ -115,7 +123,7 @@ namespace IngameScript
                 _textSprite.RotationOrScale *= 1.1f;
             }
 
-            public void OnUnhighlight()
+            public void Unhighlight()
             {
                 _state &= ~ButtonState.Highlighted;
                 _baseSprite.Size /= 1.1f;
@@ -125,9 +133,9 @@ namespace IngameScript
 
             public void Update(DateTime updateTime)
             {
-                bool isActive = _isActive?.Invoke() ?? false;
+                bool isPressed = _isPressed?.Invoke() ?? false;
 
-                if (isActive)
+                if (isPressed)
                 {
                     SetPressed();
                 }

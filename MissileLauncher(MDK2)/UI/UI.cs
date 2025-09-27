@@ -22,59 +22,71 @@ namespace IngameScript
 {
     partial class Program
     {
-        public class UI
+        public class UI : INavigable
         {
+            public IController Controller { get; private set; }
+            public bool HasActiveWindow => _activeWindow != null;
+
+            private UIWireManager _uiWireManager;
             private IMyTextSurface _display;
-            private IWindow _currentWindow = null;
-            public UI (Program program, IMyTextSurface display)
+            private IWindow _activeWindow = null;
+            private int _runCounter;
+            public UI (IController controller, IMyTextSurface display, UIWireManager uiWireManager)
             {
+                Controller = controller;
                 _display = display;
+                _uiWireManager = uiWireManager;
+
                 _display.ContentType = ContentType.SCRIPT;
                 _display.Script = "";
                 _display.ScriptBackgroundColor = Color.Black;
 
-                MainWindow mainWindow = new MainWindow(this, new Vector2(_display.TextureSize.X / 2f, _display.TextureSize.Y / 2f), new Vector2(_display.SurfaceSize.X, _display.SurfaceSize.Y));
-                OpenWindow(mainWindow);
+                MainWindow mainWindow = new MainWindow(this, new Vector2(_display.TextureSize.X / 2f, _display.TextureSize.Y / 2f), new Vector2(_display.SurfaceSize.X, _display.SurfaceSize.Y), _uiWireManager);
+                EnterWindow(mainWindow);
             }
 
-            public void Run(DateTime time, UserInput input)
+            public void Run(DateTime time)
             {
-                Navigate(input, time);
-                Update(time);
-                Draw();
+                if (_runCounter++ >= 9)
+                {
+                    Update(time);
+                    Draw();
+                    _runCounter = 0;
+                }
             }
 
-            public void OpenWindow(IWindow window)
+            public void EnterWindow(IWindow window)
             {
-                CloseWindow();
-                _currentWindow = window;
+                ExitCurrentWindow();
+                _activeWindow = window;
+                _activeWindow.Enter();
             }
 
-            public void CloseWindow()
+            public void ExitCurrentWindow()
             {
-                _currentWindow?.OnClose();
-                _currentWindow = null;
+                _activeWindow?.Exit();
+                _activeWindow = null;
             }
 
             public void Update(DateTime time)
             {
-                if (_currentWindow == null)
+                if (!HasActiveWindow)
                 {
-                    MainWindow mainWindow = new MainWindow(this, new Vector2(_display.TextureSize.X / 2f, _display.TextureSize.Y / 2f), new Vector2(_display.SurfaceSize.X, _display.SurfaceSize.Y));
-                    OpenWindow(mainWindow);
+                    MainWindow mainWindow = new MainWindow(this, new Vector2(_display.TextureSize.X / 2f, _display.TextureSize.Y / 2f), new Vector2(_display.SurfaceSize.X, _display.SurfaceSize.Y), _uiWireManager);
+                    EnterWindow(mainWindow);
                 }
-                _currentWindow?.Update(time);
+                _activeWindow?.Update(time);
             }
 
             public void Navigate(UserInput input, DateTime time)
             {
-                _currentWindow?.Navigate(input, time);
+                _activeWindow?.Navigate(input, time);
             }
 
             public void Draw()
             {
                 var frame = _display.DrawFrame();
-                _currentWindow?.Draw(frame);
+                _activeWindow?.Draw(frame);
                 frame.Dispose();
             }
         }

@@ -22,38 +22,43 @@ namespace IngameScript
 {
     partial class Program
     {
-        public class ControlStation
+        public class ControlStation : IController
         {
-            public UserInput UserInput { get; private set; }
             public int ID { get; private set; }
+            public IControllable Controllable { get; private set; }
+            public UserInput Input { get; private set; }
+            public bool IsControlling => Controllable != null;
 
             private List<IMyTextSurface> _displays = new List<IMyTextSurface>();
-            private IMyShipController _controller;
-            private TargetingLaser _controlable;
+            private IMyShipController _controllerReference;
+            private UI _ui;
+            private UIWireManager _uiWireManager;
             private Program _program;
-            public ControlStation(Program program, int iD)
+            public ControlStation(Program program, int iD, UIWireManager uiWireManager)
             {
                 _program = program;
                 ID = iD;
+                _uiWireManager = uiWireManager;
 
                 TryGetBlocks();
 
-                UserInput = new UserInput(_controller);
+                Input = new UserInput(_controllerReference);
+                _ui = new UI(this, _displays[0], _uiWireManager);
             }
 
             public bool TryGetBlocks()
             {
                 try
                 {
-                    _controller = _program.GridTerminalSystem.GetBlockWithName($"Control Station [{ID}]") as IMyShipController;
-                    if (_controller == null)
+                    _controllerReference = _program.GridTerminalSystem.GetBlockWithName($"Control Station [{ID}]") as IMyShipController;
+                    if (_controllerReference == null)
                     {
                         throw new Exception();
                     }
-                    float internalSurfaceCount = (_controller as IMyTextSurfaceProvider)?.SurfaceCount ?? 0;
+                    float internalSurfaceCount = (_controllerReference as IMyTextSurfaceProvider)?.SurfaceCount ?? 0;
                     for (int i = 0; i < internalSurfaceCount; i++)
                     {
-                        _displays.Add((_controller as IMyTextSurfaceProvider).GetSurface(i));
+                        _displays.Add((_controllerReference as IMyTextSurfaceProvider).GetSurface(i));
                     }
                     _program.GridTerminalSystem.GetBlockGroupWithName($"Control Station [{ID}] Displays")?.GetBlocksOfType(_displays);
                     return true;
@@ -68,13 +73,29 @@ namespace IngameScript
 
             public void Run(DateTime time)
             {
-                UserInput.Run(time);
+                Input.Run(time);
+                _ui.Run(time);
+
+                if (!IsControlling)
+                {
+                    _ui.Navigate(Input, time);
+                }
             }
 
-            public void TakeControl(TargetingLaser controlable)
+            public void TakeControl(IControllable controllable)
             {
-                _controlable = controlable;
-                _controlable.TakeControl(this);
+                if (IsControlling)
+                {
+                    ReleaseControl();
+                }
+                Controllable = controllable;
+                controllable.AssignControl(this);
+            }
+
+            public void ReleaseControl()
+            {
+                Controllable?.UnAssignControl();
+                Controllable = null;
             }
         }
     }

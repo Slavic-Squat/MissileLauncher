@@ -30,23 +30,25 @@ namespace IngameScript
             public TargetCoordinator TargetCoordinator { get; private set; }
             public MissileLauncher MissileLauncher { get; private set; }
             public CommunicationHandler CommunicationHandler { get; private set; }
-            public TargetingSpriteBuilder TargetingSpriteBuilder { get; private set; }
+            public IMyCubeBlock ReferenceBlock { get; private set; }
 
-            private IMyCubeBlock _referenceBlock;
+            private UIWireManager _uiWireManager;
             private Program _program;
             private List<IEnumerator<bool>> _coroutines = new List<IEnumerator<bool>>(); 
 
             public SystemCoordinator(Program program, IMyCubeBlock referenceBlock, int numOfControlStations, int numOfTargetingLasers)
             {
                 _program = program;
-                _referenceBlock = referenceBlock;
+                ReferenceBlock = referenceBlock;
 
                 ControlStations = new List<ControlStation>();
                 TargetingLasers = new List<TargetingLaser>();
 
+                _uiWireManager = new UIWireManager(this);
+
                 for (int i = 0; i < numOfControlStations; i++)
                 {
-                    ControlStations.Add(new ControlStation(program, i));
+                    ControlStations.Add(new ControlStation(program, i, _uiWireManager));
                 }
 
                 for (int i = 0; i < numOfTargetingLasers;  i++)
@@ -56,9 +58,8 @@ namespace IngameScript
 
                 CommunicationHandler = new CommunicationHandler(program, 0);
                 AWACS = new AWACS(program, 0);
-                TargetCoordinator = new TargetCoordinator(_referenceBlock, CommunicationHandler);
+                TargetCoordinator = new TargetCoordinator(ReferenceBlock, CommunicationHandler);
                 //MissileLauncher = new MissileLauncher(program, 0, 1);
-                //TargetingSpriteBuilder = new TargetingSpriteBuilder(_referenceGrid, TargetCoordinator.AllEntities, TargetCoordinator.FriendlyIDs, TargetCoordinator.HostileIDs, TargetCoordinator.NeutralIDs, _referenceGrid.EntityId);
             }
 
             public void Run(DateTime time)
@@ -83,7 +84,6 @@ namespace IngameScript
 
                 AWACS.Run(time);
                 TargetCoordinator.Run(time);
-                //TargetingSpriteBuilder.Run();
             }
 
             public void SyncTarget(int laserID)

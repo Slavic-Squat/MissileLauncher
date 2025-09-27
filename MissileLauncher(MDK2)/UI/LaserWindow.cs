@@ -22,7 +22,7 @@ namespace IngameScript
 {
     partial class Program
     {
-        public class RadarWindow : IWindow
+        public class LaserWindow : IWindow
         {
             public UI UI { get; private set; }
             public Vector2 Pos { get; private set; }
@@ -30,7 +30,6 @@ namespace IngameScript
             public bool IsInside { get; private set; }
 
             private UIWireManager _uiWireManager;
-            private TargetingSpriteBuilder _targetingSpriteBuilder;
             private MySprite _sprite;
             private List<IHighlightable> _highlightableElements = new List<IHighlightable>();
             private List<IUpdatable> _updatableElements = new List<IUpdatable>();
@@ -39,14 +38,12 @@ namespace IngameScript
             private IEnterable _enteredElement;
 
 
-            public RadarWindow(UI ui, Vector2 pos, Vector2 size, UIWireManager uiWireManager)
+            public LaserWindow(UI ui, Vector2 pos, Vector2 size, UIWireManager uiWireManager)
             {
                 UI = ui;
                 Pos = pos;
                 Size = size;
                 _uiWireManager = uiWireManager;
-
-                _targetingSpriteBuilder = new TargetingSpriteBuilder(_uiWireManager.GetReferenceBlock(), _uiWireManager.GetAllEntities(), _uiWireManager.GetNeutralIDs(), _uiWireManager.GetFriendlyIDs(), _uiWireManager.GetHostileIDs(), _uiWireManager.GetLocalIDs(), _uiWireManager.GetRemoteIDs(), _uiWireManager.GetReferenceBlock().CubeGrid.EntityId);
 
                 _sprite = new MySprite()
                 {
@@ -144,13 +141,6 @@ namespace IngameScript
             public void Draw(MySpriteDrawFrame frame)
             {
                 frame.Add(_sprite);
-
-                _targetingSpriteBuilder.BuildSprites();
-
-                foreach (var depthSprite in _targetingSpriteBuilder.FinalSprites)
-                {
-                    frame.Add(depthSprite.Sprite);
-                }
 
                 foreach (var element in _allElements)
                 {

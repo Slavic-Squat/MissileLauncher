@@ -22,19 +22,9 @@ namespace IngameScript
 {
     partial class Program
     {
-        public interface IWindow : IUIElement
+        public interface IWindow : IUIElement, IEnterable, IUpdatable
         {
             UI UI { get; }
-            void RequestClose();
-            void OnClose();
-            void OpenMenu(IMenu menu);
-            void CloseMenu(IMenu menu);
-            void FocusMenu(IMenu menu);
-            void UnfocusMenu();
-            void HighlightMenu(IMenu Menu);
-            void UnhighlightMenu();
-            void Update(DateTime time);
-            void Navigate(UserInput input, DateTime time);
         }
     }
 }

@@ -25,7 +25,6 @@ namespace IngameScript
         public class UserInput
         {
             private IMyShipController _inputBlock;
-            private DateTime _time;
             private DateTime _lastRunTime;
 
             public bool WPress { get; private set; } = false;
@@ -78,133 +77,6 @@ namespace IngameScript
 
             public Vector2 MouseInput { get; private set; } = Vector2.Zero;
 
-            public bool Press1
-            {
-                get
-                {
-                    return _press1;
-                }
-                private set
-                {
-                    _press1 = value;
-                    _press1Set = true;
-                }
-            }
-            private bool _press1 = false;
-            private bool _press1Set = false;
-            public bool Press2
-            {
-                get
-                {
-                    return _press2;
-                }
-                private set
-                {
-                    _press2 = value;
-                    _press2Set = true;
-                }
-            }
-            private bool _press2 = false;
-            private bool _press2Set = false;
-            public bool Press3
-            {
-                get
-                {
-                    return _press3;
-                }
-                private set
-                {
-                    _press3 = value;
-                    _press3Set = true;
-                }
-            }
-            private bool _press3 = false;
-            private bool _press3Set = false;
-            public bool Press4
-            {
-                get
-                {
-                    return _press4;
-                }
-                private set
-                {
-                    _press4 = value;
-                    _press4Set = true;
-                }
-            }
-            private bool _press4 = false;
-            private bool _press4Set = false;
-            public bool Press5
-            {
-                get
-                {
-                    return _press5;
-                }
-                private set
-                {
-                    _press5 = value;
-                    _press5Set = true;
-                }
-            }
-            private bool _press5 = false;
-            private bool _press5Set = false;
-            public bool Press6
-            {
-                get
-                {
-                    return _press6;
-                }
-                private set
-                {
-                    _press6 = value;
-                    _press6Set = true;
-                }
-            }
-            private bool _press6 = false;
-            private bool _press6Set = false;
-            public bool Press7
-            {
-                get
-                {
-                    return _press7;
-                }
-                private set
-                {
-                    _press7 = value;
-                    _press7Set = true;
-                }
-            }
-            private bool _press7 = false;
-            private bool _press7Set = false;
-            public bool Press8
-            {
-                get
-                {
-                    return _press8;
-                }
-                private set
-                {
-                    _press8 = value;
-                    _press8Set = true;
-                }
-            }
-            private bool _press8 = false;
-            private bool _press8Set = false;
-            public bool Press9
-            {
-                get
-                {
-                    return _press9;
-                }
-                private set
-                {
-                    _press9 = value;
-                    _press9Set = true;
-                }
-            }
-            private bool _press9 = false;
-            private bool _press9Set = false;
-
             public UserInput(IMyShipController inputBlock)
             {
                 _inputBlock = inputBlock;
@@ -213,19 +85,17 @@ namespace IngameScript
             public void Run(DateTime time)
             {
                 ListenForInput(time);
-                HandleNumbers();
             }
 
             public void ListenForInput(DateTime time)
             {
-                if (_time == DateTime.MinValue)
+                if (_lastRunTime == DateTime.MinValue)
                 {
-                    _time = time;
+                    _lastRunTime = time;
                 }
-                _lastRunTime = _time;
-                _time = time;
 
-                float deltaSeconds = (float)(_time - _lastRunTime).TotalSeconds;
+                float deltaSeconds = (float)(time - _lastRunTime).TotalSeconds;
+                _lastRunTime = time;
 
 
                 if (_inputBlock.MoveIndicator.Z < 0)
@@ -469,93 +339,6 @@ namespace IngameScript
                 }
 
                 MouseInput = _inputBlock.RotationIndicator;
-            }
-
-            public void HandleNumbers()
-            {
-                if (Press1 == true && _press1Set == false)
-                {
-                    Press1 = false;
-                }
-                if (Press2 == true && _press2Set == false)
-                {
-                    Press2 = false;
-                }
-                if (Press3 == true && _press3Set == false)
-                {
-                    Press3 = false;
-                }
-                if (Press4 == true && _press4Set == false)
-                {
-                    Press4 = false;
-                }
-                if (Press5 == true && _press5Set == false)
-                {
-                    Press5 = false;
-                }
-                if (Press6 == true && _press6Set == false)
-                {
-                    Press6 = false;
-                }
-                if (Press7 == true && _press7Set == false)
-                {
-                    Press7 = false;
-                }
-                if (Press8 == true && _press8Set == false)
-                {
-                    Press8 = false;
-                }
-                if (Press9 == true && _press9Set == false)
-                {
-                    Press9 = false;
-                }
-
-                _press1Set = false;
-                _press2Set = false;
-                _press3Set = false;
-                _press4Set = false;
-                _press5Set = false;
-                _press6Set = false;
-                _press7Set = false;
-                _press8Set = false;
-                _press9Set = false;
-            }
-
-            public void PressNumber(string numberString)
-            {
-                int number = 0;
-                int.TryParse(numberString, out number);
-
-                switch (number)
-                {
-                    case 1:
-                        Press1 = true;
-                        break;
-                    case 2:
-                        Press2 = true;
-                        break;
-                    case 3:
-                        Press3 = true;
-                        break;
-                    case 4:
-                        Press4 = true;
-                        break;
-                    case 5:
-                        Press5 = true;
-                        break;
-                    case 6:
-                        Press6 = true;
-                        break;
-                    case 7:
-                        Press7 = true;
-                        break;
-                    case 8:
-                        Press8 = true;
-                        break;
-                    case 9:
-                        Press9 = true;
-                        break;
-                }
             }
         }
     }

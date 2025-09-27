@@ -22,9 +22,9 @@ namespace IngameScript
 {
     partial class Program
     {
-        public interface IMenu : IUIElement, IEnterable, IUpdatable
+        public interface IUpdatable
         {
-            IWindow Window { get; }
+            void Update(DateTime time);
         }
     }
 }

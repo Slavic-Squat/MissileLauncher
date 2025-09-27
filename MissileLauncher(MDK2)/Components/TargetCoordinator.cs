@@ -55,6 +55,9 @@ namespace IngameScript
 
                 EntitiesLocal = new Dictionary<long, EntityInfo>();
                 EntitiesRemote = new Dictionary<long, EntityInfo>();
+                NeutralIDs = new HashSet<long>();
+                HostileIDs = new HashSet<long>();
+                FriendlyIDs = new HashSet<long>();
             }
 
             public void Run(DateTime time)

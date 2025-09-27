@@ -23,14 +23,13 @@ namespace IngameScript
 {
     partial class Program
     {
-        public class TargetingLaser
+        public class TargetingLaser : IControllable
         {
             #region Parts
             private Program _program;
             private IMyMotorStator _azimuthRotor;
             private IMyMotorStator _elevationRotor;
             private CameraArray _cameraArray;
-            private ControlStation _controlStation;
             #endregion
 
             #region State Info
@@ -52,7 +51,11 @@ namespace IngameScript
 
             #region Properties
             public int ID { get; private set; }
-            public bool IsUnderControl { get; private set; }
+            public IController Controller { get; private set; }
+            public bool HasController => Controller != null;
+            public bool IsControlPaused { get; private set; }
+            public bool IsUnderControl => HasController && !IsControlPaused;
+            public bool HasTarget => Target != null;
             public float MaxRaycastDistance
             {
                 get
@@ -127,14 +130,12 @@ namespace IngameScript
 
                 _referenceMatrix = H2 * H1 * H0;
 
-                MoveLaser(0, 0);
-
-                if (IsUnderControl && _controlStation != null)
+                if (IsUnderControl)
                 {
                     ControlLaser(time);
                 }
 
-                if (Target != null && ManualOverride == false)
+                if (HasTarget && !ManualOverride)
                 {
                     AutoTrack(time);
                 }
@@ -190,12 +191,12 @@ namespace IngameScript
 
                 if (!raycastResult.IsEmpty())
                 {
-                    if (Target != null && raycastResult.EntityId == Target.EntityID)
+                    if (HasTarget && raycastResult.EntityId == Target.EntityID)
                     {
                         Target.UpdateFromRaycast(raycastResult, time);
                     }
 
-                    else if (Target == null)
+                    else if (!HasTarget)
                     {
                         if (raycastResult.EntityId == _previouslyDetectedEntity.EntityId)
                         {
@@ -220,37 +221,51 @@ namespace IngameScript
 
             private void ControlLaser(DateTime time)
             {
-                if (_controlStation == null)
+                if (!IsUnderControl)
                     return;
 
-                UserInput userInput = _controlStation.UserInput;
-
-                MoveLaser(-userInput.MouseInput.Y, -userInput.MouseInput.X);
-
-                if (userInput.SpacePress)
+                if (!HasTarget || ManualOverride)
                 {
-                    if (Target == null)
+                    MoveLaser(-Controller.Input.MouseInput.Y, -Controller.Input.MouseInput.X);
+
+                    if (Controller.Input.SpacePress)
                     {
                         Vector3 raycastTarget = _referenceMatrix.Forward * MaxRaycastDistance + _referenceMatrix.Translation;
                         FireLaser(time, raycastTarget, 0f);
                     }
                 }
-                else if (userInput.CRelease)
+                else
                 {
-                    ForgetTarget();
+                    if (Controller.Input.CHeldAndReleased)
+                    {
+                        UnAssignControl();
+                    }
+                    else if (Controller.Input.CRelease)
+                    {
+                        ForgetTarget();
+                    }
                 }
             }
 
-            public void TakeControl(ControlStation controlStation)
+            public void AssignControl(IController controller)
             {
-                _controlStation = controlStation;
-                IsUnderControl = true;
+                Controller = controller;
             }
 
-            public void ReleaseControl()
+            public void UnAssignControl()
             {
-                _controlStation = null;
-                IsUnderControl = false;
+                Controller = null;
+                MoveLaser(0, 0);
+            }
+
+            public void PauseControl()
+            {
+                IsControlPaused = true;
+            }
+
+            public void ResumeControl()
+            {
+                IsControlPaused = false;
             }
         }
     }

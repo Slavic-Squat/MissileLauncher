@@ -30,11 +30,10 @@ namespace IngameScript
             #endregion
 
             #region Parts
-            private IMyCubeGrid _referenceGrid;
+            private IMyCubeBlock _referenceBlock;
             #endregion
 
             #region State Info
-            private int _runCounter;
             #endregion
 
             #region Fields
@@ -60,10 +59,15 @@ namespace IngameScript
             private Matrix _projectionMatrix = Matrix.Identity;
             #endregion
 
-            public TargetingSpriteBuilder(IMyCubeGrid referenceGrid, Dictionary<long, EntityInfo> entities, HashSet<long> neutralIDs, HashSet<long> friendlyIDs, HashSet<long> hostileIDs, HashSet<long> localIDs, HashSet<long> remoteIDs, long selfID)
+            public TargetingSpriteBuilder(IMyCubeBlock referenceBlock, Dictionary<long, EntityInfo> entities, HashSet<long> neutralIDs, HashSet<long> friendlyIDs, HashSet<long> hostileIDs, HashSet<long> localIDs, HashSet<long> remoteIDs, long selfID)
             {
-                _referenceGrid = referenceGrid;
+                _referenceBlock = referenceBlock;
                 _entities = entities;
+                _neutralIDs = neutralIDs;
+                _friendlyIDs = friendlyIDs;
+                _hostileIDs = hostileIDs;
+                _localIDs = localIDs;
+                _remoteIDs = remoteIDs;
                 _selfID = selfID;
 
                 _projectionMatrix = Matrix.CreatePerspectiveFieldOfView(MathHelper.ToRadians(_FOV), _AR, _n, _f);
@@ -75,8 +79,8 @@ namespace IngameScript
 
             private void BuildStaticSprites()
             {
-                Matrix cameraTargetWorld = _referenceGrid.WorldMatrix;
-                Vector3 cameraPositionLocal = new Vector3(17861, 14241, 30238);
+                Matrix cameraTargetWorld = _referenceBlock.WorldMatrix;
+                Vector3 cameraPositionLocal = new Vector3(31334, 30557, 63764);
                 Vector3 cameraPositionWorld = Vector3.Transform(cameraPositionLocal, cameraTargetWorld);
 
                 Matrix viewMatrix = Matrix.CreateLookAt(cameraPositionWorld, cameraTargetWorld.Translation, cameraTargetWorld.Up);
@@ -86,7 +90,7 @@ namespace IngameScript
 
                 Vector3 selfPosLocal = new Vector3(0, 767, 0);
                 Vector3 selfPosWorld = Vector3.Transform(selfPosLocal, cameraTargetWorld);
-                Vector3 selfPosNDC = Vector3.Transform(selfPosWorld, _projectionMatrix);
+                Vector3 selfPosNDC = Vector3.Transform(selfPosWorld, totalMatrix);
                 Vector2 selfPosPixel = new Vector2((1 + selfPosNDC.X) * 511, (1 - selfPosNDC.Y) * 511);
 
                 MySprite selfSprite = new MySprite()
@@ -94,7 +98,7 @@ namespace IngameScript
                     Type = SpriteType.TEXTURE,
                     Data = "Self_0",
                     Position = selfPosPixel,
-                    Size = new Vector2(256, 256),
+                    Size = new Vector2(128, 128),
                     Color = Color.White,
                     Alignment = TextAlignment.CENTER,
                     RotationOrScale = 0f
@@ -103,10 +107,10 @@ namespace IngameScript
                 DepthSprite selfDepthSprite = new DepthSprite(selfSprite, selfPosNDC.Z);
 
                 Vector3 basePosWorld = selfPosWorld - (Vector3.Dot(gridPlaneWorld.Normal, selfPosWorld) + gridPlaneWorld.D) * gridPlaneWorld.Normal;
-                Vector3 basePosNDC = Vector3.Transform(basePosWorld, _projectionMatrix);
+                Vector3 basePosNDC = Vector3.Transform(basePosWorld, totalMatrix);
                 Vector2 basePosPixel = new Vector2((1 + basePosNDC.X) * 511, (1 - basePosNDC.Y) * 511);
-                float basePosZView = (_f * _n) / (_f - basePosNDC.Z * (_f - _n));
-                float baseDepthScale = _minScale + (_maxScale - _minScale) * (basePosNDC.Z - _n) / (_f - _n);
+                float basePosZView = -(_f * _n) / (_f - basePosNDC.Z * (_f - _n));
+                float baseDepthScale = _minScale + (_maxScale - _minScale) * (-basePosZView - _n) / (_f - _n);
 
                 MySprite baseSprite = new MySprite()
                 {
@@ -150,7 +154,7 @@ namespace IngameScript
                     Data = "Radial_Grid_0",
                     Position = new Vector2(511, 511),
                     Size = new Vector2(1024, 1024),
-                    Color = Color.White,
+                    Color = new Color(128, 128, 128, 255),
                     Alignment = TextAlignment.CENTER,
                     RotationOrScale = 0f
                 };
@@ -163,7 +167,7 @@ namespace IngameScript
                     Data = "Radial_Grad_0",
                     Position = new Vector2(511, 511),
                     Size = new Vector2(1024, 1024),
-                    Color = Color.White,
+                    Color = new Color(255, 36, 75, 255),
                     Alignment = TextAlignment.CENTER,
                     RotationOrScale = 0f
                 };
@@ -185,7 +189,7 @@ namespace IngameScript
                 _spritesBeforePlane.Clear();
                 _spritesAfterPlane.Clear();
 
-                Matrix cameraTargetWorld = _referenceGrid.WorldMatrix;
+                Matrix cameraTargetWorld = _referenceBlock.WorldMatrix;
                 Vector3 cameraPositionLocal = new Vector3(17861, 14241, 30238);
                 Vector3 cameraPositionWorld = Vector3.Transform(cameraPositionLocal, cameraTargetWorld);
 
@@ -199,9 +203,9 @@ namespace IngameScript
                     Vector3 entityPosWorld = entity.Position;
                     Vector3 entityPosNDC = Vector3.Transform(entityPosWorld, totalMatrix);
                     Vector2 entityPosPixel = new Vector2((1 + entityPosNDC.X) * 511, (1 - entityPosNDC.Y) * 511);
-                    float entityPosZView = (_f * _n) / (_f - entityPosNDC.Z * (_f - _n));
+                    float entityPosZView = -(_f * _n) / (_f - entityPosNDC.Z * (_f - _n));
 
-                    float entityDepthScale = _minScale + (_maxScale - _minScale) * (entityPosZView - _n) / (_f - _n);
+                    float entityDepthScale = _minScale + (_maxScale - _minScale) * (-entityPosZView - _n) / (_f - _n);
 
                     string spriteName = default(string);
                     Vector2 spriteSize = default(Vector2);
@@ -209,7 +213,7 @@ namespace IngameScript
 
                     if (entity is MissileInfo)
                     {
-                        spriteName = "Missile";
+                        spriteName = "Missile_0";
                         spriteSize = new Vector2(64, 64);
 
                         var missile = entity as MissileInfo;
@@ -230,22 +234,31 @@ namespace IngameScript
                         {
                             spriteColor = Color.OrangeRed;
                         }
+                        else
+                        {
+                            spriteColor = Color.White;
+                        }
                     }
                     else
                     {
                         if (_localIDs.Contains(entity.EntityID) && _remoteIDs.Contains(entity.EntityID))
                         {
-                            spriteName = "Target2";
+                            spriteName = "Target_2";
                             spriteSize = new Vector2(128, 128);
                         }
                         else if (_localIDs.Contains(entity.EntityID))
                         {
-                            spriteName = "Target0";
+                            spriteName = "Target_0";
                             spriteSize = new Vector2(128, 128);
                         }
                         else if (_remoteIDs.Contains(entity.EntityID))
                         {
-                            spriteName = "Target1";
+                            spriteName = "Target_1";
+                            spriteSize = new Vector2(128, 128);
+                        }
+                        else
+                        {
+                            spriteName = "Target_0";
                             spriteSize = new Vector2(128, 128);
                         }
 
@@ -261,6 +274,10 @@ namespace IngameScript
                         {
                             spriteColor = Color.OrangeRed;
                         }
+                        else
+                        {
+                            spriteColor = Color.White;
+                        }
                     }
 
                     MySprite entitySprite = new MySprite()
@@ -274,21 +291,21 @@ namespace IngameScript
                         RotationOrScale = 0f,
                     };
 
-                    DepthSprite entityDepthSprite = new DepthSprite(entitySprite, entityPosZView);
+                    DepthSprite entityDepthSprite = new DepthSprite(entitySprite, entityPosNDC.Z);
 
                     EntitySprites.Add(entity.EntityID, entityDepthSprite);
 
                     Vector3 basePosWorld = entityPosWorld - (Vector3.Dot(gridPlaneWorld.Normal, entityPosWorld) + gridPlaneWorld.D) * gridPlaneWorld.Normal;
                     Vector3 basePosNDC = Vector3.Transform(basePosWorld, totalMatrix);
                     Vector2 basePosPixel = new Vector2((1 + basePosNDC.X) * 511, (1 - basePosNDC.Y) * 511);
-                    float basePosZView = (_f * _n) / (_f - basePosNDC.Z * (_f - _n));
+                    float basePosZView = -(_f * _n) / (_f - basePosNDC.Z * (_f - _n));
 
-                    float baseDepthScale = _minScale + (_maxScale - _minScale) * (basePosZView - _n) / (_f + _n);
+                    float baseDepthScale = _minScale + (_maxScale - _minScale) * (-basePosZView - _n) / (_f + _n);
 
                     MySprite baseSprite = new MySprite()
                     {
                         Type = SpriteType.TEXTURE,
-                        Data = "Sprite_Base",
+                        Data = "Base_0",
                         Position = basePosPixel,
                         Size = new Vector2(32, 32) * baseDepthScale,
                         Color = Color.White,
@@ -296,7 +313,7 @@ namespace IngameScript
                         RotationOrScale = 0f,
                     };
 
-                    DepthSprite baseDepthSprite = new DepthSprite(baseSprite, basePosZView);
+                    DepthSprite baseDepthSprite = new DepthSprite(baseSprite, basePosNDC.Z);
 
                     Vector3 stemPosWorld = 0.5f * (entityPosWorld + basePosWorld);
                     Vector3 stemPosNDC = Vector3.Transform(stemPosWorld, totalMatrix);
@@ -319,7 +336,7 @@ namespace IngameScript
 
                     DepthSprite stemDepthSprite = new DepthSprite(stemSprite, stemPosNDC.Z);
 
-                    if (gridPlaneWorld.D * (Vector3.Dot(entityPosWorld, gridPlaneWorld.Normal) + gridPlaneWorld.D) > 0)
+                    if ((Vector3.Dot(cameraPositionWorld, gridPlaneWorld.Normal) + gridPlaneWorld.D) * (Vector3.Dot(entityPosWorld, gridPlaneWorld.Normal) + gridPlaneWorld.D) > 0)
                     {
                         _spritesAfterPlane.Add(entityDepthSprite);
                         _spritesAfterPlane.Add(baseDepthSprite);
@@ -334,8 +351,7 @@ namespace IngameScript
                 }
 
                 FinalSprites.AddRange(_spritesBeforePlane.OrderBy(x => -x.Depth));
-                FinalSprites.AddRange(_spritesAfterPlane.OrderBy(x => -x.Depth));
-                FinalSprites.AddRange(_staticSpritesAfterPlane.OrderBy(x => -x.Depth));
+                FinalSprites.AddRange(_spritesAfterPlane.Concat(_staticSpritesAfterPlane).OrderBy(x => -x.Depth));
             }
         }
     }

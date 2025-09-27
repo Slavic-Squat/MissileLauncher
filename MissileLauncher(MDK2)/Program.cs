@@ -38,8 +38,12 @@ namespace IngameScript
         {
             Runtime.UpdateFrequency = UpdateFrequency.Update1;
 
-            _systemCoordinator = new SystemCoordinator(this, 1, 1);
-            _systemCoordinator.ControlStations[0].TakeControl(_systemCoordinator.TargetingLasers[0]);
+            List<IMyShipController> tempList = new List<IMyShipController>();
+            GridTerminalSystem.GetBlocksOfType(tempList, ctrl => ctrl.IsMainCockpit);
+            IMyCubeBlock referenceBlock = tempList.Count > 0 ? tempList[0] as IMyCubeBlock : null;
+
+            _systemCoordinator = new SystemCoordinator(this, referenceBlock, 1, 1);
+            //_systemCoordinator.ControlStations[0].TakeControl(_systemCoordinator.TargetingLasers[0]);
 
             _commandHandler = new CommandHandler(Me, commands);
 
