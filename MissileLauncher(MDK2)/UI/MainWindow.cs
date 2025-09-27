@@ -55,16 +55,25 @@ namespace IngameScript
                     Alignment = TextAlignment.CENTER
                 };
 
-                ButtonElement laserButton = new ButtonElement("LASER CTRL", pos + new Vector2(-250, 0), new Vector2(400, 100), "LASER CTRL", 2.0f, () => { return true; });
-                ButtonElement radarButton = new ButtonElement("RADAR", pos + new Vector2(250, 0), new Vector2(400, 100), "LASER CTRL", 2.0f, () => { return true; });
+                Button laserButton = new Button("LASER CTRL", pos + new Vector2(-250, 0), new Vector2(400, 100), "LASER CTRL", 2.0f, () => { return true; });
+                Button radarButton = new Button("RADAR", pos + new Vector2(250, 0), new Vector2(400, 100), "LASER CTRL", 2.0f, () => { return true; });
 
-                HighlightElement(laserButton);
                 _highlightableElements.Add(laserButton);
                 _highlightableElements.Add(radarButton);
+
+                _updatableElements.Add(laserButton);
+                _updatableElements.Add(radarButton);
+
+                _allElements.Add(laserButton);
+                _allElements.Add(radarButton);
             }
 
             public void Enter()
             {
+                if (_highlightableElements.Count > 0)
+                {
+                    HighlightElement(_highlightableElements[0]);
+                }
                 IsInside = true;
             }
 
@@ -167,6 +176,17 @@ namespace IngameScript
                 {
                     Exit();
                 }
+                else if (_highlightedElement == null)
+                {
+                    if (_highlightableElements.Count > 0)
+                    {
+                        HighlightElement(_highlightableElements[0]);
+                    }
+                    else
+                    {
+                        return;
+                    }
+                }
                 else if (input.WRelease)
                 {
                     IHighlightable nextElement = _highlightableElements.Where(element => element.Pos.Y < _highlightedElement.Pos.Y).OrderBy(element =>
@@ -211,7 +231,7 @@ namespace IngameScript
 
                     HighlightElement(nextElement);
                 }
-                else if (input.SpaceRelease && _highlightedElement != null)
+                else if (input.SpaceRelease)
                 {
                     ActivateHighlightedElement(time);
                 }

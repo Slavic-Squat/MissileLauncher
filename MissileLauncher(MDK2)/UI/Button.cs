@@ -22,7 +22,7 @@ namespace IngameScript
 {
     partial class Program
     {
-        public class ButtonElement : IButton
+        public class Button : IButton
         {
             public string Name { get; private set; }
             public Vector2 Pos { get; private set; }
@@ -46,7 +46,7 @@ namespace IngameScript
                 None = 0, Highlighted = 1, Pressed = 1 << 1,
             }
 
-            public ButtonElement(string name, Vector2 pos, Vector2 size, string text, float textScale, Func<bool> func, Func<bool> isPressed = null)
+            public Button(string name, Vector2 pos, Vector2 size, string text, float textScale, Func<bool> func, Func<bool> isPressed = null)
             {
                 Name = name;
                 Pos = pos;
