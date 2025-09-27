@@ -76,9 +76,18 @@ namespace IngameScript
                 Input.Run(time);
                 _ui.Run(time);
 
+                CleanUp();
                 if (!IsControlling)
                 {
                     _ui.Navigate(Input, time);
+                }
+            }
+
+            private void CleanUp()
+            {
+                if (!Controllable?.HasController ?? false)
+                {
+                    Controllable = null;
                 }
             }
 
@@ -90,6 +99,8 @@ namespace IngameScript
                 }
                 Controllable = controllable;
                 controllable.AssignControl(this);
+
+                _ui.EnterModal(new InfoModal(new Vector2(_ui.TextureSize.X * 0.5f, _ui.TextureSize.Y * 0.5f), _ui.SurfaceSize * 0.75f, () => !IsControlling, $"UI Navigation Disabled\nReason: Controlling Object", 1.2f));
             }
 
             public void ReleaseControl()

@@ -84,6 +84,13 @@ namespace IngameScript
 
                 AWACS.Run(time);
                 TargetCoordinator.Run(time);
+
+                SyncTarget(0);
+
+                foreach (var target in AWACS.Targets.Values)
+                {
+                    TargetCoordinator.AddEntity(target, false);
+                }
             }
 
             public void SyncTarget(int laserID)

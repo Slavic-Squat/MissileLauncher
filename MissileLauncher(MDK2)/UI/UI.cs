@@ -26,22 +26,25 @@ namespace IngameScript
         {
             public IController Controller { get; private set; }
             public bool HasActiveWindow => _activeWindow != null;
+            public Vector2 SurfaceSize => _display.SurfaceSize;
+            public Vector2 TextureSize => _display.TextureSize;
+            public UIWireManager UIWireManager { get; private set; }
 
-            private UIWireManager _uiWireManager;
             private IMyTextSurface _display;
             private IWindow _activeWindow = null;
+            private IModal _activeModal = null;
             private int _runCounter;
             public UI (IController controller, IMyTextSurface display, UIWireManager uiWireManager)
             {
                 Controller = controller;
                 _display = display;
-                _uiWireManager = uiWireManager;
+                UIWireManager = uiWireManager;
 
-                _display.ContentType = ContentType.SCRIPT;
-                _display.Script = "";
-                _display.ScriptBackgroundColor = Color.Black;
+                display.ContentType = ContentType.SCRIPT;
+                display.Script = "";
+                display.ScriptBackgroundColor = Color.Black;
 
-                MainWindow mainWindow = new MainWindow(this, new Vector2(_display.TextureSize.X / 2f, _display.TextureSize.Y / 2f), new Vector2(_display.SurfaceSize.X, _display.SurfaceSize.Y), _uiWireManager);
+                MainWindow mainWindow = new MainWindow(this);
                 EnterWindow(mainWindow);
             }
 
@@ -62,17 +65,36 @@ namespace IngameScript
                 _activeWindow.Enter();
             }
 
-            public void ExitCurrentWindow()
+            private void ExitCurrentWindow()
             {
                 _activeWindow?.Exit();
                 _activeWindow = null;
             }
 
+            public void EnterModal(IModal modal)
+            {
+                _activeModal = modal;
+            }
+
+            private void CleanUp()
+            {
+                if (!_activeWindow?.IsInside ?? false)
+                {
+                    _activeWindow = null;
+                }
+                if (_activeModal?.CanClose ?? false)
+                {
+                    _activeModal = null;
+                }
+            }
+
             public void Update(DateTime time)
             {
+                CleanUp();
+
                 if (!HasActiveWindow)
                 {
-                    MainWindow mainWindow = new MainWindow(this, new Vector2(_display.TextureSize.X / 2f, _display.TextureSize.Y / 2f), new Vector2(_display.SurfaceSize.X, _display.SurfaceSize.Y), _uiWireManager);
+                    MainWindow mainWindow = new MainWindow(this);
                     EnterWindow(mainWindow);
                 }
                 _activeWindow?.Update(time);
@@ -80,6 +102,10 @@ namespace IngameScript
 
             public void Navigate(UserInput input, DateTime time)
             {
+                if (_activeModal != null)
+                {
+                    return;
+                }
                 _activeWindow?.Navigate(input, time);
             }
 
@@ -87,6 +113,7 @@ namespace IngameScript
             {
                 var frame = _display.DrawFrame();
                 _activeWindow?.Draw(frame);
+                _activeModal?.Draw(frame);
                 frame.Dispose();
             }
         }

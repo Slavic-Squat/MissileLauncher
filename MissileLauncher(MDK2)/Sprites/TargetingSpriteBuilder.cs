@@ -27,6 +27,15 @@ namespace IngameScript
             #region Properties
             public Dictionary<long, DepthSprite> EntitySprites { get; private set; }
             public List<DepthSprite> FinalSprites { get; private set; }
+            public float Zoom
+            {
+                get { return _zoom; }
+                set
+                {
+                    _zoom = value;
+                    BuildStaticSprites();
+                }
+            }
             #endregion
 
             #region Parts
@@ -43,6 +52,7 @@ namespace IngameScript
             private float _f = 100000;
             private float _minScale = 0.5f;
             private float _maxScale = 1.5f;
+            private float _zoom = 1f;
 
             private Dictionary<long, EntityInfo> _entities;
             private HashSet<long> _neutralIDs;
@@ -53,6 +63,7 @@ namespace IngameScript
             private long _selfID = -1;
 
             private List<DepthSprite> _spritesBeforePlane = new List<DepthSprite>();
+            private List<DepthSprite> _planeSprites = new List<DepthSprite>();
             private List<DepthSprite> _spritesAfterPlane = new List<DepthSprite>();
             private List<DepthSprite> _staticSpritesAfterPlane = new List<DepthSprite>();
 
@@ -82,6 +93,12 @@ namespace IngameScript
                 Matrix cameraTargetWorld = _referenceBlock.WorldMatrix;
                 Vector3 cameraPositionLocal = new Vector3(31334, 30557, 63764);
                 Vector3 cameraPositionWorld = Vector3.Transform(cameraPositionLocal, cameraTargetWorld);
+
+                Vector3 TargetToCamera = cameraPositionWorld - cameraTargetWorld.Translation;
+                float TargetToCameraDist = TargetToCamera.Length();
+                Vector3 TargetToCameraDir = TargetToCamera / TargetToCameraDist;
+
+                cameraPositionWorld = cameraTargetWorld.Translation + TargetToCameraDir * (TargetToCameraDist / _zoom);
 
                 Matrix viewMatrix = Matrix.CreateLookAt(cameraPositionWorld, cameraTargetWorld.Translation, cameraTargetWorld.Up);
                 Matrix totalMatrix = viewMatrix * _projectionMatrix;
@@ -174,12 +191,13 @@ namespace IngameScript
 
                 DepthSprite gradDepthSprite = new DepthSprite(gradSprite, cameraTargetNDC.Z);
 
+                _planeSprites.Clear();
+                _planeSprites.Add(gridDepthSprite);
+                _planeSprites.Add(gradDepthSprite);
                 _staticSpritesAfterPlane.Clear();
                 _staticSpritesAfterPlane.Add(selfDepthSprite);
                 _staticSpritesAfterPlane.Add(baseDepthSprite);
                 _staticSpritesAfterPlane.Add(stemDepthSprite);
-                _staticSpritesAfterPlane.Add(gridDepthSprite);
-                _staticSpritesAfterPlane.Add(gradDepthSprite);
             }
 
             public void BuildSprites()
@@ -190,8 +208,14 @@ namespace IngameScript
                 _spritesAfterPlane.Clear();
 
                 Matrix cameraTargetWorld = _referenceBlock.WorldMatrix;
-                Vector3 cameraPositionLocal = new Vector3(17861, 14241, 30238);
+                Vector3 cameraPositionLocal = new Vector3(31334, 30557, 63764);
                 Vector3 cameraPositionWorld = Vector3.Transform(cameraPositionLocal, cameraTargetWorld);
+
+                Vector3 TargetToCamera = cameraPositionWorld - cameraTargetWorld.Translation;
+                float TargetToCameraDist = TargetToCamera.Length();
+                Vector3 TargetToCameraDir = TargetToCamera / TargetToCameraDist;
+
+                cameraPositionWorld = cameraTargetWorld.Translation + TargetToCameraDir * (TargetToCameraDist / _zoom);
 
                 Matrix viewMatrix = Matrix.CreateLookAt(cameraPositionWorld, cameraTargetWorld.Translation, cameraTargetWorld.Up);
                 Matrix totalMatrix = viewMatrix * _projectionMatrix;
@@ -214,7 +238,7 @@ namespace IngameScript
                     if (entity is MissileInfo)
                     {
                         spriteName = "Missile_0";
-                        spriteSize = new Vector2(64, 64);
+                        spriteSize = new Vector2(16, 16);
 
                         var missile = entity as MissileInfo;
 
@@ -244,22 +268,22 @@ namespace IngameScript
                         if (_localIDs.Contains(entity.EntityID) && _remoteIDs.Contains(entity.EntityID))
                         {
                             spriteName = "Target_2";
-                            spriteSize = new Vector2(128, 128);
+                            spriteSize = new Vector2(32, 32);
                         }
                         else if (_localIDs.Contains(entity.EntityID))
                         {
                             spriteName = "Target_0";
-                            spriteSize = new Vector2(128, 128);
+                            spriteSize = new Vector2(32, 32);
                         }
                         else if (_remoteIDs.Contains(entity.EntityID))
                         {
                             spriteName = "Target_1";
-                            spriteSize = new Vector2(128, 128);
+                            spriteSize = new Vector2(32, 32);
                         }
                         else
                         {
                             spriteName = "Target_0";
-                            spriteSize = new Vector2(128, 128);
+                            spriteSize = new Vector2(32, 32);
                         }
 
                         if (_neutralIDs.Contains(entity.EntityID))
@@ -351,6 +375,7 @@ namespace IngameScript
                 }
 
                 FinalSprites.AddRange(_spritesBeforePlane.OrderBy(x => -x.Depth));
+                FinalSprites.AddRange(_planeSprites);
                 FinalSprites.AddRange(_spritesAfterPlane.Concat(_staticSpritesAfterPlane).OrderBy(x => -x.Depth));
             }
         }

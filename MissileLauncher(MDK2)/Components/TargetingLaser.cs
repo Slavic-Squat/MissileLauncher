@@ -130,6 +130,8 @@ namespace IngameScript
 
                 _referenceMatrix = H2 * H1 * H0;
 
+                _cameraArray.Update(time);
+
                 if (IsUnderControl)
                 {
                     ControlLaser(time);
@@ -230,20 +232,17 @@ namespace IngameScript
 
                     if (Controller.Input.SpacePress)
                     {
-                        Vector3 raycastTarget = _referenceMatrix.Forward * MaxRaycastDistance + _referenceMatrix.Translation;
+                        Vector3 raycastTarget = _referenceMatrix.Forward * MaxRaycastDistance * 0.9f + _referenceMatrix.Translation;
                         FireLaser(time, raycastTarget, 0f);
                     }
                 }
-                else
+                if (Controller.Input.CHeldAndReleased)
                 {
-                    if (Controller.Input.CHeldAndReleased)
-                    {
-                        UnAssignControl();
-                    }
-                    else if (Controller.Input.CRelease)
-                    {
-                        ForgetTarget();
-                    }
+                    UnAssignControl();
+                }
+                else if (Controller.Input.CRelease)
+                {
+                    ForgetTarget();
                 }
             }
 

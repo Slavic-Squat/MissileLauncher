@@ -29,43 +29,88 @@ namespace IngameScript
             public Vector2 Size { get; private set; }
             public bool IsInside { get; private set; }
 
-            private UIWireManager _uiWireManager;
-            private MySprite _sprite;
+            private List<TargetingLaser> _lasers;
+
+            private List<MySprite> _sprites = new List<MySprite>();
             private List<IHighlightable> _highlightableElements = new List<IHighlightable>();
             private List<IUpdatable> _updatableElements = new List<IUpdatable>();
             private List<IUIElement> _allElements = new List<IUIElement>();
             private IHighlightable _highlightedElement;
             private IEnterable _enteredElement;
+            private int _pageIndex = 0;
 
 
-            public LaserWindow(UI ui, Vector2 pos, Vector2 size, UIWireManager uiWireManager)
+            public LaserWindow(UI ui, Vector2 pos, Vector2 size)
             {
                 UI = ui;
                 Pos = pos;
                 Size = size;
-                _uiWireManager = uiWireManager;
 
-                _sprite = new MySprite()
+                Init();
+            }
+
+            public LaserWindow(UI ui)
+            {
+                UI = ui;
+                Pos = new Vector2(ui.TextureSize.X / 2f, ui.TextureSize.Y / 2f);
+                Size = new Vector2(ui.SurfaceSize.X, ui.SurfaceSize.Y);
+
+                _lasers = UI.UIWireManager.GetTargetingLasers();
+
+                Init();
+            }
+
+            public void Init()
+            {
+                MySprite backgroundSprite = new MySprite()
                 {
                     Type = SpriteType.TEXTURE,
                     Data = "SquareSimple",
-                    Position = pos,
-                    Size = size,
-                    Color = UIConfig.WindowBackgroundColor,
+                    Position = Pos,
+                    Size = Size,
+                    Color = Color.Black,
                     Alignment = TextAlignment.CENTER
                 };
+                _sprites.Add(backgroundSprite);
 
-                Button laserButton = new Button("LASER CTRL", pos + new Vector2(-250, 0), new Vector2(400, 100), "LASER CTRL", 2.0f, () => { return true; });
-                Button radarButton = new Button("RADAR", pos + new Vector2(250, 0), new Vector2(400, 100), "LASER CTRL", 2.0f, () => { return true; });
+                MySprite headerBorderSprite = new MySprite()
+                {
+                    Type = SpriteType.TEXTURE,
+                    Data = "SquareSimple",
+                    Position = Pos + new Vector2(0, -Size.Y / 2 + 30),
+                    Size = new Vector2(460, 80),
+                    Color = Color.White,
+                    Alignment = TextAlignment.CENTER
+                };
+                _sprites.Add(headerBorderSprite);
 
-                _highlightableElements.Add(laserButton);
-                _highlightableElements.Add(radarButton);
+                MySprite headerFillSprite = new MySprite()
+                {
+                    Type = SpriteType.TEXTURE,
+                    Data = "SquareSimple",
+                    Position = Pos + new Vector2(0, -Size.Y / 2 + 30),
+                    Size = new Vector2(440, 60),
+                    Color = new Color(32, 32, 32, 255),
+                    Alignment = TextAlignment.CENTER
+                };
+                _sprites.Add(headerFillSprite);
 
-                _updatableElements.Add(laserButton);
-                _updatableElements.Add(radarButton);
+                MySprite headerTextSprite = SpriteHelper.CreateText(Pos + new Vector2(0, -Size.Y / 2 + 30), "Select Laser To Control:", Color.White, 1.5f);
+                _sprites.Add(headerTextSprite);
 
-                _allElements.Add(laserButton);
-                _allElements.Add(radarButton);
+                for (int i = 0; i < _lasers.Count; i++)
+                {
+                    TargetingLaser laser = _lasers[i];
+                    Button button = new Button($"Laser [{i}]", Pos + new Vector2(i % 2 * 320 - Size.X / 2 + 160, i / 2 * 140 - Size.Y / 2 + 180), new Vector2(240, 80), $"Laser [{i}]", 1.2f, () =>
+                    {
+                        UI.Controller.TakeControl(laser);
+                        return true;
+                    });
+
+                    _highlightableElements.Add(button);
+                    _updatableElements.Add(button);
+                    _allElements.Add(button);
+                }
             }
 
             public void Enter()
@@ -121,21 +166,21 @@ namespace IngameScript
                 if (_enteredElement != null)
                 {
                     _enteredElement.Exit();
-                    CleanUpCurrentElement();
+                    _enteredElement = null;
                 }
             }
 
-            private void CleanUpCurrentElement()
+            private void CleanUp()
             {
-                _enteredElement = null;
+                if (!_enteredElement?.IsInside ?? false)
+                {
+                    _enteredElement = null;
+                }
             }
 
             public void Update(DateTime time)
             {
-                if (_enteredElement?.IsInside == false)
-                {
-                    CleanUpCurrentElement();
-                }
+                CleanUp();
 
                 foreach (var element in _updatableElements)
                 {
@@ -151,7 +196,7 @@ namespace IngameScript
 
             public void Draw(MySpriteDrawFrame frame)
             {
-                frame.Add(_sprite);
+                frame.AddRange(_sprites);
 
                 foreach (var element in _allElements)
                 {

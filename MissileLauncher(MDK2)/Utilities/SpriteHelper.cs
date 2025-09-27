@@ -24,51 +24,51 @@ namespace IngameScript
     {
         public static class SpriteHelper
         {
-            public static List<MySprite> CreateBorder(Vector2 pos, Vector2 size, Color color, float borderThickness)
-            {
-                List<MySprite> sprites = new List<MySprite>();
-                MySprite topBorder = new MySprite()
-                {
-                    Type = SpriteType.TEXTURE,
-                    Data = "SquareSimple",
-                    Position = pos + new Vector2(0, -size.Y / 2 + borderThickness / 2),
-                    Size = new Vector2(size.X, borderThickness),
-                    Color = color,
-                    Alignment = TextAlignment.CENTER
-                };
-                sprites.Add(topBorder);
-                MySprite bottomBorder = new MySprite()
-                {
-                    Type = SpriteType.TEXTURE,
-                    Data = "SquareSimple",
-                    Position = pos + new Vector2(0, size.Y / 2 - borderThickness / 2),
-                    Size = new Vector2(size.X, borderThickness),
-                    Color = color,
-                    Alignment = TextAlignment.CENTER
-                };
-                sprites.Add(bottomBorder);
-                MySprite leftBorder = new MySprite()
-                {
-                    Type = SpriteType.TEXTURE,
-                    Data = "SquareSimple",
-                    Position = pos + new Vector2(-size.X / 2 + borderThickness / 2, 0),
-                    Size = new Vector2(borderThickness, size.Y),
-                    Color = color,
-                    Alignment = TextAlignment.CENTER
-                };
-                sprites.Add(leftBorder);
-                MySprite rightBorder = new MySprite()
-                {
-                    Type = SpriteType.TEXTURE,
-                    Data = "SquareSimple",
-                    Position = pos + new Vector2(size.X / 2 - borderThickness / 2, 0),
-                    Size = new Vector2(borderThickness, size.Y),
-                    Color = color,
-                    Alignment = TextAlignment.CENTER
-                };
-                sprites.Add(rightBorder);
-                return sprites;
-            }
+            //public static List<MySprite> CreateBorder(Vector2 pos, Vector2 size, Color color, float borderThickness)
+            //{
+            //    List<MySprite> sprites = new List<MySprite>();
+            //    MySprite topBorder = new MySprite()
+            //    {
+            //        Type = SpriteType.TEXTURE,
+            //        Data = "SquareSimple",
+            //        Position = pos + new Vector2(0, -size.Y / 2 + borderThickness / 2),
+            //        Size = new Vector2(size.X, borderThickness),
+            //        Color = color,
+            //        Alignment = TextAlignment.CENTER
+            //    };
+            //    sprites.Add(topBorder);
+            //    MySprite bottomBorder = new MySprite()
+            //    {
+            //        Type = SpriteType.TEXTURE,
+            //        Data = "SquareSimple",
+            //        Position = pos + new Vector2(0, size.Y / 2 - borderThickness / 2),
+            //        Size = new Vector2(size.X, borderThickness),
+            //        Color = color,
+            //        Alignment = TextAlignment.CENTER
+            //    };
+            //    sprites.Add(bottomBorder);
+            //    MySprite leftBorder = new MySprite()
+            //    {
+            //        Type = SpriteType.TEXTURE,
+            //        Data = "SquareSimple",
+            //        Position = pos + new Vector2(-size.X / 2 + borderThickness / 2, 0),
+            //        Size = new Vector2(borderThickness, size.Y),
+            //        Color = color,
+            //        Alignment = TextAlignment.CENTER
+            //    };
+            //    sprites.Add(leftBorder);
+            //    MySprite rightBorder = new MySprite()
+            //    {
+            //        Type = SpriteType.TEXTURE,
+            //        Data = "SquareSimple",
+            //        Position = pos + new Vector2(size.X / 2 - borderThickness / 2, 0),
+            //        Size = new Vector2(borderThickness, size.Y),
+            //        Color = color,
+            //        Alignment = TextAlignment.CENTER
+            //    };
+            //    sprites.Add(rightBorder);
+            //    return sprites;
+            //}
 
             public static MySprite CreateText(Vector2 pos, string text, Color color, float scale)
             {

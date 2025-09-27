@@ -29,9 +29,8 @@ namespace IngameScript
             public Vector2 Size { get; private set; }
             public bool IsInside { get; private set; }
 
-            private UIWireManager _uiWireManager;
             private TargetingSpriteBuilder _targetingSpriteBuilder;
-            private MySprite _sprite;
+            private List<MySprite> _sprites = new List<MySprite>();
             private List<IHighlightable> _highlightableElements = new List<IHighlightable>();
             private List<IUpdatable> _updatableElements = new List<IUpdatable>();
             private List<IUIElement> _allElements = new List<IUIElement>();
@@ -39,36 +38,40 @@ namespace IngameScript
             private IEnterable _enteredElement;
 
 
-            public RadarWindow(UI ui, Vector2 pos, Vector2 size, UIWireManager uiWireManager)
+            public RadarWindow(UI ui, Vector2 pos, Vector2 size)
             {
                 UI = ui;
                 Pos = pos;
                 Size = size;
-                _uiWireManager = uiWireManager;
+                
+                Init();
+            }
 
-                _targetingSpriteBuilder = new TargetingSpriteBuilder(_uiWireManager.GetReferenceBlock(), _uiWireManager.GetAllEntities(), _uiWireManager.GetNeutralIDs(), _uiWireManager.GetFriendlyIDs(), _uiWireManager.GetHostileIDs(), _uiWireManager.GetLocalIDs(), _uiWireManager.GetRemoteIDs(), _uiWireManager.GetReferenceBlock().CubeGrid.EntityId);
+            public RadarWindow(UI ui)
+            {
+                UI = ui;
+                Pos = new Vector2(ui.TextureSize.X / 2f, ui.TextureSize.Y / 2f);
+                Size = new Vector2(ui.SurfaceSize.X, ui.SurfaceSize.Y);
 
-                _sprite = new MySprite()
+                Init();
+            }
+
+            public void Init()
+            {
+                UIWireManager uiWireManager = UI.UIWireManager;
+
+                _targetingSpriteBuilder = new TargetingSpriteBuilder(uiWireManager.GetReferenceBlock(), uiWireManager.GetAllEntities(), uiWireManager.GetNeutralIDs(), uiWireManager.GetFriendlyIDs(), uiWireManager.GetHostileIDs(), uiWireManager.GetLocalIDs(), uiWireManager.GetRemoteIDs(), uiWireManager.GetReferenceBlock().CubeGrid.EntityId);
+
+                MySprite backgroundSprite = new MySprite()
                 {
                     Type = SpriteType.TEXTURE,
                     Data = "SquareSimple",
-                    Position = pos,
-                    Size = size,
+                    Position = Pos,
+                    Size = Size,
                     Color = UIConfig.WindowBackgroundColor,
                     Alignment = TextAlignment.CENTER
                 };
-
-                Button laserButton = new Button("LASER CTRL", pos + new Vector2(-250, 0), new Vector2(400, 100), "LASER CTRL", 2.0f, () => { return true; });
-                Button radarButton = new Button("RADAR", pos + new Vector2(250, 0), new Vector2(400, 100), "LASER CTRL", 2.0f, () => { return true; });
-
-                _highlightableElements.Add(laserButton);
-                _highlightableElements.Add(radarButton);
-
-                _updatableElements.Add(laserButton);
-                _updatableElements.Add(radarButton);
-
-                _allElements.Add(laserButton);
-                _allElements.Add(radarButton);
+                _sprites.Add(backgroundSprite);
             }
 
             public void Enter()
@@ -124,21 +127,21 @@ namespace IngameScript
                 if (_enteredElement != null)
                 {
                     _enteredElement.Exit();
-                    CleanUpCurrentElement();
+                    _enteredElement = null;
                 }
             }
 
-            private void CleanUpCurrentElement()
+            private void CleanUp()
             {
-                _enteredElement = null;
+                if (!_enteredElement?.IsInside ?? false)
+                {
+                    _enteredElement = null;
+                }
             }
 
             public void Update(DateTime time)
             {
-                if (_enteredElement?.IsInside == false)
-                {
-                    CleanUpCurrentElement();
-                }
+                CleanUp();
 
                 foreach (var element in _updatableElements)
                 {
@@ -154,8 +157,9 @@ namespace IngameScript
 
             public void Draw(MySpriteDrawFrame frame)
             {
-                frame.Add(_sprite);
+                frame.AddRange(_sprites);
 
+                _targetingSpriteBuilder.Zoom = 2f;
                 _targetingSpriteBuilder.BuildSprites();
 
                 foreach (var depthSprite in _targetingSpriteBuilder.FinalSprites)

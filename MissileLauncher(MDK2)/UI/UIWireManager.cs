@@ -49,6 +49,8 @@ namespace IngameScript
             public HashSet<long> GetNeutralIDs() => _systemCoordinator.TargetCoordinator.NeutralIDs;
             public HashSet<long> GetHostileIDs() => _systemCoordinator.TargetCoordinator.HostileIDs;
             public HashSet<long> GetFriendlyIDs() => _systemCoordinator.TargetCoordinator.FriendlyIDs;
+
+            public List<TargetingLaser> GetTargetingLasers() => _systemCoordinator.TargetingLasers;
         }
     }
 }

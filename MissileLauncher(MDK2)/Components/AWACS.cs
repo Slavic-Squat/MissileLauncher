@@ -110,6 +110,11 @@ namespace IngameScript
                 if (_lastRunTime == default(DateTime))
                     _lastRunTime = time;
 
+                _cameraArray0.Update(time);
+                _cameraArray1.Update(time);
+                _cameraArray2.Update(time);
+                _cameraArray3.Update(time);
+
                 if (TargetIDs.Count != 0)
                 {
                     _spinRotorAngle = _spinRotorInverted ? -_spinRotor.Angle : _spinRotor.Angle;
