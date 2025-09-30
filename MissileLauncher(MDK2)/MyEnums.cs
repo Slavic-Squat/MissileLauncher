@@ -22,10 +22,6 @@ namespace IngameScript
 {
     partial class Program
     {
-        public interface IButton : IHighlightable, IUpdatable
-        {
-            bool CanPress { get; }
-            void Press(DateTime time);
-        }
+        
     }
 }

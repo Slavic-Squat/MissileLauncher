@@ -25,17 +25,19 @@ namespace IngameScript
     {
         public class CommunicationHandler
         {
-            public Program Program { get; private set; }
             public int ID { get; private set; }
+            public long SelfAddress => _program.IGC.Me;
+
+            private Program _program;
             private HashSet<IMyBroadcastListener> _broadcastListeners = new HashSet<IMyBroadcastListener>();
             private IMyUnicastListener _unicastListener;
             private Dictionary<string, Queue<MyIGCMessage>> _messages = new Dictionary<string, Queue<MyIGCMessage>>();
 
             public CommunicationHandler(Program program, int iD)
             {
-                Program = program;
+                _program = program;
                 ID = iD;
-                _unicastListener = Program.IGC.UnicastListener;
+                _unicastListener = _program.IGC.UnicastListener;
             }
 
             public void Recieve()
@@ -43,7 +45,7 @@ namespace IngameScript
                 while (_unicastListener.HasPendingMessage)
                 {
                     var message = _unicastListener.AcceptMessage();
-                    if (message.Source != Program.IGC.Me && _messages.ContainsKey(message.Tag))
+                    if (message.Source != SelfAddress && _messages.ContainsKey(message.Tag))
                     {
                         _messages[message.Tag].Enqueue(message);
 
@@ -60,7 +62,7 @@ namespace IngameScript
                     while (listener.HasPendingMessage)
                     {
                         var message = listener.AcceptMessage();
-                        if (message.Source != Program.IGC.Me && _messages.ContainsKey(message.Tag))
+                        if (message.Source != SelfAddress && _messages.ContainsKey(message.Tag))
                         {
                             _messages[message.Tag].Enqueue(message);
 
@@ -77,18 +79,18 @@ namespace IngameScript
             public void SendBroadcast(byte[] data, string tag)
             {
                 string dataString = Convert.ToBase64String(data);
-                Program.IGC.SendBroadcastMessage(tag, dataString);
+                _program.IGC.SendBroadcastMessage(tag, dataString);
             }
 
             public void SendUnicast(byte[] data, long targetAddress, string tag)
             {
                 string dataString = Convert.ToBase64String(data);
-                Program.IGC.SendUnicastMessage(targetAddress, tag, dataString);
+                _program.IGC.SendUnicastMessage(targetAddress, tag, dataString);
             }
 
             public void RegisterBroadcastListener(string tag)
             {
-                var listener = Program.IGC.RegisterBroadcastListener(tag);
+                var listener = _program.IGC.RegisterBroadcastListener(tag);
                 _broadcastListeners.Add(listener);
                 RegisterTag(tag);
             }

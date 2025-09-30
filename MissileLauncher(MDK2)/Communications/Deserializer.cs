@@ -26,7 +26,7 @@ namespace IngameScript
         {
             public enum ObjectTypes : byte
             {
-                Command, EntityInfo, MissileInfo
+                Command, EntityInfo, MissileInfoLite, MissileInfo
             }
             public static object Deserialize(string dataString)
             {
@@ -39,6 +39,9 @@ namespace IngameScript
 
                     case ObjectTypes.EntityInfo:
                         return EntityInfo.Deserialize(data);
+
+                    case ObjectTypes.MissileInfoLite:
+                        return MissileInfoLite.Deserialize(data);
 
                     case ObjectTypes.MissileInfo:
                         return MissileInfo.Deserialize(data);

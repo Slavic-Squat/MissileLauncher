@@ -23,21 +23,14 @@ namespace IngameScript
 {
     partial class Program
     {
-        public class MissileInfo : MissileInfoLite
+        public class MissileInfoLite : EntityInfo
         {
-            public MissileStage Stage { get; private set; }
-            public long TargetID { get; private set; }
+            public long LauncherID { get; private set; }
 
-            public enum MissileStage : byte
+            public MissileInfoLite(long entityID, Vector3 position, Vector3 velocity, DateTime timeRecorded, long launcherID)
+                : base(entityID, position, velocity, timeRecorded)
             {
-                Unknown, Flying, Interception
-            }
-
-            public MissileInfo(long entityID, Vector3 position, Vector3 velocity, DateTime timeRecorded, long launcherID, long targetID, MissileStage stage)
-                : base(entityID, position, velocity, timeRecorded, launcherID)
-            {
-                TargetID = targetID;
-                Stage = stage;
+                LauncherID = launcherID;
             }
 
             public override byte[] Serialize()
@@ -45,15 +38,14 @@ namespace IngameScript
                 byte[] baseData = base.Serialize();
 
                 List<byte> missileData = new List<byte>();
-                baseData[0] = (byte)Deserializer.ObjectTypes.MissileInfo;
+                baseData[0] = (byte)Deserializer.ObjectTypes.MissileInfoLite;
                 missileData.AddRange(baseData);
-                missileData.AddRange(BitConverter.GetBytes(TargetID));
-                missileData.Add((byte)Stage);
+                missileData.AddRange(BitConverter.GetBytes(LauncherID));
 
                 return missileData.ToArray();
             }
 
-            public static new MissileInfo Deserialize(byte[] data)
+            public static new MissileInfoLite Deserialize(byte[] data)
             {
                 int index = 1;
 
@@ -90,13 +82,7 @@ namespace IngameScript
                 long launcherID = BitConverter.ToInt64(data, index);
                 index += 8;
 
-                long targetID = BitConverter.ToInt64(data, index);
-                index += 8;
-
-                MissileStage stage = (MissileStage)data[index];
-                index += 1;
-
-                return new MissileInfo(entityID, pos, vel, timeRecorded, launcherID, targetID, stage);
+                return new MissileInfoLite(entityID, pos, vel, timeRecorded, launcherID);
             }
         }
     }

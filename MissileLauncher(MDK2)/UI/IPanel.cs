@@ -22,10 +22,9 @@ namespace IngameScript
 {
     partial class Program
     {
-        public interface IButton : IHighlightable, IUpdatable
+        public interface IPanel : IEnterable, INavigable
         {
-            bool CanPress { get; }
-            void Press(DateTime time);
+            IWindow ParentWindow { get; }
         }
     }
 }

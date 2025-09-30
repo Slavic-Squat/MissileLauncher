@@ -22,10 +22,11 @@ namespace IngameScript
 {
     partial class Program
     {
-        public interface IButton : IHighlightable, IUpdatable
+        public interface IStepper<T> : IEnterable, IHighlightable, INavigable
         {
-            bool CanPress { get; }
-            void Press(DateTime time);
+            T CurrentState { get; }
+            void StepForward();
+            void StepBackward();
         }
     }
 }

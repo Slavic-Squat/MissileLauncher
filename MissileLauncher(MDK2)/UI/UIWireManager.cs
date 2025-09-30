@@ -41,14 +41,9 @@ namespace IngameScript
             }
 
             public IMyCubeBlock GetReferenceBlock() => _systemCoordinator.ReferenceBlock;
-            public Dictionary<long, EntityInfo> GetAllEntities() => _systemCoordinator.TargetCoordinator.GetAllEntities();
-            public Dictionary<long, EntityInfo> GetLocalEntities() => _systemCoordinator.TargetCoordinator.EntitiesLocal;
-            public HashSet<long> GetLocalIDs() => _systemCoordinator.TargetCoordinator.EntitiesLocal.Keys.ToHashSet();
-            public Dictionary<long, EntityInfo> GetRemoteEntities() => _systemCoordinator.TargetCoordinator.EntitiesRemote;
-            public HashSet<long> GetRemoteIDs() => _systemCoordinator.TargetCoordinator.EntitiesRemote.Keys.ToHashSet();
-            public HashSet<long> GetNeutralIDs() => _systemCoordinator.TargetCoordinator.NeutralIDs;
-            public HashSet<long> GetHostileIDs() => _systemCoordinator.TargetCoordinator.HostileIDs;
-            public HashSet<long> GetFriendlyIDs() => _systemCoordinator.TargetCoordinator.FriendlyIDs;
+            public long GetSelfID() => _systemCoordinator.SelfID;
+            public Dictionary<long, EntityInfoExt> GetAllEntities() => _systemCoordinator.TargetCoordinator.GetAllEntities();
+            public Dictionary<long, MissileInfo> GetAllMyMissiles() => _systemCoordinator.MissileCoordinator.ActiveMissiles;
 
             public List<TargetingLaser> GetTargetingLasers() => _systemCoordinator.TargetingLasers;
         }

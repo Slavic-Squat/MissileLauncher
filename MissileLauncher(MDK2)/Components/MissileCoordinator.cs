@@ -22,10 +22,12 @@ namespace IngameScript
 {
     partial class Program
     {
-        public class MissileLauncher
+        public class MissileCoordinator
         {
             #region Properties
             public int ID { get; private set; }
+            public Dictionary<long, MissileInfo> ActiveMissiles { get; private set; }
+            public HashSet<long> ActiveMissileIDs => ActiveMissiles.Keys.ToHashSet();
             #endregion
 
             #region Components
@@ -33,29 +35,23 @@ namespace IngameScript
             #endregion
 
             private Program _program;
+            private CommunicationHandler _communicationHandler;
+            private IMyCubeBlock _referenceBlock;
+            private long _selfID;
 
-            public MissileLauncher(Program program, int id, int numberOfMissileBays)
+            public MissileCoordinator(Program program, int id, int numberOfMissileBays, IMyCubeBlock referenceBlock, long selfID, CommunicationHandler communicationHandler)
             {
                 _program = program;
                 ID = id;
+                _referenceBlock = referenceBlock;
+                _selfID = selfID;
+                _communicationHandler = communicationHandler;
 
                 MissileBays = new List<MissileBay>();
                 for (int i = 0; i < numberOfMissileBays; i++)
                 {
-                    MissileBays.Add(new MissileBay(_program, i));
+                    MissileBays.Add(new MissileBay(_program, i, _selfID, _communicationHandler.SelfAddress));
                 }
-            }
-
-            public void InitNextAvailableMissile()
-            {
-                MissileBay missileBay = MissileBays.Find(x => x.State == MissileBay.Status.Exists);
-                missileBay?.InitMissile();
-            }
-
-            public void LaunchNextAvailableMissile(long targetID)
-            {
-                MissileBay missileBay = MissileBays.Find(x => x.State == MissileBay.Status.Ready);
-                missileBay?.Launch(targetID);
             }
         }
     }

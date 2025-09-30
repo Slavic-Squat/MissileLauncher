@@ -25,12 +25,12 @@ namespace IngameScript
         public class TargetCoordinator
         {
             #region Parts
-            private IMyCubeBlock _referenceBlock;
             private CommunicationHandler _communicationHandler;
             #endregion
 
             #region Fields
-
+            private long _selfID;
+            private IMyCubeBlock _referenceBlock;
             #endregion
 
             #region Properties
@@ -47,8 +47,10 @@ namespace IngameScript
                 Neutral, Friendly, Hostile
             }
 
-            public TargetCoordinator(IMyCubeBlock referenceBlock, CommunicationHandler communicationHandler)
+            public TargetCoordinator(int id, long selfID, IMyCubeBlock referenceBlock, CommunicationHandler communicationHandler)
             {
+                ID = id;
+                _selfID = selfID;
                 _referenceBlock = referenceBlock;
                 _communicationHandler = communicationHandler;
                 _communicationHandler.RegisterBroadcastListener("EntityInfo");
@@ -103,6 +105,19 @@ namespace IngameScript
             {
                 var entityID = entity.EntityID;
 
+                if (entityID == _selfID)
+                {
+                    return;
+                }
+                else if (entity is MissileInfo)
+                {
+                    var missile = entity as MissileInfo;
+                    if (missile.LauncherID == _selfID)
+                    {
+                        return;
+                    }
+                }
+                
                 var dictionary = remote ? EntitiesRemote : EntitiesLocal;
 
                 if (!dictionary.ContainsKey(entityID))
@@ -161,23 +176,78 @@ namespace IngameScript
                 }
             }
 
-            public Dictionary<long, EntityInfo> GetAllEntities()
+            public Dictionary<long, EntityInfoExt> GetAllEntities()
             {
-                var allEntities = new Dictionary<long, EntityInfo>(EntitiesLocal);
+                var allEntityInfos = new Dictionary<long, EntityInfo>(EntitiesLocal);
 
-                foreach (var entityKVP in EntitiesRemote)
+                foreach (var entityInfoKVP in EntitiesRemote)
                 {
-                    if (!allEntities.ContainsKey(entityKVP.Key))
+                    if (!allEntityInfos.ContainsKey(entityInfoKVP.Key))
                     {
-                        allEntities.Add(entityKVP.Key, entityKVP.Value);
+                        allEntityInfos.Add(entityInfoKVP.Key, entityInfoKVP.Value);
                     }
-                    else if (allEntities[entityKVP.Key].TimeRecorded < entityKVP.Value.TimeRecorded)
+                    else if (allEntityInfos[entityInfoKVP.Key].TimeRecorded < entityInfoKVP.Value.TimeRecorded)
                     {
-                        allEntities[entityKVP.Key] = entityKVP.Value;
+                        allEntityInfos[entityInfoKVP.Key] = entityInfoKVP.Value;
                     }
                 }
 
-                return allEntities;
+                var allEntityInfosExt = new Dictionary<long, EntityInfoExt>();
+
+                foreach (var entityInfoExtKVP in allEntityInfos)
+                {
+                    long key = entityInfoExtKVP.Key;
+                    long sourceKey = key;
+                    EntityInfo entityInfo = entityInfoExtKVP.Value;
+                    long relationKey = key;
+
+                    float distance = Vector3.Distance(entityInfo.Position, _referenceBlock.GetPosition());
+
+                    if (entityInfo is MissileInfo)
+                    {
+                        MissileInfo missileInfo = entityInfo as MissileInfo;
+                        relationKey = missileInfo.LauncherID;
+                    }
+
+                    EntityInfoExt.Source source = EntityInfoExt.Source.None;
+                    EntityInfoExt.Relation relation;
+
+                    if (EntitiesLocal.ContainsKey(key))
+                    {
+                        source |= EntityInfoExt.Source.Local;
+                    }
+
+                    if (EntitiesRemote.ContainsKey(key))
+                    {
+                        source |= EntityInfoExt.Source.Remote;
+                    }
+
+                    if (NeutralIDs.Contains(key))
+                    {
+                        relation = EntityInfoExt.Relation.Neutral;
+                    }
+                    else if (FriendlyIDs.Contains(key))
+                    {
+                        relation = EntityInfoExt.Relation.Friendly;
+                    }
+                    else if (HostileIDs.Contains(key))
+                    {
+                        relation = EntityInfoExt.Relation.Hostile;
+                    }
+                    else if (relationKey == _selfID)
+                    {
+                        relation = EntityInfoExt.Relation.Me;
+                    }
+                    else
+                    {
+                        relation = EntityInfoExt.Relation.Neutral;
+                    }
+
+                    var entityInfoExt = new EntityInfoExt(entityInfo, source, relation, distance);
+                    allEntityInfosExt.Add(key, entityInfoExt);
+                }
+
+                return allEntityInfosExt;
             }
         }
     }

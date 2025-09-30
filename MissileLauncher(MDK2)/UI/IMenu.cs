@@ -22,9 +22,10 @@ namespace IngameScript
 {
     partial class Program
     {
-        public interface IMenu : IUIElement, IEnterable, IUpdatable
+        public interface IMenu : IEnterable, INavigable
         {
-            IWindow Window { get; }
+            IWindow ParentWindow { get; }
+            IEnterable ParentEnterable { get; }
         }
     }
 }

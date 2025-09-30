@@ -26,11 +26,12 @@ namespace IngameScript
         {
             #region Fields
             private Program _program;
-            private int _missileCounter;
             #endregion
 
             #region Parts
             private IMyProgrammableBlock _missileComputer;
+            private long _selfID;
+            private long _selfAddress;
             #endregion
 
             #region Properties
@@ -43,10 +44,12 @@ namespace IngameScript
                 Empty, Exists, Building, Fueling, Ready, Firing, Error
             }
 
-            public MissileBay(Program program, int ID)
+            public MissileBay(Program program, int id, long selfID, long selfAddress)
             {
                 _program = program;
-                this.ID = ID;
+                ID = id;
+                _selfID = selfID;
+                _selfAddress = selfAddress;
 
                 RegisterMissile();
             }
@@ -81,10 +84,7 @@ namespace IngameScript
             {
                 if (State == Status.Exists)
                 {
-                    long launcherAddress = _program.IGC.Me;
-                    long launcherEntityID = _program.Me.EntityId;
-
-                    _missileComputer.CustomData = $"InitMissile {launcherAddress} {launcherEntityID}";
+                    _missileComputer.CustomData = $"InitMissile {_selfAddress} {_selfID}";
                     if (_missileComputer.TryRun("-CommandSent"))
                     {
                         State = Status.Ready;

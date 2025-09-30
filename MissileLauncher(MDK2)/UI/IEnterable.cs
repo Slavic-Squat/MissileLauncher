@@ -22,7 +22,7 @@ namespace IngameScript
 {
     partial class Program
     {
-        public interface IEnterable : IUIElement, INavigable, IUpdatable
+        public interface IEnterable : IUIElement
         {
             bool IsInside { get; }
             void Enter();

@@ -28,9 +28,10 @@ namespace IngameScript
             public List<TargetingLaser> TargetingLasers { get; private set; }
             public AWACS AWACS { get; private set; }
             public TargetCoordinator TargetCoordinator { get; private set; }
-            public MissileLauncher MissileLauncher { get; private set; }
+            public MissileCoordinator MissileCoordinator { get; private set; }
             public CommunicationHandler CommunicationHandler { get; private set; }
             public IMyCubeBlock ReferenceBlock { get; private set; }
+            public long SelfID => ReferenceBlock.CubeGrid.EntityId;
 
             private UIWireManager _uiWireManager;
             private Program _program;
@@ -58,8 +59,7 @@ namespace IngameScript
 
                 CommunicationHandler = new CommunicationHandler(program, 0);
                 AWACS = new AWACS(program, 0);
-                TargetCoordinator = new TargetCoordinator(ReferenceBlock, CommunicationHandler);
-                //MissileLauncher = new MissileLauncher(program, 0, 1);
+                TargetCoordinator = new TargetCoordinator(0, SelfID, ReferenceBlock, CommunicationHandler);
             }
 
             public void Run(DateTime time)

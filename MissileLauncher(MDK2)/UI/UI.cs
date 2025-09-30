@@ -97,7 +97,11 @@ namespace IngameScript
                     MainWindow mainWindow = new MainWindow(this);
                     EnterWindow(mainWindow);
                 }
-                _activeWindow?.Update(time);
+
+                if (_activeWindow is IUpdatable)
+                {
+                    ((IUpdatable)_activeWindow).Update(time);
+                }
             }
 
             public void Navigate(UserInput input, DateTime time)

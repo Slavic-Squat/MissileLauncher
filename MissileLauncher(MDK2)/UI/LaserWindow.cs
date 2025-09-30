@@ -22,7 +22,7 @@ namespace IngameScript
 {
     partial class Program
     {
-        public class LaserWindow : IWindow
+        public class LaserWindow : IWindow, IUpdatable
         {
             public UI UI { get; private set; }
             public Vector2 Pos { get; private set; }
@@ -62,7 +62,27 @@ namespace IngameScript
 
             public void Init()
             {
-                MySprite backgroundSprite = new MySprite()
+                BuildSprites();
+
+                for (int i = 0; i < _lasers.Count; i++)
+                {
+                    TargetingLaser laser = _lasers[i];
+                    Button button = new Button($"Laser [{i}]", Pos + new Vector2(i % 2 * 320 - Size.X / 2 + 160, i / 2 * 140 - Size.Y / 2 + 180), new Vector2(240, 80), $"Laser [{i}]", 1.2f, () =>
+                    {
+                        UI.Controller.TakeControl(laser);
+                        return true;
+                    });
+
+                    _highlightableElements.Add(button);
+                    _updatableElements.Add(button);
+                    _allElements.Add(button);
+                }
+            }
+
+            private void BuildSprites()
+            {
+                _sprites.Clear();
+                MySprite fillSprite = new MySprite()
                 {
                     Type = SpriteType.TEXTURE,
                     Data = "SquareSimple",
@@ -71,7 +91,7 @@ namespace IngameScript
                     Color = Color.Black,
                     Alignment = TextAlignment.CENTER
                 };
-                _sprites.Add(backgroundSprite);
+                _sprites.Add(fillSprite);
 
                 MySprite headerBorderSprite = new MySprite()
                 {
@@ -97,20 +117,6 @@ namespace IngameScript
 
                 MySprite headerTextSprite = SpriteHelper.CreateText(Pos + new Vector2(0, -Size.Y / 2 + 30), "Select Laser To Control:", Color.White, 1.5f);
                 _sprites.Add(headerTextSprite);
-
-                for (int i = 0; i < _lasers.Count; i++)
-                {
-                    TargetingLaser laser = _lasers[i];
-                    Button button = new Button($"Laser [{i}]", Pos + new Vector2(i % 2 * 320 - Size.X / 2 + 160, i / 2 * 140 - Size.Y / 2 + 180), new Vector2(240, 80), $"Laser [{i}]", 1.2f, () =>
-                    {
-                        UI.Controller.TakeControl(laser);
-                        return true;
-                    });
-
-                    _highlightableElements.Add(button);
-                    _updatableElements.Add(button);
-                    _allElements.Add(button);
-                }
             }
 
             public void Enter()
@@ -191,7 +197,10 @@ namespace IngameScript
                     element.Update(time);
                 }
 
-                _enteredElement?.Update(time);
+                if (_enteredElement is IUpdatable)
+                {
+                    ((IUpdatable)_enteredElement).Update(time);
+                }
             }
 
             public void Draw(MySpriteDrawFrame frame)
@@ -213,67 +222,42 @@ namespace IngameScript
 
             public void Navigate(UserInput input, DateTime time)
             {
+                if (_enteredElement is INavigable)
+                {
+                    ((INavigable)_enteredElement).Navigate(input, time);
+                }
                 if (_enteredElement != null)
                 {
-                    _enteredElement.Navigate(input, time);
+                    return;
                 }
-                else if (input.CHeldAndReleased)
+
+                if (_highlightableElements.Count == 0)
+                {
+                    return;
+                }
+
+                if (input.CRelease)
                 {
                     Exit();
                 }
-                else if (_highlightedElement == null)
-                {
-                    if (_highlightableElements.Count > 0)
-                    {
-                        HighlightElement(_highlightableElements[0]);
-                    }
-                    else
-                    {
-                        return;
-                    }
-                }
                 else if (input.WRelease)
                 {
-                    IHighlightable nextElement = _highlightableElements.Where(element => element.Pos.Y < _highlightedElement.Pos.Y).OrderBy(element =>
-                    {
-                        float dx = Math.Abs(element.Pos.X - _highlightedElement.Pos.X);
-                        float dy = Math.Abs(element.Pos.Y - _highlightedElement.Pos.Y);
-                        return dx * 10 + dy;
-                    }).FirstOrDefault() ?? _highlightedElement;
-
+                    IHighlightable nextElement = UIUtilities.Navigate(_highlightableElements, _highlightedElement, UIUtilities.NavigationDirection.Up);
                     HighlightElement(nextElement);
                 }
                 else if (input.SRelease)
                 {
-                    IHighlightable nextElement = _highlightableElements.Where(element => element.Pos.Y > _highlightedElement.Pos.Y).OrderBy(element =>
-                    {
-                        float dx = Math.Abs(element.Pos.X - _highlightedElement.Pos.X);
-                        float dy = Math.Abs(element.Pos.Y - _highlightedElement.Pos.Y);
-                        return dx * 10 + dy;
-                    }).FirstOrDefault() ?? _highlightedElement;
-
+                    IHighlightable nextElement = UIUtilities.Navigate(_highlightableElements, _highlightedElement, UIUtilities.NavigationDirection.Down);
                     HighlightElement(nextElement);
                 }
                 else if (input.ARelease)
                 {
-                    IHighlightable nextElement = _highlightableElements.Where(element => element.Pos.X < _highlightedElement.Pos.X).OrderBy(element =>
-                    {
-                        float dx = Math.Abs(element.Pos.X - _highlightedElement.Pos.X);
-                        float dy = Math.Abs(element.Pos.Y - _highlightedElement.Pos.Y);
-                        return dx + dy * 10;
-                    }).FirstOrDefault() ?? _highlightedElement;
-
+                    IHighlightable nextElement = UIUtilities.Navigate(_highlightableElements, _highlightedElement, UIUtilities.NavigationDirection.Left);
                     HighlightElement(nextElement);
                 }
                 else if (input.DRelease)
                 {
-                    IHighlightable nextElement = _highlightableElements.Where(element => element.Pos.X > _highlightedElement.Pos.X).OrderBy(element =>
-                    {
-                        float dx = Math.Abs(element.Pos.X - _highlightedElement.Pos.X);
-                        float dy = Math.Abs(element.Pos.Y - _highlightedElement.Pos.Y);
-                        return dx + dy * 10;
-                    }).FirstOrDefault() ?? _highlightedElement;
-
+                    IHighlightable nextElement = UIUtilities.Navigate(_highlightableElements, _highlightedElement, UIUtilities.NavigationDirection.Right);
                     HighlightElement(nextElement);
                 }
                 else if (input.SpaceRelease)

@@ -22,20 +22,85 @@ namespace IngameScript
 {
     partial class Program
     {
-        public class RadarWindow : IWindow
+        public class RadarWindow : IWindow, IUpdatable
         {
             public UI UI { get; private set; }
             public Vector2 Pos { get; private set; }
             public Vector2 Size { get; private set; }
             public bool IsInside { get; private set; }
 
+            private long SelfID => UI.UIWireManager.GetSelfID();
+            private IMyCubeBlock ReferenceBlock => UI.UIWireManager.GetReferenceBlock();
+            private Dictionary<long, EntityInfoExt> AllEntities => UI.UIWireManager.GetAllEntities();
+            private Dictionary<long, MissileInfo> AllMyMissiles => UI.UIWireManager.GetAllMyMissiles();
+
             private TargetingSpriteBuilder _targetingSpriteBuilder;
+            private Dictionary<long, DepthSprite> EntitySprites => _targetingSpriteBuilder.EntitySprites;
+
             private List<MySprite> _sprites = new List<MySprite>();
+
             private List<IHighlightable> _highlightableElements = new List<IHighlightable>();
             private List<IUpdatable> _updatableElements = new List<IUpdatable>();
             private List<IUIElement> _allElements = new List<IUIElement>();
+
             private IHighlightable _highlightedElement;
             private IEnterable _enteredElement;
+            private long _targetedEntityID;
+
+            private enum NavMode
+            {
+                UI, Targeting, MissileControl,
+            }
+            private NavMode _currentNavMode = NavMode.UI;
+            private Dictionary<NavMode, string> _navModeDisplayNames = new Dictionary<NavMode, string>()
+            {
+                { NavMode.UI, "UI" },
+                { NavMode.Targeting, "Targeting" },
+                { NavMode.MissileControl, "Missile Control" },
+            };
+
+            private enum TargetingNavType
+            {
+                All, Targets, Missiles,
+            }
+            private Dictionary<TargetingNavType, string> _targetingNavTypeDisplayNames = new Dictionary<TargetingNavType, string>()
+            {
+                { TargetingNavType.All, "All" },
+                { TargetingNavType.Targets, "Targets" },
+                { TargetingNavType.Missiles, "Missiles" },
+            };
+            private Dictionary<TargetingNavType, Func<HashSet<long>>> _targetingNavTypeFilters;
+            private TargetingNavType _currentNavType = TargetingNavType.All;
+
+            private enum TargetingNavRelation
+            {
+                All, Hostile, Neutral, Friendly,
+            }
+            private Dictionary<TargetingNavRelation, string> _targetingNavRelationDisplayNames = new Dictionary<TargetingNavRelation, string>()
+            {
+                { TargetingNavRelation.All, "All" },
+                { TargetingNavRelation.Hostile, "Hostile" },
+                { TargetingNavRelation.Neutral, "Neutral" },
+                { TargetingNavRelation.Friendly, "Friendly" },
+            };
+            private Dictionary<TargetingNavRelation, Func<HashSet<long>>> _targetingNavRelationFilters;
+            private TargetingNavRelation _currentNavRelation = TargetingNavRelation.All;
+
+            private enum ScopeScale
+            {
+                Close, Far
+            }
+            private Dictionary<ScopeScale, string> _scopeScaleDisplayNames = new Dictionary<ScopeScale, string>()
+            {
+                { ScopeScale.Close, "6Km" },
+                { ScopeScale.Far, "12Km" },
+            };
+            private Dictionary<ScopeScale, int> _scopeScaleValues = new Dictionary<ScopeScale, int>()
+            {
+                { ScopeScale.Close, 2 },
+                { ScopeScale.Far, 1 },
+            };
+            private ScopeScale _currentScopeScale = ScopeScale.Close;
 
 
             public RadarWindow(UI ui, Vector2 pos, Vector2 size)
@@ -58,17 +123,36 @@ namespace IngameScript
 
             public void Init()
             {
-                UIWireManager uiWireManager = UI.UIWireManager;
+                BuildSprites();
 
-                _targetingSpriteBuilder = new TargetingSpriteBuilder(uiWireManager.GetReferenceBlock(), uiWireManager.GetAllEntities(), uiWireManager.GetNeutralIDs(), uiWireManager.GetFriendlyIDs(), uiWireManager.GetHostileIDs(), uiWireManager.GetLocalIDs(), uiWireManager.GetRemoteIDs(), uiWireManager.GetReferenceBlock().CubeGrid.EntityId);
+                _targetingSpriteBuilder = new TargetingSpriteBuilder(ReferenceBlock);
 
+                _targetingNavTypeFilters = new Dictionary<TargetingNavType, Func<HashSet<long>>>()
+                {
+                    { TargetingNavType.All, () => AllEntities.Keys.ToHashSet() },
+                    { TargetingNavType.Targets, () => AllEntities.Where(kvp => kvp.Value.EntityType == EntityInfoExt.Type.Target).Select(kvp => kvp.Key).ToHashSet() },
+                    { TargetingNavType.Missiles, () => AllEntities.Where(kvp => kvp.Value.EntityType == EntityInfoExt.Type.Missile).Select(kvp => kvp.Key).ToHashSet() },
+                };
+
+                _targetingNavRelationFilters = new Dictionary<TargetingNavRelation, Func<HashSet<long>>>()
+                {
+                    { TargetingNavRelation.All, () => AllEntities.Keys.ToHashSet() },
+                    { TargetingNavRelation.Hostile, () => AllEntities.Where(kvp => kvp.Value.EntityRelation == EntityInfoExt.Relation.Hostile).Select(kvp => kvp.Key).ToHashSet() },
+                    { TargetingNavRelation.Neutral, () => AllEntities.Where(kvp => kvp.Value.EntityRelation == EntityInfoExt.Relation.Neutral).Select(kvp => kvp.Key).ToHashSet() },
+                    { TargetingNavRelation.Friendly, () => AllEntities.Where(kvp => kvp.Value.EntityRelation == EntityInfoExt.Relation.Friendly).Select(kvp => kvp.Key).ToHashSet() },
+                };
+            }
+
+            private void BuildSprites()
+            {
+                _sprites.Clear();
                 MySprite backgroundSprite = new MySprite()
                 {
                     Type = SpriteType.TEXTURE,
                     Data = "SquareSimple",
                     Position = Pos,
                     Size = Size,
-                    Color = UIConfig.WindowBackgroundColor,
+                    Color = Color.Black,
                     Alignment = TextAlignment.CENTER
                 };
                 _sprites.Add(backgroundSprite);
@@ -115,6 +199,16 @@ namespace IngameScript
                 }
             }
 
+            private void TargetEntity(long entityID)
+            {
+                _targetedEntityID = entityID;
+            }
+
+            private void UntargetEntity()
+            {
+                _targetedEntityID = -1;
+            }
+
             private void EnterElement(IEnterable enterable)
             {
                 ExitCurrentElement();
@@ -152,19 +246,22 @@ namespace IngameScript
                     element.Update(time);
                 }
 
-                _enteredElement?.Update(time);
+                if (_enteredElement is IUpdatable)
+                {
+                    ((IUpdatable)_enteredElement).Update(time);
+                }
             }
 
             public void Draw(MySpriteDrawFrame frame)
             {
                 frame.AddRange(_sprites);
 
-                _targetingSpriteBuilder.Zoom = 2f;
-                _targetingSpriteBuilder.BuildSprites();
+                _targetingSpriteBuilder.Zoom = _scopeScaleValues[_currentScopeScale];
+                _targetingSpriteBuilder.BuildSprites(AllEntities, AllMyMissiles, _targetedEntityID);
 
                 foreach (var depthSprite in _targetingSpriteBuilder.FinalSprites)
                 {
-                    frame.Add(depthSprite.Sprite);
+                    depthSprite.Draw(frame);
                 }
 
                 foreach (var element in _allElements)
@@ -182,72 +279,144 @@ namespace IngameScript
 
             public void Navigate(UserInput input, DateTime time)
             {
+                if (_enteredElement is INavigable)
+                {
+                    ((INavigable)_enteredElement).Navigate(input, time);
+                }
                 if (_enteredElement != null)
                 {
-                    _enteredElement.Navigate(input, time);
+                    return;
                 }
-                else if (input.CHeldAndReleased)
+
+                if (input.QRelease)
+                {
+                    _currentNavMode = (NavMode)_currentNavMode.Next();
+                }
+
+                switch (_currentNavMode)
+                {
+                    case NavMode.UI:
+                        NavigateUI(input, time);
+                        break;
+                    case NavMode.Targeting:
+                        NavigateTargeting(input, time);
+                        break;
+                    case NavMode.MissileControl:
+                        NavigateMissileControl(input, time);
+                        break;
+                }
+            }
+
+            private void NavigateUI(UserInput input, DateTime time)
+            {
+                if (_highlightableElements.Count == 0)
+                {
+                    return;
+                }
+
+                if (input.CRelease)
                 {
                     Exit();
                 }
-                else if (_highlightedElement == null)
-                {
-                    if (_highlightableElements.Count > 0)
-                    {
-                        HighlightElement(_highlightableElements[0]);
-                    }
-                    else
-                    {
-                        return;
-                    }
-                }
                 else if (input.WRelease)
                 {
-                    IHighlightable nextElement = _highlightableElements.Where(element => element.Pos.Y < _highlightedElement.Pos.Y).OrderBy(element =>
-                    {
-                        float dx = Math.Abs(element.Pos.X - _highlightedElement.Pos.X);
-                        float dy = Math.Abs(element.Pos.Y - _highlightedElement.Pos.Y);
-                        return dx * 10 + dy;
-                    }).FirstOrDefault() ?? _highlightedElement;
-
+                    IHighlightable nextElement = UIUtilities.Navigate(_highlightableElements, _highlightedElement, UIUtilities.NavigationDirection.Up);
                     HighlightElement(nextElement);
                 }
                 else if (input.SRelease)
                 {
-                    IHighlightable nextElement = _highlightableElements.Where(element => element.Pos.Y > _highlightedElement.Pos.Y).OrderBy(element =>
-                    {
-                        float dx = Math.Abs(element.Pos.X - _highlightedElement.Pos.X);
-                        float dy = Math.Abs(element.Pos.Y - _highlightedElement.Pos.Y);
-                        return dx * 10 + dy;
-                    }).FirstOrDefault() ?? _highlightedElement;
-
+                    IHighlightable nextElement = UIUtilities.Navigate(_highlightableElements, _highlightedElement, UIUtilities.NavigationDirection.Down);
                     HighlightElement(nextElement);
                 }
                 else if (input.ARelease)
                 {
-                    IHighlightable nextElement = _highlightableElements.Where(element => element.Pos.X < _highlightedElement.Pos.X).OrderBy(element =>
-                    {
-                        float dx = Math.Abs(element.Pos.X - _highlightedElement.Pos.X);
-                        float dy = Math.Abs(element.Pos.Y - _highlightedElement.Pos.Y);
-                        return dx + dy * 10;
-                    }).FirstOrDefault() ?? _highlightedElement;
-
+                    IHighlightable nextElement = UIUtilities.Navigate(_highlightableElements, _highlightedElement, UIUtilities.NavigationDirection.Left);
                     HighlightElement(nextElement);
                 }
                 else if (input.DRelease)
                 {
-                    IHighlightable nextElement = _highlightableElements.Where(element => element.Pos.X > _highlightedElement.Pos.X).OrderBy(element =>
-                    {
-                        float dx = Math.Abs(element.Pos.X - _highlightedElement.Pos.X);
-                        float dy = Math.Abs(element.Pos.Y - _highlightedElement.Pos.Y);
-                        return dx + dy * 10;
-                    }).FirstOrDefault() ?? _highlightedElement;
-
+                    IHighlightable nextElement = UIUtilities.Navigate(_highlightableElements, _highlightedElement, UIUtilities.NavigationDirection.Right);
                     HighlightElement(nextElement);
                 }
                 else if (input.SpaceRelease)
                 {
                     ActivateHighlightedElement(time);
+                }
+            }
+
+            private void NavigateTargeting(UserInput input, DateTime time)
+            {
+                HashSet<long> typeFilter = _targetingNavTypeFilters[_currentNavType]();
+                HashSet<long> relationFilter = _targetingNavRelationFilters[_currentNavRelation]();
+                HashSet<long> combinedFilter = typeFilter.Intersect(relationFilter).ToHashSet();
+
+                Dictionary<long, DepthSprite> navigableSprites = EntitySprites.Where(kvp => combinedFilter.Contains(kvp.Key)).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+
+                if (navigableSprites.Count == 0)
+                {
+                    UntargetEntity();
+                    return;
+                }
+
+                if (input.CRelease)
+                {
+                    Exit();
+                }
+                else if (input.WRelease)
+                {
+                    long nextEntityID = UIUtilities.Navigate(navigableSprites, _targetedEntityID, UIUtilities.NavigationDirection.Up);
+                    TargetEntity(nextEntityID);
+                }
+                else if (input.SRelease)
+                {
+                    long nextEntityID = UIUtilities.Navigate(navigableSprites, _targetedEntityID, UIUtilities.NavigationDirection.Down);
+                    TargetEntity(nextEntityID);
+                }
+                else if (input.ARelease)
+                {
+                    long nextEntityID = UIUtilities.Navigate(navigableSprites, _targetedEntityID, UIUtilities.NavigationDirection.Left);
+                    TargetEntity(nextEntityID);
+                }
+                else if (input.DRelease)
+                {
+                    long nextEntityID = UIUtilities.Navigate(navigableSprites, _targetedEntityID, UIUtilities.NavigationDirection.Right);
+                    TargetEntity(nextEntityID);
+                }
+            }
+
+            private void NavigateMissileControl(UserInput input, DateTime time)
+            {
+                Dictionary<long, DepthSprite> navigableSprites = EntitySprites.Where(kvp => AllMyMissiles.ContainsKey(kvp.Key)).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+
+                if (navigableSprites.Count == 0)
+                {
+                    UntargetEntity();
+                    return;
+                }
+
+                if (input.CRelease)
+                {
+                    Exit();
+                }
+                else if (input.WRelease)
+                {
+                    long nextEntityID = UIUtilities.Navigate(navigableSprites, _targetedEntityID, UIUtilities.NavigationDirection.Up);
+                    TargetEntity(nextEntityID);
+                }
+                else if (input.SRelease)
+                {
+                    long nextEntityID = UIUtilities.Navigate(navigableSprites, _targetedEntityID, UIUtilities.NavigationDirection.Down);
+                    TargetEntity(nextEntityID);
+                }
+                else if (input.ARelease)
+                {
+                    long nextEntityID = UIUtilities.Navigate(navigableSprites, _targetedEntityID, UIUtilities.NavigationDirection.Left);
+                    TargetEntity(nextEntityID);
+                }
+                else if (input.DRelease)
+                {
+                    long nextEntityID = UIUtilities.Navigate(navigableSprites, _targetedEntityID, UIUtilities.NavigationDirection.Right);
+                    TargetEntity(nextEntityID);
                 }
             }
         }
