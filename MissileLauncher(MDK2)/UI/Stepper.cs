@@ -24,30 +24,45 @@ namespace IngameScript
     {
         public class Stepper<T> : IStepper<T>
         {
-            public Vector2 Pos { get; private set; }
-            public Vector2 Size { get; private set; }
+            public RectangleF Bounds => _bounds;
+            public Vector2 Pos => Bounds.Position;
+            public Vector2 Size => Bounds.Size;
+            public Vector2 Center => Bounds.Center;
             public T CurrentState => _stateGetter();
             public bool IsHighlighted { get; private set; }
             public bool IsInside { get; private set; }
+
+            private RectangleF _bounds;
+            private readonly Vector2 _originalPos;
+            private readonly Vector2 _originalSize;
 
             private Func<T> _stateGetter;
             private Action _onForward;
             private Action _onBackward;
             private Dictionary<T, string> _displayNames;
 
+            private Color _fillColor = UIConfig.ButtonFillColor;
+            private Color _borderColor = UIConfig.ButtonBorderColor;
+            private Color _textColor = UIConfig.ButtonTextColor;
+
             private MySprite _fillSprite;
             private MySprite _borderSprite;
             private MySprite _highlightSprite;
             private MySprite _textSprite;
 
-            public Stepper(Vector2 pos, Vector2 size, Func<T> stateGetter, Action onForward, Action onBackward, Dictionary<T, string> displayNames)
+            private IMyTextSurface _surface;
+
+            public Stepper(Vector2 pos, Vector2 size, Func<T> stateGetter, Action onForward, Action onBackward, Dictionary<T, string> displayNames, IMyTextSurface surface)
             {
-                Pos = pos;
-                Size = size;
+                _bounds = new RectangleF(pos, size);
+                _originalPos = pos;
+                _originalSize = size;
+
                 _stateGetter = stateGetter;
                 _onForward = onForward;
                 _onBackward = onBackward;
                 _displayNames = displayNames;
+                _surface = surface;
 
                 BuildSprites();
             }
@@ -58,9 +73,9 @@ namespace IngameScript
                 {
                     Type = SpriteType.TEXTURE,
                     Data = "SquareSimple",
-                    Position = Pos,
+                    Position = Center,
                     Size = Size - 20,
-                    Color = UIConfig.ButtonFillColor,
+                    Color = _fillColor,
                     Alignment = TextAlignment.CENTER
                 };
 
@@ -68,9 +83,9 @@ namespace IngameScript
                 {
                     Type = SpriteType.TEXTURE,
                     Data = "SquareSimple",
-                    Position = Pos,
+                    Position = Center,
                     Size = Size,
-                    Color = UIConfig.ButtonBorderColor,
+                    Color = _borderColor,
                     Alignment = TextAlignment.CENTER
                 };
 
@@ -78,20 +93,21 @@ namespace IngameScript
                 {
                     Type = SpriteType.TEXTURE,
                     Data = "SquareSimple",
-                    Position = Pos,
-                    Size = Size * 1.1f + 10f,
+                    Position = Center,
+                    Size = Size + 10f,
                     Color = UIConfig.ButtonHighlightColor,
                     Alignment = TextAlignment.CENTER
                 };
 
                 string displayName = _displayNames.ContainsKey(CurrentState) ? _displayNames[CurrentState] : "N/A";
-                _textSprite = SpriteHelper.CreateText(Pos, displayName, UIConfig.ButtonTextColor, 1.0f);
+                _textSprite = SpriteHelper.CreateText(Bounds, displayName, _textColor, _surface, TextAlignment.CENTER, true, 0.75f);
             }
 
             private void OnStep()
             {
                 string displayName = _displayNames.ContainsKey(CurrentState) ? _displayNames[CurrentState] : "N/A";
-                _textSprite = SpriteHelper.CreateText(Pos, displayName, UIConfig.ButtonTextColor, 1.0f);
+                _textSprite = SpriteHelper.CreateText(Bounds, displayName, _textColor, _surface, TextAlignment.CENTER, true, 0.75f);
+                BuildSprites();
             }
 
             public void StepForward()
@@ -122,9 +138,10 @@ namespace IngameScript
                     return;
 
                 IsHighlighted = true;
-                _fillSprite.Size *= 1.1f;
-                _borderSprite.Size *= 1.1f;
-                _textSprite.RotationOrScale *= 1.1f;
+                _bounds.Size = _originalSize * 1.1f;
+                _bounds.Position -= _originalSize * 0.05f;
+
+                BuildSprites();
             }
 
             public void Unhighlight()
@@ -133,9 +150,10 @@ namespace IngameScript
                     return;
 
                 IsHighlighted = false;
-                _fillSprite.Size /= 1.1f;
-                _borderSprite.Size /= 1.1f;
-                _textSprite.RotationOrScale /= 1.1f;
+                _bounds.Size = _originalSize;
+                _bounds.Position = _originalPos;
+
+                BuildSprites();
             }
 
             public void Navigate(UserInput input, DateTime time)

@@ -60,6 +60,7 @@ namespace IngameScript
                 CommunicationHandler = new CommunicationHandler(program, 0);
                 AWACS = new AWACS(program, 0);
                 TargetCoordinator = new TargetCoordinator(0, SelfID, ReferenceBlock, CommunicationHandler);
+                MissileCoordinator = new MissileCoordinator(program, 0, 0, ReferenceBlock, SelfID, CommunicationHandler);
             }
 
             public void Run(DateTime time)

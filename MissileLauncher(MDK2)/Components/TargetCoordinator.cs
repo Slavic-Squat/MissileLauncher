@@ -35,8 +35,8 @@ namespace IngameScript
 
             #region Properties
             public int ID { get; private set; }
-            public Dictionary<long, EntityInfo> EntitiesLocal { get; private set; }
-            public Dictionary<long, EntityInfo> EntitiesRemote { get; private set; }
+            public Dictionary<long, EntityInfo> TargetsLocal { get; private set; }
+            public Dictionary<long, EntityInfo> TargetsRemote { get; private set; }
             public HashSet<long> NeutralIDs { get; private set; }
             public HashSet<long> HostileIDs { get; private set; }
             public HashSet<long> FriendlyIDs { get; private set; }
@@ -55,8 +55,8 @@ namespace IngameScript
                 _communicationHandler = communicationHandler;
                 _communicationHandler.RegisterBroadcastListener("EntityInfo");
 
-                EntitiesLocal = new Dictionary<long, EntityInfo>();
-                EntitiesRemote = new Dictionary<long, EntityInfo>();
+                TargetsLocal = new Dictionary<long, EntityInfo>();
+                TargetsRemote = new Dictionary<long, EntityInfo>();
                 NeutralIDs = new HashSet<long>();
                 HostileIDs = new HashSet<long>();
                 FriendlyIDs = new HashSet<long>();
@@ -74,7 +74,7 @@ namespace IngameScript
                     }
                 }
 
-                foreach (var entityKVP in EntitiesLocal)
+                foreach (var entityKVP in TargetsLocal)
                 {
                     TimeSpan timeSinceLastDetection = time - entityKVP.Value.TimeRecorded;
 
@@ -84,7 +84,7 @@ namespace IngameScript
                     }
                 }
 
-                foreach (var entityKVP in EntitiesRemote)
+                foreach (var entityKVP in TargetsRemote)
                 {
                     TimeSpan timeSinceLastDetection = time - entityKVP.Value.TimeRecorded;
 
@@ -94,46 +94,53 @@ namespace IngameScript
                     }
                 }
 
-                foreach (var entity in EntitiesLocal.Values)
+                foreach (var entity in TargetsLocal.Values)
                 {
                     byte[] data = entity.Serialize();
                     _communicationHandler.SendBroadcast(data, "EntityInfo");
                 }
             }
 
-            public void AddEntity(EntityInfo entity, bool remote)
+            public void AddEntity(EntityInfo entityInfo, bool remote)
             {
-                var entityID = entity.EntityID;
+                var entityID = entityInfo.EntityID;
+                var relationID = entityID;
 
                 if (entityID == _selfID)
                 {
                     return;
                 }
-                else if (entity is MissileInfo)
+                else if (entityInfo is MissileInfo)
                 {
-                    var missile = entity as MissileInfo;
+                    var missile = entityInfo as MissileInfo;
+                    relationID = missile.LauncherID;
                     if (missile.LauncherID == _selfID)
                     {
                         return;
                     }
                 }
-                
-                var dictionary = remote ? EntitiesRemote : EntitiesLocal;
+
+                if (!NeutralIDs.Contains(relationID) && !HostileIDs.Contains(relationID) && !FriendlyIDs.Contains(relationID))
+                {
+                    NeutralIDs.Add(relationID);
+                }
+
+                var dictionary = remote ? TargetsRemote : TargetsLocal;
 
                 if (!dictionary.ContainsKey(entityID))
                 {
-                    dictionary.Add(entityID, entity);
+                    dictionary.Add(entityID, entityInfo);
                 }
-                else if (dictionary[entityID].TimeRecorded < entity.TimeRecorded)
+                else if (dictionary[entityID].TimeRecorded < entityInfo.TimeRecorded)
                 {
                     var storedEntity = dictionary[entityID];
-                    storedEntity.UpdateFromEntityInfo(entity);
+                    storedEntity.UpdateFromEntityInfo(entityInfo);
                 }
             }
 
             public void RemoveEntity(long entityID, bool remote)
             {
-                var dictionary = remote ? EntitiesRemote : EntitiesLocal;
+                var dictionary = remote ? TargetsRemote : TargetsLocal;
                 if (dictionary.ContainsKey(entityID))
                 {
                     dictionary.Remove(entityID);
@@ -176,11 +183,11 @@ namespace IngameScript
                 }
             }
 
-            public Dictionary<long, EntityInfoExt> GetAllEntities()
+            public Dictionary<long, EntityInfoExt> GetAllTargets()
             {
-                var allEntityInfos = new Dictionary<long, EntityInfo>(EntitiesLocal);
+                var allEntityInfos = new Dictionary<long, EntityInfo>(TargetsLocal);
 
-                foreach (var entityInfoKVP in EntitiesRemote)
+                foreach (var entityInfoKVP in TargetsRemote)
                 {
                     if (!allEntityInfos.ContainsKey(entityInfoKVP.Key))
                     {
@@ -212,12 +219,12 @@ namespace IngameScript
                     EntityInfoExt.Source source = EntityInfoExt.Source.None;
                     EntityInfoExt.Relation relation;
 
-                    if (EntitiesLocal.ContainsKey(key))
+                    if (TargetsLocal.ContainsKey(key))
                     {
                         source |= EntityInfoExt.Source.Local;
                     }
 
-                    if (EntitiesRemote.ContainsKey(key))
+                    if (TargetsRemote.ContainsKey(key))
                     {
                         source |= EntityInfoExt.Source.Remote;
                     }

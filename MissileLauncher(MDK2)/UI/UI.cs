@@ -26,18 +26,18 @@ namespace IngameScript
         {
             public IController Controller { get; private set; }
             public bool HasActiveWindow => _activeWindow != null;
-            public Vector2 SurfaceSize => _display.SurfaceSize;
-            public Vector2 TextureSize => _display.TextureSize;
+            public IMyTextSurface Display { get; private set; }
+            public Vector2 SurfaceSize => Display.SurfaceSize;
+            public Vector2 TextureSize => Display.TextureSize;
             public UIWireManager UIWireManager { get; private set; }
 
-            private IMyTextSurface _display;
             private IWindow _activeWindow = null;
             private IModal _activeModal = null;
             private int _runCounter;
             public UI (IController controller, IMyTextSurface display, UIWireManager uiWireManager)
             {
                 Controller = controller;
-                _display = display;
+                Display = display;
                 UIWireManager = uiWireManager;
 
                 display.ContentType = ContentType.SCRIPT;
@@ -115,7 +115,7 @@ namespace IngameScript
 
             public void Draw()
             {
-                var frame = _display.DrawFrame();
+                var frame = Display.DrawFrame();
                 _activeWindow?.Draw(frame);
                 _activeModal?.Draw(frame);
                 frame.Dispose();

@@ -25,23 +25,26 @@ namespace IngameScript
         public class MainWindow : IWindow, IUpdatable
         {
             public UI UI { get; private set; }
-            public Vector2 Pos { get; private set; }
-            public Vector2 Size { get; private set; }
+            public RectangleF Bounds => _bounds;
+            public Vector2 Pos => _bounds.Position;
+            public Vector2 Size => _bounds.Size;
+            public Vector2 Center => _bounds.Center;
             public bool IsInside { get; private set; }
 
+            public IMyTextSurface Display => UI.Display;
+
+            private RectangleF _bounds;
             private List<MySprite> _sprites = new List<MySprite>();
-            private List<IHighlightable> _highlightableElements = new List<IHighlightable>();
-            private List<IUpdatable> _updatableElements = new List<IUpdatable>();
-            private List<IUIElement> _allElements = new List<IUIElement>();
-            private IHighlightable _highlightedElement;
+            private List<IButton> _buttons = new List<IButton>();
+            private IButton _highlightedButton;
             private IEnterable _enteredElement;
 
 
             public MainWindow(UI ui, Vector2 pos, Vector2 size)
             {
                 UI = ui;
-                Pos = pos;
-                Size = size;
+
+                _bounds = new RectangleF(pos, size);
 
                 Init();
             }
@@ -49,8 +52,10 @@ namespace IngameScript
             public MainWindow(UI ui)
             {
                 UI = ui;
-                Pos = new Vector2(ui.TextureSize.X / 2f, ui.TextureSize.Y / 2f);
-                Size = new Vector2(ui.SurfaceSize.X, ui.SurfaceSize.Y);
+                Vector2 pos = (ui.TextureSize - ui.SurfaceSize) * 0.5f;
+                Vector2 size = new Vector2(ui.SurfaceSize.X, ui.SurfaceSize.Y);
+
+                _bounds = new RectangleF(pos, size);
 
                 Init();
             }
@@ -59,25 +64,28 @@ namespace IngameScript
             {
                 BuildSprites();
 
-                Button laserButton = new Button("LASER CTRL", Pos + new Vector2(-250, 0), new Vector2(400, 100), "LASER CTRL", 2.0f, () =>
+                Vector2 laserButtonSize = new Vector2(400, 100);
+                Vector2 laserButtonPos = Pos + new Vector2(50, Size.Y * 0.5f - laserButtonSize.Y * 0.5f);
+                
+                Button laserButton = new Button("LASER CTRL", laserButtonPos, laserButtonSize, "LASER CTRL", () =>
                 {
                     UI.EnterWindow(new LaserWindow(UI));
                     return true;
-                });
-                Button radarButton = new Button("RADAR", Pos + new Vector2(250, 0), new Vector2(400, 100), "RADAR", 2.0f, () => 
+                },
+                Display);
+
+                Vector2 radarButtonSize = new Vector2(400, 100);
+                Vector2 radarButtonPos = Pos + new Vector2(Bounds.Right - radarButtonSize.X - 50, Size.Y * 0.5f - radarButtonSize.Y * 0.5f);
+                
+                Button radarButton = new Button("RADAR", radarButtonPos, radarButtonSize, "RADAR", () => 
                 { 
                     UI.EnterWindow(new RadarWindow(UI));
                     return true; 
-                });
+                },
+                Display);
 
-                _highlightableElements.Add(laserButton);
-                _highlightableElements.Add(radarButton);
-
-                _updatableElements.Add(laserButton);
-                _updatableElements.Add(radarButton);
-
-                _allElements.Add(laserButton);
-                _allElements.Add(radarButton);
+                _buttons.Add(laserButton);
+                _buttons.Add(radarButton);
             }
 
             private void BuildSprites()
@@ -87,7 +95,7 @@ namespace IngameScript
                 {
                     Type = SpriteType.TEXTURE,
                     Data = "SquareSimple",
-                    Position = Pos,
+                    Position = Center,
                     Size = Size,
                     Color = UIConfig.WindowFillColor,
                     Alignment = TextAlignment.CENTER
@@ -97,9 +105,9 @@ namespace IngameScript
 
             public void Enter()
             {
-                if (_highlightableElements.Count > 0)
+                if (_buttons.Count > 0)
                 {
-                    HighlightElement(_highlightableElements[0]);
+                    HighlightButton(_buttons[0]);
                 }
                 IsInside = true;
             }
@@ -107,33 +115,26 @@ namespace IngameScript
             public void Exit()
             {
                 IsInside = false;
-                UnhighlightCurrentElement();
+                UnhighlightCurrentButton();
                 ExitCurrentElement();
             }
 
-            private void HighlightElement(IHighlightable highlightable)
+            private void HighlightButton(IButton button)
             {
-                UnhighlightCurrentElement();
-                highlightable.Highlight();
-                _highlightedElement = highlightable;
+                UnhighlightCurrentButton();
+                button.Highlight();
+                _highlightedButton = button;
             }
 
-            private void UnhighlightCurrentElement()
+            private void UnhighlightCurrentButton()
             {
-                _highlightedElement?.Unhighlight();
-                _highlightedElement = null;
+                _highlightedButton?.Unhighlight();
+                _highlightedButton = null;
             }
 
-            private void ActivateHighlightedElement(DateTime time)
+            private void ActivateHighlightedButton(DateTime time)
             {
-                if (_highlightedElement is IButton)
-                {
-                    ((IButton)_highlightedElement).Press(time);
-                }
-                else if (_highlightedElement is IEnterable)
-                {
-                    EnterElement((IEnterable)_highlightedElement);
-                }
+                _highlightedButton?.Press(time);
             }
 
             private void EnterElement(IEnterable enterable)
@@ -164,13 +165,9 @@ namespace IngameScript
             {
                 CleanUp();
 
-                foreach (var element in _updatableElements)
+                foreach (var button in _buttons)
                 {
-                    if (element == _enteredElement)
-                    {
-                        continue;
-                    }
-                    element.Update(time);
+                    button.Update(time);
                 }
 
                 if (_enteredElement is IUpdatable)
@@ -183,16 +180,16 @@ namespace IngameScript
             {
                 frame.AddRange(_sprites);
 
-                foreach (var element in _allElements)
+                foreach (var button in _buttons)
                 {
-                    if (element == _enteredElement || element == _highlightedElement)
+                    if (button == _highlightedButton)
                     {
                         continue;
                     }
 
-                    element.Draw(frame);
+                    button.Draw(frame);
                 }
-                _highlightedElement?.Draw(frame);
+                _highlightedButton?.Draw(frame);
                 _enteredElement?.Draw(frame);
             }
 
@@ -207,38 +204,39 @@ namespace IngameScript
                     return;
                 }
 
-                if (_highlightableElements.Count == 0)
-                {
-                    return;
-                }
-
                 if (input.CRelease)
                 {
                     Exit();
                 }
-                else if (input.WRelease)
+
+                if (_buttons.Count == 0)
                 {
-                    IHighlightable nextElement = UIUtilities.Navigate(_highlightableElements, _highlightedElement, UIUtilities.NavigationDirection.Up);
-                    HighlightElement(nextElement);
+                    return;
+                }
+
+                if (input.WRelease)
+                {
+                    IButton nextButton = UIUtilities.Navigate(_buttons, _highlightedButton, UIUtilities.NavigationDirection.Up);
+                    HighlightButton(nextButton);
                 }
                 else if (input.SRelease)
                 {
-                    IHighlightable nextElement = UIUtilities.Navigate(_highlightableElements, _highlightedElement, UIUtilities.NavigationDirection.Down);
-                    HighlightElement(nextElement);
+                    IButton nextButton = UIUtilities.Navigate(_buttons, _highlightedButton, UIUtilities.NavigationDirection.Down);
+                    HighlightButton(nextButton);
                 }
                 else if (input.ARelease)
                 {
-                    IHighlightable nextElement = UIUtilities.Navigate(_highlightableElements, _highlightedElement, UIUtilities.NavigationDirection.Left);
-                    HighlightElement(nextElement);
+                    IButton nextButton = UIUtilities.Navigate(_buttons, _highlightedButton, UIUtilities.NavigationDirection.Left);
+                    HighlightButton(nextButton);
                 }
                 else if (input.DRelease)
                 {
-                    IHighlightable nextElement = UIUtilities.Navigate(_highlightableElements, _highlightedElement, UIUtilities.NavigationDirection.Right);
-                    HighlightElement(nextElement);
+                    IButton nextButton = UIUtilities.Navigate(_buttons, _highlightedButton, UIUtilities.NavigationDirection.Right);
+                    HighlightButton(nextButton);
                 }
                 else if (input.SpaceRelease)
                 {
-                    ActivateHighlightedElement(time);
+                    ActivateHighlightedButton(time);
                 }
             }
         }

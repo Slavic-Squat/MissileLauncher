@@ -28,6 +28,7 @@ namespace IngameScript
             public IControllable Controllable { get; private set; }
             public UserInput Input { get; private set; }
             public bool IsControlling => Controllable != null;
+            public IMyTextSurface PrimaryDisplay { get; private set; }
 
             private List<IMyTextSurface> _displays = new List<IMyTextSurface>();
             private IMyShipController _controllerReference;
@@ -42,8 +43,9 @@ namespace IngameScript
 
                 TryGetBlocks();
 
+                PrimaryDisplay = _displays[0];
                 Input = new UserInput(_controllerReference);
-                _ui = new UI(this, _displays[0], _uiWireManager);
+                _ui = new UI(this, PrimaryDisplay, _uiWireManager);
             }
 
             public bool TryGetBlocks()
@@ -100,7 +102,7 @@ namespace IngameScript
                 Controllable = controllable;
                 controllable.AssignControl(this);
 
-                _ui.EnterModal(new InfoModal(new Vector2(_ui.TextureSize.X * 0.5f, _ui.TextureSize.Y * 0.5f), _ui.SurfaceSize * 0.75f, () => !IsControlling, $"UI Navigation Disabled\nReason: Controlling Object", 1.2f));
+                _ui.EnterModal(new InfoModal((_ui.TextureSize - _ui.SurfaceSize) * 0.5f, _ui.SurfaceSize * 0.75f, () => !IsControlling, $"UI Navigation Disabled\nReason: Controlling Object", PrimaryDisplay));
             }
 
             public void ReleaseControl()

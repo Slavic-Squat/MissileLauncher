@@ -25,6 +25,18 @@ namespace IngameScript
         public class UIWireManager
         {
             private SystemCoordinator _systemCoordinator;
+
+            public HashSet<long> MyMissileIDs => _systemCoordinator.MissileCoordinator.ActiveMissileIDs;
+            public HashSet<long> NeutralIDs => _systemCoordinator.TargetCoordinator.NeutralIDs;
+            public HashSet<long> FriendlyIDs => _systemCoordinator.TargetCoordinator.FriendlyIDs;
+            public HashSet<long> HostileIDs => _systemCoordinator.TargetCoordinator.HostileIDs;
+
+            public List<TargetingLaser> TargetingLasers => _systemCoordinator.TargetingLasers;
+            public List<ControlStation> ControlStations => _systemCoordinator.ControlStations;
+
+            public IMyCubeBlock ReferenceBlock => _systemCoordinator.ReferenceBlock;
+            public long SelfID => _systemCoordinator.SelfID;
+
             public UIWireManager(SystemCoordinator systemCoordinator)
             {
                 _systemCoordinator = systemCoordinator;
@@ -32,20 +44,26 @@ namespace IngameScript
 
             public bool TakeControlOfLaser(int controlStationID, int targetingLaserID)
             {
-                ControlStation controlStation = _systemCoordinator.ControlStations[controlStationID];
-                TargetingLaser targetingLaser = _systemCoordinator.TargetingLasers[targetingLaserID];
+                ControlStation controlStation = ControlStations[controlStationID];
+                TargetingLaser targetingLaser = TargetingLasers[targetingLaserID];
 
                 controlStation.TakeControl(targetingLaser);
 
                 return true;
             }
+            public Dictionary<long, EntityInfoExt> GetAllTargets() => _systemCoordinator.TargetCoordinator.GetAllTargets();
+            public Dictionary<long, EntityInfoExt> GetAllMyMissiles() => _systemCoordinator.MissileCoordinator.GetAllMyMissiles();
 
-            public IMyCubeBlock GetReferenceBlock() => _systemCoordinator.ReferenceBlock;
-            public long GetSelfID() => _systemCoordinator.SelfID;
-            public Dictionary<long, EntityInfoExt> GetAllEntities() => _systemCoordinator.TargetCoordinator.GetAllEntities();
-            public Dictionary<long, MissileInfo> GetAllMyMissiles() => _systemCoordinator.MissileCoordinator.ActiveMissiles;
+            public Dictionary<long, EntityInfoExt> GetAllEntities()
+            {
+                var allEntities = new Dictionary<long, EntityInfoExt>(GetAllTargets());
+                foreach (var missile in GetAllMyMissiles())
+                {
+                    allEntities[missile.Key] = missile.Value;
+                }
 
-            public List<TargetingLaser> GetTargetingLasers() => _systemCoordinator.TargetingLasers;
+                return allEntities;
+            }
         }
     }
 }

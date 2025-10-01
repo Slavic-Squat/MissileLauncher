@@ -25,8 +25,6 @@ namespace IngameScript
         public class TargetingSpriteBuilder
         {
             #region Properties
-            public Dictionary<long, DepthSprite> EntitySprites { get; private set; }
-            public List<DepthSprite> FinalSprites { get; private set; }
             public float Zoom
             {
                 get { return _zoom; }
@@ -40,9 +38,6 @@ namespace IngameScript
 
             #region Parts
             private IMyCubeBlock _referenceBlock;
-            #endregion
-
-            #region State Info
             #endregion
 
             #region Fields
@@ -67,8 +62,6 @@ namespace IngameScript
                 _referenceBlock = referenceBlock;
 
                 _projectionMatrix = Matrix.CreatePerspectiveFieldOfView(MathHelper.ToRadians(_FOV), _AR, _n, _f);
-                EntitySprites = new Dictionary<long, DepthSprite>();
-                FinalSprites = new List<DepthSprite>();
 
                 BuildStaticSprites();
             }
@@ -185,10 +178,11 @@ namespace IngameScript
                 _staticSpritesAfterPlane.Add(stemDepthSprite);
             }
 
-            public void BuildSprites(Dictionary<long, EntityInfoExt> entityInfoExts, Dictionary<long, MissileInfo> myMissileInfos, long targetedID)
+            public List<DepthSprite> BuildSprites(Dictionary<long, EntityInfoExt> entityInfoExts, long targetedID, out Dictionary<long, DepthSprite> entitySprites)
             {
-                EntitySprites.Clear();
-                FinalSprites.Clear();
+                List<DepthSprite> finalSprites = new List<DepthSprite>();
+                entitySprites = new Dictionary<long, DepthSprite>();
+
                 _spritesBeforePlane.Clear();
                 _spritesAfterPlane.Clear();
 
@@ -210,6 +204,12 @@ namespace IngameScript
                 foreach (var entityInfoKVP in entityInfoExts)
                 {
                     EntityInfoExt entityInfoExt = entityInfoKVP.Value;
+
+                    if (entityInfoExt.Distance > 12000f / _zoom)
+                    {
+                        continue;
+                    }
+
                     EntityInfo entityInfo = entityInfoExt.Info;
                     long key = entityInfoKVP.Key;
 
@@ -284,7 +284,7 @@ namespace IngameScript
 
                     DepthSprite entityDepthSprite = new DepthSprite(entitySprite, entityPosNDC.Z);
 
-                    EntitySprites.Add(key, entityDepthSprite);
+                    entitySprites.Add(key, entityDepthSprite);
 
                     DepthSprite selectorDepthSprite = default(DepthSprite);
 
@@ -295,7 +295,7 @@ namespace IngameScript
                             Type = SpriteType.TEXTURE,
                             Data = "Selector_0",
                             Position = entityPosPixel,
-                            Size = new Vector2(48, 48) * entityDepthScale,
+                            Size = entitySprite.Size * 1.25f,
                             Color = Color.Yellow,
                             Alignment = TextAlignment.CENTER,
                             RotationOrScale = 0f,
@@ -369,123 +369,11 @@ namespace IngameScript
                     }
                 }
 
-                foreach (var missileInfoKVP in myMissileInfos)
-                {
-                    MissileInfo missileInfo = missileInfoKVP.Value;
-                    long key = missileInfoKVP.Key;
+                finalSprites.AddRange(_spritesBeforePlane.OrderBy(x => -x.Depth));
+                finalSprites.AddRange(_planeSprites);
+                finalSprites.AddRange(_spritesAfterPlane.Concat(_staticSpritesAfterPlane).OrderBy(x => -x.Depth));
 
-                    Vector3 missilePosWorld = missileInfo.Position;
-                    Vector3 missilePosNDC = Vector3.Transform(missilePosWorld, totalMatrix);
-                    Vector2 entityPosPixel = new Vector2((1 + missilePosNDC.X) * 511, (1 - missilePosNDC.Y) * 511);
-                    float entityPosZView = -(_f * _n) / (_f - missilePosNDC.Z * (_f - _n));
-
-                    float entityDepthScale = _minScale + (_maxScale - _minScale) * (-entityPosZView - _n) / (_f - _n);
-
-                    string spriteName = "Missile_0";
-                    Vector2 spriteSize = new Vector2(16, 16);
-                    Color spriteColor = Color.Cyan;
-
-                    MySprite entitySprite = new MySprite()
-                    {
-                        Type = SpriteType.TEXTURE,
-                        Data = spriteName,
-                        Position = entityPosPixel,
-                        Size = spriteSize * entityDepthScale,
-                        Color = spriteColor,
-                        Alignment = TextAlignment.CENTER,
-                        RotationOrScale = 0f,
-                    };
-
-                    DepthSprite missileDepthSprite = new DepthSprite(entitySprite, missilePosNDC.Z);
-
-                    EntitySprites.Add(key, missileDepthSprite);
-
-                    DepthSprite selectorDepthSprite = default(DepthSprite);
-
-                    if (key == targetedID)
-                    {
-                        MySprite selectorSprite = new MySprite()
-                        {
-                            Type = SpriteType.TEXTURE,
-                            Data = "Selector_0",
-                            Position = entityPosPixel,
-                            Size = new Vector2(48, 48) * entityDepthScale,
-                            Color = Color.Yellow,
-                            Alignment = TextAlignment.CENTER,
-                            RotationOrScale = 0f,
-                        };
-
-                        selectorDepthSprite = new DepthSprite(selectorSprite, missilePosNDC.Z - 0.001f);
-                    }
-
-                    Vector3 basePosWorld = missilePosWorld - (Vector3.Dot(gridPlaneWorld.Normal, missilePosWorld) + gridPlaneWorld.D) * gridPlaneWorld.Normal;
-                    Vector3 basePosNDC = Vector3.Transform(basePosWorld, totalMatrix);
-                    Vector2 basePosPixel = new Vector2((1 + basePosNDC.X) * 511, (1 - basePosNDC.Y) * 511);
-                    float basePosZView = -(_f * _n) / (_f - basePosNDC.Z * (_f - _n));
-
-                    float baseDepthScale = _minScale + (_maxScale - _minScale) * (-basePosZView - _n) / (_f + _n);
-
-                    MySprite baseSprite = new MySprite()
-                    {
-                        Type = SpriteType.TEXTURE,
-                        Data = "Base_0",
-                        Position = basePosPixel,
-                        Size = new Vector2(32, 32) * baseDepthScale,
-                        Color = Color.White,
-                        Alignment = TextAlignment.CENTER,
-                        RotationOrScale = 0f,
-                    };
-
-                    DepthSprite baseDepthSprite = new DepthSprite(baseSprite, basePosNDC.Z);
-
-                    Vector3 stemPosWorld = 0.5f * (missilePosWorld + basePosWorld);
-                    Vector3 stemPosNDC = Vector3.Transform(stemPosWorld, totalMatrix);
-                    Vector2 stemPosPixel = new Vector2((1 + stemPosNDC.X) * 511, (1 - stemPosNDC.Y) * 511);
-
-                    Vector2 stemVector = new Vector2(entityPosPixel.X - basePosPixel.X, entityPosPixel.Y - basePosPixel.Y);
-                    float stemLength = stemVector.Length();
-                    float stemAngle = (float)Math.Atan2(stemVector.Y, stemVector.X);
-
-                    MySprite stemSprite = new MySprite()
-                    {
-                        Type = SpriteType.TEXTURE,
-                        Data = "SquareSimple",
-                        Position = stemPosPixel,
-                        Size = new Vector2(stemLength, 1),
-                        Color = Color.White,
-                        Alignment = TextAlignment.CENTER,
-                        RotationOrScale = stemAngle,
-                    };
-
-                    DepthSprite stemDepthSprite = new DepthSprite(stemSprite, stemPosNDC.Z);
-
-                    if ((Vector3.Dot(cameraPositionWorld, gridPlaneWorld.Normal) + gridPlaneWorld.D) * (Vector3.Dot(missilePosWorld, gridPlaneWorld.Normal) + gridPlaneWorld.D) > 0)
-                    {
-                        _spritesAfterPlane.Add(missileDepthSprite);
-                        _spritesAfterPlane.Add(baseDepthSprite);
-                        _spritesAfterPlane.Add(stemDepthSprite);
-
-                        if (key == targetedID)
-                        {
-                            _spritesAfterPlane.Add(selectorDepthSprite);
-                        }
-                    }
-                    else
-                    {
-                        _spritesBeforePlane.Add(missileDepthSprite);
-                        _spritesBeforePlane.Add(baseDepthSprite);
-                        _spritesBeforePlane.Add(stemDepthSprite);
-
-                        if (key == targetedID)
-                        {
-                            _spritesBeforePlane.Add(selectorDepthSprite);
-                        }
-                    }
-                }
-
-                FinalSprites.AddRange(_spritesBeforePlane.OrderBy(x => -x.Depth));
-                FinalSprites.AddRange(_planeSprites);
-                FinalSprites.AddRange(_spritesAfterPlane.Concat(_staticSpritesAfterPlane).OrderBy(x => -x.Depth));
+                return finalSprites;
             }
         }
     }

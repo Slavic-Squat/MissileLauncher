@@ -24,14 +24,18 @@ namespace IngameScript
     {
         public struct DepthSprite : IUIElement
         {
-            public Vector2 Pos => Sprite.Position ?? Vector2.Zero;
-            public Vector2 Size => Sprite.Size ?? Vector2.Zero;
+            public RectangleF Bounds { get; private set; }
+            public Vector2 Pos => Bounds.Position;
+            public Vector2 Size => Bounds.Size;
+            public Vector2 Center => Bounds.Center;
             public MySprite Sprite { get; private set; }
             public float Depth { get; private set; }
             public DepthSprite(MySprite sprite, float depth)
             {
                 Sprite = sprite;
                 Depth = depth;
+
+                Bounds = new RectangleF((Vector2)(sprite.Position - sprite.Size * 0.5f), (Vector2)sprite.Size);
             }
 
             public void Draw(MySpriteDrawFrame frame)

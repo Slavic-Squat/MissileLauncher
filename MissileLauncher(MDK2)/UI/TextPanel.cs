@@ -22,28 +22,28 @@ namespace IngameScript
 {
     partial class Program
     {
-        public class InfoModal : IModal
+        public class TextPanel : IPanel
         {
             public RectangleF Bounds => _bounds;
-            public Vector2 Pos => Bounds.Position;
-            public Vector2 Size => Bounds.Size;
-            public Vector2 Center => Bounds.Center;
-            public bool CanClose => _condition.Invoke();
+            public Vector2 Pos => _bounds.Position;
+            public Vector2 Size => _bounds.Size;
+            public Vector2 Center => _bounds.Center;
+
+            public string Text { get; set; }
 
             private RectangleF _bounds;
-            private string _text;
-            private Func<bool> _condition;
+
+            private IMyTextSurface _surface;
+
             private MySprite _fillSprite;
             private MySprite _borderSprite;
             private MySprite _textSprite;
 
-            private IMyTextSurface _surface;
-
-            public InfoModal(Vector2 pos, Vector2 size, Func<bool> condition, string text, IMyTextSurface surface)
+            public TextPanel(Vector2 pos, Vector2 size, string text, IMyTextSurface surface)
             {
                 _bounds = new RectangleF(pos, size);
-                _text = text;
-                _condition = condition;
+
+                Text = text;
                 _surface = surface;
 
                 BuildSprites();
@@ -57,25 +57,33 @@ namespace IngameScript
                     Data = "SquareSimple",
                     Position = Center,
                     Size = Size - 20,
-                    Color = new Color(0, 0, 0, 200),
-                    Alignment = TextAlignment.CENTER
+                    RotationOrScale = 0f,
+                    Color = UIConfig.PanelFillColor,
+                    Alignment = TextAlignment.CENTER,
                 };
-
                 _borderSprite = new MySprite()
                 {
                     Type = SpriteType.TEXTURE,
                     Data = "SquareSimple",
                     Position = Center,
                     Size = Size,
-                    Color = Color.White,
-                    Alignment = TextAlignment.CENTER
+                    RotationOrScale = 0f,
+                    Color = UIConfig.PanelBorderColor,
+                    Alignment = TextAlignment.CENTER,
                 };
-
-                _textSprite = SpriteHelper.CreateText(Bounds, _text, Color.White, _surface, TextAlignment.CENTER, true, 0.75f);
+                _textSprite = new MySprite();
             }
 
             public void Draw(MySpriteDrawFrame frame)
             {
+                if (!string.IsNullOrEmpty(Text))
+                {
+                    _textSprite = SpriteHelper.CreateText(Bounds, Text, Color.White, _surface, TextAlignment.LEFT, false, 0.75f, 25f);
+                    debugEcho(_textSprite.Data);
+                    debugEcho(_textSprite.Position.ToString());
+                    debugEcho(_textSprite.Size.ToString());
+                }
+
                 frame.Add(_borderSprite);
                 frame.Add(_fillSprite);
                 frame.Add(_textSprite);

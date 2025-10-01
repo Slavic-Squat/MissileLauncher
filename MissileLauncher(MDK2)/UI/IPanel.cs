@@ -22,9 +22,9 @@ namespace IngameScript
 {
     partial class Program
     {
-        public interface IPanel : IEnterable, INavigable
+        public interface IPanel : IUIElement
         {
-            IWindow ParentWindow { get; }
+
         }
     }
 }

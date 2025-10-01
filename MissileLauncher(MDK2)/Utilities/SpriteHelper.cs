@@ -70,16 +70,67 @@ namespace IngameScript
             //    return sprites;
             //}
 
-            public static MySprite CreateText(Vector2 pos, string text, Color color, float scale)
+            public static MySprite CreateText(Vector2 pos, string text, Color color, IMyTextSurface surface, float scale = 1f, TextAlignment alignment = TextAlignment.LEFT, bool vertCentered = false)
             {
+                var sb = new StringBuilder(text);
+
+                if (vertCentered)
+                {
+                    float textHeight = surface.MeasureStringInPixels(sb, "White", scale).Y;
+                    pos.Y -= textHeight / 2;
+                }
                 return new MySprite()
                 {
                     Type = SpriteType.TEXT,
                     Data = text,
-                    Position = pos + new Vector2(0, -scale * 16f),
+                    Position = pos,
                     Color = color,
                     RotationOrScale = scale,
-                    Alignment = TextAlignment.CENTER
+                    Alignment = alignment,
+                    FontId = "White"
+                };
+            }
+
+            public static MySprite CreateText(RectangleF bounds, string text, Color color, IMyTextSurface surface, TextAlignment alignment = TextAlignment.LEFT, bool vertCentered = false, float scale = 1f, float padding = 0f)
+            {
+                var sb = new StringBuilder(text);
+
+                Vector2 textSize = surface.MeasureStringInPixels(sb, "White", 1f);
+                float fillScale = Math.Min(bounds.Size.X / textSize.X, bounds.Size.Y / textSize.Y);
+
+                Vector2 pos = bounds.Position;
+
+                if (vertCentered)
+                {
+                    pos.Y = bounds.Center.Y - (textSize.Y * fillScale * scale) / 2;
+                }
+                else
+                {
+                    pos.Y += padding;
+                }
+
+                switch (alignment)
+                {
+                    case TextAlignment.LEFT:
+                        pos.X += padding;
+                        break;
+                    case TextAlignment.RIGHT:
+                        pos.X = bounds.Right - padding;
+                        break;
+                    case TextAlignment.CENTER:
+                        pos.X = bounds.Center.X;
+                        break;
+                }
+
+                return new MySprite()
+                {
+                    Type = SpriteType.TEXT,
+                    Data = text,
+                    Position = pos,
+                    Color = color,
+                    RotationOrScale = fillScale * scale,
+                    Alignment = alignment,
+                    FontId = "White"
                 };
             }
         }

@@ -25,26 +25,28 @@ namespace IngameScript
         public class LaserWindow : IWindow, IUpdatable
         {
             public UI UI { get; private set; }
-            public Vector2 Pos { get; private set; }
-            public Vector2 Size { get; private set; }
+            public RectangleF Bounds => _bounds;
+            public Vector2 Pos => _bounds.Position;
+            public Vector2 Size => _bounds.Size;
+            public Vector2 Center => _bounds.Center;
             public bool IsInside { get; private set; }
 
-            private List<TargetingLaser> _lasers;
+            public IMyTextSurface Display => UI.Display;
 
+            private List<TargetingLaser> Lasers => UI.UIWireManager.TargetingLasers;
+
+            private RectangleF _bounds;
             private List<MySprite> _sprites = new List<MySprite>();
-            private List<IHighlightable> _highlightableElements = new List<IHighlightable>();
-            private List<IUpdatable> _updatableElements = new List<IUpdatable>();
-            private List<IUIElement> _allElements = new List<IUIElement>();
-            private IHighlightable _highlightedElement;
+            private List<IButton> _buttons = new List<IButton>();
+            private IButton _highlightedButton;
             private IEnterable _enteredElement;
-            private int _pageIndex = 0;
 
 
             public LaserWindow(UI ui, Vector2 pos, Vector2 size)
             {
                 UI = ui;
-                Pos = pos;
-                Size = size;
+
+                _bounds = new RectangleF(pos, size);
 
                 Init();
             }
@@ -52,10 +54,11 @@ namespace IngameScript
             public LaserWindow(UI ui)
             {
                 UI = ui;
-                Pos = new Vector2(ui.TextureSize.X / 2f, ui.TextureSize.Y / 2f);
-                Size = new Vector2(ui.SurfaceSize.X, ui.SurfaceSize.Y);
 
-                _lasers = UI.UIWireManager.GetTargetingLasers();
+                Vector2 pos = (ui.TextureSize - ui.SurfaceSize) * 0.5f;
+                Vector2 size = new Vector2(ui.SurfaceSize.X, ui.SurfaceSize.Y);
+
+                _bounds = new RectangleF(pos, size);
 
                 Init();
             }
@@ -64,18 +67,20 @@ namespace IngameScript
             {
                 BuildSprites();
 
-                for (int i = 0; i < _lasers.Count; i++)
+                for (int i = 0; i < Lasers.Count; i++)
                 {
-                    TargetingLaser laser = _lasers[i];
-                    Button button = new Button($"Laser [{i}]", Pos + new Vector2(i % 2 * 320 - Size.X / 2 + 160, i / 2 * 140 - Size.Y / 2 + 180), new Vector2(240, 80), $"Laser [{i}]", 1.2f, () =>
+                    TargetingLaser laser = Lasers[i];
+                    Vector2 size = new Vector2(240, 80);
+                    Vector2 pos = Pos + new Vector2(i % 2 * (size.X + 50) + 50, i / 2 * (size.Y + 50) + 50);
+                    
+                    Button button = new Button($"Laser [{i}]", pos, size, $"Laser [{i}]", () =>
                     {
                         UI.Controller.TakeControl(laser);
                         return true;
-                    });
+                    },
+                    Display);
 
-                    _highlightableElements.Add(button);
-                    _updatableElements.Add(button);
-                    _allElements.Add(button);
+                    _buttons.Add(button);
                 }
             }
 
@@ -86,19 +91,25 @@ namespace IngameScript
                 {
                     Type = SpriteType.TEXTURE,
                     Data = "SquareSimple",
-                    Position = Pos,
+                    Position = Center,
                     Size = Size,
                     Color = Color.Black,
                     Alignment = TextAlignment.CENTER
                 };
                 _sprites.Add(fillSprite);
 
+                Vector2 headerSize = new Vector2(440, 60);
+                Vector2 headerPos = Pos + new Vector2(Center.X - headerSize.X * 0.5f, 0);
+                RectangleF headerBounds = new RectangleF(headerPos, headerSize);
+
+                float headerBorderThickness = 20f;
+
                 MySprite headerBorderSprite = new MySprite()
                 {
                     Type = SpriteType.TEXTURE,
                     Data = "SquareSimple",
-                    Position = Pos + new Vector2(0, -Size.Y / 2 + 30),
-                    Size = new Vector2(460, 80),
+                    Position = headerBounds.Center,
+                    Size = headerBounds.Size,
                     Color = Color.White,
                     Alignment = TextAlignment.CENTER
                 };
@@ -108,22 +119,22 @@ namespace IngameScript
                 {
                     Type = SpriteType.TEXTURE,
                     Data = "SquareSimple",
-                    Position = Pos + new Vector2(0, -Size.Y / 2 + 30),
-                    Size = new Vector2(440, 60),
+                    Position = headerBounds.Center,
+                    Size = headerBounds.Size - headerBorderThickness,
                     Color = new Color(32, 32, 32, 255),
                     Alignment = TextAlignment.CENTER
                 };
                 _sprites.Add(headerFillSprite);
 
-                MySprite headerTextSprite = SpriteHelper.CreateText(Pos + new Vector2(0, -Size.Y / 2 + 30), "Select Laser To Control:", Color.White, 1.5f);
+                MySprite headerTextSprite = SpriteHelper.CreateText(headerBounds, "Select Laser To Control:", Color.White, Display, TextAlignment.CENTER, true, 0.75f);
                 _sprites.Add(headerTextSprite);
             }
 
             public void Enter()
             {
-                if (_highlightableElements.Count > 0)
+                if (_buttons.Count > 0)
                 {
-                    HighlightElement(_highlightableElements[0]);
+                    HighlightButton(_buttons[0]);
                 }
                 IsInside = true;
             }
@@ -131,33 +142,26 @@ namespace IngameScript
             public void Exit()
             {
                 IsInside = false;
-                UnhighlightCurrentElement();
+                UnhighlightCurrentButton();
                 ExitCurrentElement();
             }
 
-            private void HighlightElement(IHighlightable highlightable)
+            private void HighlightButton(IButton button)
             {
-                UnhighlightCurrentElement();
-                highlightable.Highlight();
-                _highlightedElement = highlightable;
+                UnhighlightCurrentButton();
+                button.Highlight();
+                _highlightedButton = button;
             }
 
-            private void UnhighlightCurrentElement()
+            private void UnhighlightCurrentButton()
             {
-                _highlightedElement?.Unhighlight();
-                _highlightedElement = null;
+                _highlightedButton?.Unhighlight();
+                _highlightedButton = null;
             }
 
-            private void ActivateHighlightedElement(DateTime time)
+            private void ActivateHighlightedButton(DateTime time)
             {
-                if (_highlightedElement is IButton)
-                {
-                    ((IButton)_highlightedElement).Press(time);
-                }
-                else if (_highlightedElement is IEnterable)
-                {
-                    EnterElement((IEnterable)_highlightedElement);
-                }
+                _highlightedButton?.Press(time);
             }
 
             private void EnterElement(IEnterable enterable)
@@ -188,13 +192,9 @@ namespace IngameScript
             {
                 CleanUp();
 
-                foreach (var element in _updatableElements)
+                foreach (var button in _buttons)
                 {
-                    if (element == _enteredElement)
-                    {
-                        continue;
-                    }
-                    element.Update(time);
+                    button.Update(time);
                 }
 
                 if (_enteredElement is IUpdatable)
@@ -207,16 +207,16 @@ namespace IngameScript
             {
                 frame.AddRange(_sprites);
 
-                foreach (var element in _allElements)
+                foreach (var button in _buttons)
                 {
-                    if (element == _enteredElement || element == _highlightedElement)
+                    if (button == _highlightedButton)
                     {
                         continue;
                     }
 
-                    element.Draw(frame);
+                    button.Draw(frame);
                 }
-                _highlightedElement?.Draw(frame);
+                _highlightedButton?.Draw(frame);
                 _enteredElement?.Draw(frame);
             }
 
@@ -231,38 +231,39 @@ namespace IngameScript
                     return;
                 }
 
-                if (_highlightableElements.Count == 0)
-                {
-                    return;
-                }
-
                 if (input.CRelease)
                 {
                     Exit();
                 }
-                else if (input.WRelease)
+
+                if (_buttons.Count == 0)
                 {
-                    IHighlightable nextElement = UIUtilities.Navigate(_highlightableElements, _highlightedElement, UIUtilities.NavigationDirection.Up);
-                    HighlightElement(nextElement);
+                    return;
+                }
+
+                if (input.WRelease)
+                {
+                    IButton nextButton = UIUtilities.Navigate(_buttons, _highlightedButton, UIUtilities.NavigationDirection.Up);
+                    HighlightButton(nextButton);
                 }
                 else if (input.SRelease)
                 {
-                    IHighlightable nextElement = UIUtilities.Navigate(_highlightableElements, _highlightedElement, UIUtilities.NavigationDirection.Down);
-                    HighlightElement(nextElement);
+                    IButton nextButton = UIUtilities.Navigate(_buttons, _highlightedButton, UIUtilities.NavigationDirection.Down);
+                    HighlightButton(nextButton);
                 }
                 else if (input.ARelease)
                 {
-                    IHighlightable nextElement = UIUtilities.Navigate(_highlightableElements, _highlightedElement, UIUtilities.NavigationDirection.Left);
-                    HighlightElement(nextElement);
+                    IButton nextButton = UIUtilities.Navigate(_buttons, _highlightedButton, UIUtilities.NavigationDirection.Left);
+                    HighlightButton(nextButton);
                 }
                 else if (input.DRelease)
                 {
-                    IHighlightable nextElement = UIUtilities.Navigate(_highlightableElements, _highlightedElement, UIUtilities.NavigationDirection.Right);
-                    HighlightElement(nextElement);
+                    IButton nextButton = UIUtilities.Navigate(_buttons, _highlightedButton, UIUtilities.NavigationDirection.Right);
+                    HighlightButton(nextButton);
                 }
                 else if (input.SpaceRelease)
                 {
-                    ActivateHighlightedElement(time);
+                    ActivateHighlightedButton(time);
                 }
             }
         }

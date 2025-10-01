@@ -47,11 +47,29 @@ namespace IngameScript
                 _selfID = selfID;
                 _communicationHandler = communicationHandler;
 
+                ActiveMissiles = new Dictionary<long, MissileInfo>();
+
                 MissileBays = new List<MissileBay>();
                 for (int i = 0; i < numberOfMissileBays; i++)
                 {
                     MissileBays.Add(new MissileBay(_program, i, _selfID, _communicationHandler.SelfAddress));
                 }
+            }
+
+            public Dictionary<long, EntityInfoExt> GetAllMyMissiles()
+            {
+                Dictionary<long, EntityInfoExt> allMyMissiles = new Dictionary<long, EntityInfoExt>();
+
+                foreach (var missileInfoKVP in ActiveMissiles)
+                {
+                    EntityInfoExt.Source source = EntityInfoExt.Source.Remote;
+                    EntityInfoExt.Relation relation = EntityInfoExt.Relation.Me;
+                    float distance = Vector3.Distance(missileInfoKVP.Value.Position, _referenceBlock.GetPosition());
+
+                    allMyMissiles[missileInfoKVP.Key] = new EntityInfoExt(missileInfoKVP.Value, source, relation, distance);
+                }
+
+                return allMyMissiles;
             }
         }
     }
