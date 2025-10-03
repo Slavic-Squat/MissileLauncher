@@ -32,8 +32,11 @@ namespace IngameScript
             public bool IsInside { get; private set; }
 
             public IMyTextSurface Display => UI.Display;
-
-            private long SelfID => UI.UIWireManager.SelfID;
+            public NavMode NavMode { get; set; } = NavMode.UI;
+            public EntityTypeFilter NavTypeFilter { get; set; } = EntityTypeFilter.All;
+            public EntityRelationFilter NavRelationFilter { get; set; } = EntityRelationFilter.All;
+            public EntitySourceFilter NavSourceFilter { get; set; } = EntitySourceFilter.Both;
+            public ScopeScale ScopeScale { get; set; } = ScopeScale.Close;
             private IMyCubeBlock ReferenceBlock => UI.UIWireManager.ReferenceBlock;
 
             private Dictionary<long, EntityInfoExt> _allEntities = new Dictionary<long, EntityInfoExt>();
@@ -47,18 +50,14 @@ namespace IngameScript
             private List<MySprite> _sprites = new List<MySprite>();
 
             private List<IHighlightable> _highlightables = new List<IHighlightable>();
+            private Stack<IMenu> _menuStack = new Stack<IMenu>();
             private TextPanel _targetPanel;
+            private ControlPanel _optionsPanel;
 
             private IHighlightable _highlightedElement;
             private IEnterable _enteredElement;
 
             private long _selectedEntityID;
-            
-            private NavMode _navMode = NavMode.UI;
-            private EntityTypeFilter _navTypeFilter = EntityTypeFilter.All;
-            private EntityRelationFilter _navRelationFilter = EntityRelationFilter.All;
-            private EntitySourceFilter _navSourceFilter = EntitySourceFilter.Both;
-            private ScopeScale _scopeScale = ScopeScale.Close;
 
 
             public RadarWindow(UI ui, Vector2 pos, Vector2 size)
@@ -92,6 +91,12 @@ namespace IngameScript
                 Vector2 targetPanelSize = new Vector2(200, 300);
                 Vector2 targetPanelPos = Pos + new Vector2(Size.X - targetPanelSize.X, Size.Y - targetPanelSize.Y);
                 _targetPanel = new TextPanel(targetPanelPos, targetPanelSize, "", Display);
+
+                Vector2 optionsPanelSize = new Vector2(200, 300);
+                Vector2 optionsPanelPos = Pos;
+
+                _optionsPanel = UIFactory.CreateTargetingOptionsPanel(this, optionsPanelPos, optionsPanelSize, Display);
+                _highlightables.Add(_optionsPanel);
             }
 
             private void BuildSprites()
@@ -121,32 +126,36 @@ namespace IngameScript
             public void Exit()
             {
                 IsInside = false;
-                UnhighlightCurrentElement();
-                ExitCurrentElement();
+                UnhighlightElement(_highlightedElement);
+                ExitElement(_enteredElement);
             }
 
             private void HighlightElement(IHighlightable highlightable)
             {
-                UnhighlightCurrentElement();
+                UnhighlightElement(_highlightedElement);
                 highlightable.Highlight();
                 _highlightedElement = highlightable;
             }
 
-            private void UnhighlightCurrentElement()
+            private void UnhighlightElement(IHighlightable hightlightable)
             {
-                _highlightedElement?.Unhighlight();
-                _highlightedElement = null;
+                hightlightable?.Unhighlight();
+                
+                if (_highlightedElement == hightlightable)
+                {
+                    _highlightedElement = null;
+                }
             }
 
-            private void ActivateHighlightedElement(DateTime time)
+            private void ActivateHighlightable(IHighlightable highlightable, DateTime time)
             {
-                if (_highlightedElement is IButton)
+                if (highlightable is IButton)
                 {
-                    ((IButton)_highlightedElement).Press(time);
+                    ((IButton)highlightable).Press(time);
                 }
-                else if (_highlightedElement is IEnterable)
+                else if (highlightable is IEnterable)
                 {
-                    EnterElement((IEnterable)_highlightedElement);
+                    EnterElement((IEnterable)highlightable);
                 }
             }
 
@@ -162,16 +171,16 @@ namespace IngameScript
 
             private void EnterElement(IEnterable enterable)
             {
-                ExitCurrentElement();
-                enterable.Enter();
+                ExitElement(_enteredElement);
+                enterable?.Enter();
                 _enteredElement = enterable;
             }
 
-            private void ExitCurrentElement()
+            private void ExitElement(IEnterable enterable)
             {
-                if (_enteredElement != null)
+                enterable?.Exit();
+                if (_enteredElement == enterable)
                 {
-                    _enteredElement.Exit();
                     _enteredElement = null;
                 }
             }
@@ -188,7 +197,7 @@ namespace IngameScript
             {
                 _allEntities = UI.UIWireManager.GetAllEntities();
 
-                _targetingSpriteBuilder.Zoom = GetValue(_scopeScale);
+                _targetingSpriteBuilder.Zoom = GetValue(ScopeScale);
                 _targetingSprites = _targetingSpriteBuilder.BuildSprites(_allEntities, _selectedEntityID, out _entitySprites);
 
                 if (_entitySprites.Keys.Contains(_selectedEntityID))
@@ -201,27 +210,22 @@ namespace IngameScript
                     _targetPanel.Text = "No Target Selected";
                 }
 
-                CleanUp();
+                _optionsPanel.Update(time);
 
-                if (_enteredElement is IUpdatable)
-                {
-                    ((IUpdatable)_enteredElement).Update(time);
-                }
+                CleanUp();
             }
 
             public void Draw(MySpriteDrawFrame frame)
             {
                 frame.AddRange(_sprites);
 
-                foreach (var depthSprite in _targetingSprites)
+                foreach (var sprite in _targetingSprites)
                 {
-                    depthSprite.Draw(frame);
+                    sprite.Draw(frame);
                 }
 
                 _targetPanel.Draw(frame);
-
-                _highlightedElement?.Draw(frame);
-                _enteredElement?.Draw(frame);
+                _optionsPanel.Draw(frame);
             }
 
             public void Navigate(UserInput input, DateTime time)
@@ -242,10 +246,10 @@ namespace IngameScript
 
                 if (input.QRelease)
                 {
-                    _navMode = NextNavMode(_navMode);
+                    NavMode = NextNavMode(NavMode);
                 }
 
-                switch (_navMode)
+                switch (NavMode)
                 {
                     case NavMode.UI:
                         NavigateUI(input, time);
@@ -265,38 +269,42 @@ namespace IngameScript
 
                 if (input.WRelease)
                 {
-                    IHighlightable nextElement = UIUtilities.Navigate(_highlightables, _highlightedElement, UIUtilities.NavigationDirection.Up);
+                    IHighlightable nextElement = UIUtilities.Navigate(_highlightables, _highlightedElement, NavigationDirection.Up);
                     HighlightElement(nextElement);
                 }
                 else if (input.SRelease)
                 {
-                    IHighlightable nextElement = UIUtilities.Navigate(_highlightables, _highlightedElement, UIUtilities.NavigationDirection.Down);
+                    IHighlightable nextElement = UIUtilities.Navigate(_highlightables, _highlightedElement, NavigationDirection.Down);
                     HighlightElement(nextElement);
                 }
                 else if (input.ARelease)
                 {
-                    IHighlightable nextElement = UIUtilities.Navigate(_highlightables, _highlightedElement, UIUtilities.NavigationDirection.Left);
+                    IHighlightable nextElement = UIUtilities.Navigate(_highlightables, _highlightedElement, NavigationDirection.Left);
                     HighlightElement(nextElement);
                 }
                 else if (input.DRelease)
                 {
-                    IHighlightable nextElement = UIUtilities.Navigate(_highlightables, _highlightedElement, UIUtilities.NavigationDirection.Right);
+                    IHighlightable nextElement = UIUtilities.Navigate(_highlightables, _highlightedElement, NavigationDirection.Right);
                     HighlightElement(nextElement);
                 }
                 else if (input.SpaceRelease)
                 {
-                    ActivateHighlightedElement(time);
+                    ActivateHighlightable(_highlightedElement, time);
                 }
             }
 
             private void NavigateTargeting(UserInput input, DateTime time)
             {
-                Dictionary<long, MyEntitySprite> filtered = _entitySprites.Where(kvp => Matches(kvp.Value.EntityInfo, _navTypeFilter, _navRelationFilter, _navSourceFilter)).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+                Dictionary<long, MyEntitySprite> filtered = _entitySprites.Where(kvp => Matches(kvp.Value.EntityInfo, NavTypeFilter, NavRelationFilter, NavSourceFilter)).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
 
                 if (filtered.Count() == 0)
                 {
                     UnselectEntity();
                     return;
+                }
+                else if (!filtered.Keys.Contains(_selectedEntityID))
+                {
+                    UnselectEntity();
                 }
 
                 if (input.CRelease)
@@ -305,22 +313,22 @@ namespace IngameScript
                 }
                 else if (input.WRelease)
                 {
-                    long nextEntityID = UIUtilities.Navigate(filtered, _selectedEntityID, UIUtilities.NavigationDirection.Up);
+                    long nextEntityID = UIUtilities.Navigate(filtered, _selectedEntityID, NavigationDirection.Up);
                     SelectEntity(nextEntityID);
                 }
                 else if (input.SRelease)
                 {
-                    long nextEntityID = UIUtilities.Navigate(filtered, _selectedEntityID, UIUtilities.NavigationDirection.Down);
+                    long nextEntityID = UIUtilities.Navigate(filtered, _selectedEntityID, NavigationDirection.Down);
                     SelectEntity(nextEntityID);
                 }
                 else if (input.ARelease)
                 {
-                    long nextEntityID = UIUtilities.Navigate(filtered, _selectedEntityID, UIUtilities.NavigationDirection.Left);
+                    long nextEntityID = UIUtilities.Navigate(filtered, _selectedEntityID, NavigationDirection.Left);
                     SelectEntity(nextEntityID);
                 }
                 else if (input.DRelease)
                 {
-                    long nextEntityID = UIUtilities.Navigate(filtered, _selectedEntityID, UIUtilities.NavigationDirection.Right);
+                    long nextEntityID = UIUtilities.Navigate(filtered, _selectedEntityID, NavigationDirection.Right);
                     SelectEntity(nextEntityID);
                 }
             }

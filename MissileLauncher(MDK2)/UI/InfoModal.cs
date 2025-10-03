@@ -56,7 +56,7 @@ namespace IngameScript
                     Type = SpriteType.TEXTURE,
                     Data = "SquareSimple",
                     Position = Center,
-                    Size = Size - 20,
+                    Size = Size - 20f,
                     Color = new Color(0, 0, 0, 200),
                     Alignment = TextAlignment.CENTER
                 };
@@ -71,7 +71,7 @@ namespace IngameScript
                     Alignment = TextAlignment.CENTER
                 };
 
-                _textSprite = SpriteHelper.CreateText(Bounds, _text, Color.White, _surface, TextAlignment.CENTER, true, 0.75f);
+                _textSprite = SpriteHelper.CreateText(Bounds, _text, Color.White, _surface, TextAlignment.CENTER, true, 0.2f);
             }
 
             public void Draw(MySpriteDrawFrame frame)

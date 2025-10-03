@@ -24,15 +24,6 @@ namespace IngameScript
     {
         public static class UIUtilities
         {
-
-            public enum NavigationDirection
-            {
-                Left,
-                Right,
-                Up,
-                Down
-            }
-
             public static T Navigate<T>(IEnumerable<T> source, T current, NavigationDirection direction) where T : IPositional2D
             {
                 if (EqualityComparer<T>.Default.Equals(current, default(T)))

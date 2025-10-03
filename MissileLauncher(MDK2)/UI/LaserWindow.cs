@@ -71,9 +71,9 @@ namespace IngameScript
                 {
                     TargetingLaser laser = Lasers[i];
                     Vector2 size = new Vector2(240, 80);
-                    Vector2 pos = Pos + new Vector2(i % 2 * (size.X + 50) + 50, i / 2 * (size.Y + 50) + 50);
+                    Vector2 pos = Pos + new Vector2(i % 2 * (size.X + 50) + 50, i / 2 * (size.Y + 50) + 100);
                     
-                    Button button = new Button($"Laser [{i}]", pos, size, $"Laser [{i}]", () =>
+                    Button button = new Button($"Laser [{i}]", pos, size, () => $"Laser [{i}]", () =>
                     {
                         UI.Controller.TakeControl(laser);
                         return true;
@@ -102,7 +102,7 @@ namespace IngameScript
                 Vector2 headerPos = Pos + new Vector2(Center.X - headerSize.X * 0.5f, 0);
                 RectangleF headerBounds = new RectangleF(headerPos, headerSize);
 
-                float headerBorderThickness = 20f;
+                float minDim = Math.Min(headerBounds.Width, headerBounds.Height);
 
                 MySprite headerBorderSprite = new MySprite()
                 {
@@ -120,13 +120,13 @@ namespace IngameScript
                     Type = SpriteType.TEXTURE,
                     Data = "SquareSimple",
                     Position = headerBounds.Center,
-                    Size = headerBounds.Size - headerBorderThickness,
+                    Size = headerBounds.Size - 2 * 0.1f * minDim,
                     Color = new Color(32, 32, 32, 255),
                     Alignment = TextAlignment.CENTER
                 };
                 _sprites.Add(headerFillSprite);
 
-                MySprite headerTextSprite = SpriteHelper.CreateText(headerBounds, "Select Laser To Control:", Color.White, Display, TextAlignment.CENTER, true, 0.75f);
+                MySprite headerTextSprite = SpriteHelper.CreateText(headerBounds, "Select Laser To Control:", Color.White, Display, TextAlignment.CENTER, true, 0.2f);
                 _sprites.Add(headerTextSprite);
             }
 
@@ -142,40 +142,43 @@ namespace IngameScript
             public void Exit()
             {
                 IsInside = false;
-                UnhighlightCurrentButton();
-                ExitCurrentElement();
+                UnhighlightButton(_highlightedButton);
+                ExitElement(_enteredElement);
             }
 
             private void HighlightButton(IButton button)
             {
-                UnhighlightCurrentButton();
+                UnhighlightButton(_highlightedButton);
                 button.Highlight();
                 _highlightedButton = button;
             }
 
-            private void UnhighlightCurrentButton()
+            private void UnhighlightButton(IButton button)
             {
-                _highlightedButton?.Unhighlight();
-                _highlightedButton = null;
+                button?.Unhighlight();
+                if (_highlightedButton == button)
+                {
+                    _highlightedButton = null;
+                }
             }
 
-            private void ActivateHighlightedButton(DateTime time)
+            private void ActivateButton(IButton button, DateTime time)
             {
-                _highlightedButton?.Press(time);
+                button?.Press(time);
             }
 
             private void EnterElement(IEnterable enterable)
             {
-                ExitCurrentElement();
+                ExitElement(_enteredElement);
                 enterable.Enter();
                 _enteredElement = enterable;
             }
 
-            private void ExitCurrentElement()
+            private void ExitElement(IEnterable enterable)
             {
-                if (_enteredElement != null)
+                enterable?.Exit();
+                if (_enteredElement == enterable)
                 {
-                    _enteredElement.Exit();
                     _enteredElement = null;
                 }
             }
@@ -243,27 +246,27 @@ namespace IngameScript
 
                 if (input.WRelease)
                 {
-                    IButton nextButton = UIUtilities.Navigate(_buttons, _highlightedButton, UIUtilities.NavigationDirection.Up);
+                    IButton nextButton = UIUtilities.Navigate(_buttons, _highlightedButton, NavigationDirection.Up);
                     HighlightButton(nextButton);
                 }
                 else if (input.SRelease)
                 {
-                    IButton nextButton = UIUtilities.Navigate(_buttons, _highlightedButton, UIUtilities.NavigationDirection.Down);
+                    IButton nextButton = UIUtilities.Navigate(_buttons, _highlightedButton, NavigationDirection.Down);
                     HighlightButton(nextButton);
                 }
                 else if (input.ARelease)
                 {
-                    IButton nextButton = UIUtilities.Navigate(_buttons, _highlightedButton, UIUtilities.NavigationDirection.Left);
+                    IButton nextButton = UIUtilities.Navigate(_buttons, _highlightedButton, NavigationDirection.Left);
                     HighlightButton(nextButton);
                 }
                 else if (input.DRelease)
                 {
-                    IButton nextButton = UIUtilities.Navigate(_buttons, _highlightedButton, UIUtilities.NavigationDirection.Right);
+                    IButton nextButton = UIUtilities.Navigate(_buttons, _highlightedButton, NavigationDirection.Right);
                     HighlightButton(nextButton);
                 }
                 else if (input.SpaceRelease)
                 {
-                    ActivateHighlightedButton(time);
+                    ActivateButton(_highlightedButton, time);
                 }
             }
         }

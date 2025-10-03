@@ -226,7 +226,6 @@ namespace IngameScript
                 {
                     TargetInfo targetInfo = targetKVP.Value;
                     long key = targetInfo.EntityID;
-                    long sourceKey = targetInfo.EntityID;
                     long relationKey = targetInfo.EntityID;
 
                     EntitySource source = EntitySource.Remote;

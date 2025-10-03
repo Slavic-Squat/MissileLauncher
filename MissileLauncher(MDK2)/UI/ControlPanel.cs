@@ -18,105 +18,105 @@ using VRage.Game.ModAPI.Ingame.Utilities;
 using VRage.Game.ObjectBuilders.Definitions;
 using VRageMath;
 
+
 namespace IngameScript
 {
     partial class Program
     {
-        public class MainWindow : IWindow, IUpdatable
+        public class ControlPanel : IPanel, IEnterable, INavigable, IUpdatable, IHighlightable
         {
-            public UI UI { get; private set; }
             public RectangleF Bounds => _bounds;
             public Vector2 Pos => _bounds.Position;
             public Vector2 Size => _bounds.Size;
             public Vector2 Center => _bounds.Center;
             public bool IsInside { get; private set; }
+            public bool IsHighlighted { get; private set; }
 
-            public IMyTextSurface Display => UI.Display;
 
             private RectangleF _bounds;
-            private List<MySprite> _sprites = new List<MySprite>();
             private List<IButton> _buttons = new List<IButton>();
             private IButton _highlightedButton;
-            private IEnterable _enteredElement;
 
+            private IMyTextSurface _surface;
 
-            public MainWindow(UI ui, Vector2 pos, Vector2 size)
+            private MySprite _fillSprite;
+            private MySprite _borderSprite;
+            private MySprite _highlightSprite;
+
+            private List<MySprite> _sprites = new List<MySprite>();
+
+            public ControlPanel(Vector2 pos, Vector2 size, IMyTextSurface surface)
             {
-                UI = ui;
-
                 _bounds = new RectangleF(pos, size);
+                IsInside = false;
+                _surface = surface;
 
-                Init();
-            }
-
-            public MainWindow(UI ui)
-            {
-                UI = ui;
-                Vector2 pos = (ui.TextureSize - ui.SurfaceSize) * 0.5f;
-                Vector2 size = new Vector2(ui.SurfaceSize.X, ui.SurfaceSize.Y);
-
-                _bounds = new RectangleF(pos, size);
-
-                Init();
-            }
-
-            private void Init()
-            {
                 BuildSprites();
-
-                Vector2 laserButtonSize = new Vector2(400, 100);
-                Vector2 laserButtonPos = Pos + new Vector2(50, Size.Y * 0.5f - laserButtonSize.Y * 0.5f);
-                
-                Button laserButton = new Button("LASER CTRL", laserButtonPos, laserButtonSize, () => "LASER CTRL", () =>
-                {
-                    UI.EnterWindow(new LaserWindow(UI));
-                    return true;
-                },
-                Display);
-
-                Vector2 radarButtonSize = new Vector2(400, 100);
-                Vector2 radarButtonPos = Pos + new Vector2(Bounds.Right - radarButtonSize.X - 50, Size.Y * 0.5f - radarButtonSize.Y * 0.5f);
-                
-                Button radarButton = new Button("RADAR", radarButtonPos, radarButtonSize, () => "RADAR", () => 
-                { 
-                    UI.EnterWindow(new RadarWindow(UI));
-                    return true; 
-                },
-                Display);
-
-                _buttons.Add(laserButton);
-                _buttons.Add(radarButton);
             }
 
-            private void BuildSprites()
+            public void BuildSprites()
             {
-                _sprites.Clear();
-                MySprite fillSprite = new MySprite()
+                float minDim = Math.Min(_bounds.Width, _bounds.Height);
+
+                _fillSprite = new MySprite()
+                {
+                    Type = SpriteType.TEXTURE,
+                    Data = "SquareSimple",
+                    Position = Center,
+                    Size = Size - 20f,
+                    RotationOrScale = 0f,
+                    Color = UIConfig.PanelFillColor,
+                    Alignment = TextAlignment.CENTER,
+                };
+                _borderSprite = new MySprite()
                 {
                     Type = SpriteType.TEXTURE,
                     Data = "SquareSimple",
                     Position = Center,
                     Size = Size,
-                    Color = UIConfig.WindowFillColor,
+                    RotationOrScale = 0f,
+                    Color = UIConfig.PanelBorderColor,
+                    Alignment = TextAlignment.CENTER,
+                };
+                _highlightSprite = new MySprite()
+                {
+                    Type = SpriteType.TEXTURE,
+                    Data = "SquareSimple",
+                    Position = Center,
+                    Size = Size + 20f,
+                    Color = UIConfig.PanelHighlightColor,
                     Alignment = TextAlignment.CENTER
                 };
-                _sprites.Add(fillSprite);
+            }
+
+            public void AddButton(IButton button)
+            {
+                _buttons.Add(button);
+            }
+
+            public void AddSprite(MySprite sprite)
+            {
+                _sprites.Add(sprite);
+            }
+
+            public void Highlight()
+            {
+                IsHighlighted = true;
+            }
+
+            public void Unhighlight()
+            {
+                IsHighlighted = false;
             }
 
             public void Enter()
             {
-                if (_buttons.Count > 0)
-                {
-                    HighlightButton(_buttons[0]);
-                }
                 IsInside = true;
             }
 
             public void Exit()
             {
                 IsInside = false;
-                UnhighlightButton(_highlightedButton);
-                ExitElement(_enteredElement);
             }
 
             private void HighlightButton(IButton button)
@@ -129,9 +129,18 @@ namespace IngameScript
             private void UnhighlightButton(IButton button)
             {
                 button?.Unhighlight();
-                if (button == _highlightedButton)
+
+                if (_highlightedButton == button)
                 {
                     _highlightedButton = null;
+                }
+            }
+
+            public void Update(DateTime time)
+            {
+                foreach (var button in _buttons)
+                {
+                    button.Update(time);
                 }
             }
 
@@ -140,48 +149,19 @@ namespace IngameScript
                 button?.Press(time);
             }
 
-            private void EnterElement(IEnterable enterable)
-            {
-                ExitElement(_enteredElement);
-                enterable.Enter();
-                _enteredElement = enterable;
-            }
-
-            private void ExitElement(IEnterable enterable)
-            {
-                enterable?.Exit();
-                if (enterable == _enteredElement)
-                {
-                    _enteredElement = null;
-                }
-            }
-
-            private void CleanUp()
-            {
-                if (!_enteredElement?.IsInside ?? false)
-                {
-                    _enteredElement = null;
-                }
-            }
-
-            public void Update(DateTime time)
-            {
-                CleanUp();
-
-                foreach (var button in _buttons)
-                {
-                    button.Update(time);
-                }
-
-                if (_enteredElement is IUpdatable)
-                {
-                    ((IUpdatable)_enteredElement).Update(time);
-                }
-            }
-
             public void Draw(MySpriteDrawFrame frame)
             {
-                frame.AddRange(_sprites);
+                if (IsHighlighted)
+                {
+                    frame.Add(_highlightSprite);
+                }
+                frame.Add(_borderSprite);
+                frame.Add(_fillSprite);
+
+                foreach (var sprite in _sprites)
+                {
+                    frame.Add(sprite);
+                }
 
                 foreach (var button in _buttons)
                 {
@@ -189,24 +169,13 @@ namespace IngameScript
                     {
                         continue;
                     }
-
                     button.Draw(frame);
                 }
                 _highlightedButton?.Draw(frame);
-                _enteredElement?.Draw(frame);
             }
 
             public void Navigate(UserInput input, DateTime time)
             {
-                if (_enteredElement is INavigable)
-                {
-                    ((INavigable)_enteredElement).Navigate(input, time);
-                }
-                if (_enteredElement != null)
-                {
-                    return;
-                }
-
                 if (input.CRelease)
                 {
                     Exit();

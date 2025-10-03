@@ -46,7 +46,7 @@ namespace IngameScript
             private ButtonState _state = ButtonState.None;
             private DateTime _timePressed = DateTime.MinValue;
             private Func<bool> _canPress;
-            private string _text;
+            private Func<string> _textGetter;
 
             private Color _fillColor = UIConfig.ButtonFillColor;
             private Color _borderColor = UIConfig.ButtonBorderColor;
@@ -59,7 +59,7 @@ namespace IngameScript
 
             private IMyTextSurface _surface;
 
-            public Button(string name, Vector2 pos, Vector2 size, string text, Func<bool> action, IMyTextSurface surface, Func<bool> canPress = null)
+            public Button(string name, Vector2 pos, Vector2 size, Func<string> textGetter, Func<bool> action, IMyTextSurface surface, Func<bool> canPress = null)
             {
                 Name = name;
 
@@ -67,7 +67,7 @@ namespace IngameScript
                 _originalPos = pos;
                 _originalSize = size;
 
-                _text = text;
+                _textGetter = textGetter;
                 _action = action;
                 _surface = surface;
                 _canPress = canPress;
@@ -77,12 +77,14 @@ namespace IngameScript
 
             private void BuildSprites()
             {
+                float minDim = Math.Min(_bounds.Width, _bounds.Height);
+
                 _fillSprite = new MySprite()
                 {
                     Type = SpriteType.TEXTURE,
                     Data = "SquareSimple",
                     Position = Center,
-                    Size = Size - 20,
+                    Size = Size - 2f * 0.1f * minDim,
                     Color = _fillColor,
                     Alignment = TextAlignment.CENTER
                 };
@@ -102,12 +104,12 @@ namespace IngameScript
                     Type = SpriteType.TEXTURE,
                     Data = "SquareSimple",
                     Position = Center,
-                    Size = Size + 10f,
+                    Size = Size + 2f * 0.1f * minDim,
                     Color = UIConfig.ButtonHighlightColor,
                     Alignment = TextAlignment.CENTER
                 };
 
-                _textSprite = SpriteHelper.CreateText(Bounds, _text, _textColor, _surface, TextAlignment.CENTER, true, 0.75f);
+                _textSprite = SpriteHelper.CreateText(Bounds, _textGetter(), _textColor, _surface, TextAlignment.CENTER, true, 0.2f);
             }
 
             public void Press(DateTime time)

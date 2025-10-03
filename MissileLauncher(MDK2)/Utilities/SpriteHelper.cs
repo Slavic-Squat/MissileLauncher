@@ -45,24 +45,21 @@ namespace IngameScript
                 };
             }
 
-            public static MySprite CreateText(RectangleF bounds, string text, Color color, IMyTextSurface surface, TextAlignment alignment = TextAlignment.LEFT, bool vertCentered = false, float scale = 1f, float padding = 0f)
+            public static MySprite CreateText(RectangleF bounds, string text, Color color, IMyTextSurface surface, TextAlignment alignment = TextAlignment.LEFT, bool vertCentered = false, float padding = 0f)
             {
                 var sb = new StringBuilder(text);
+
+                float minDim = Math.Min(bounds.Width, bounds.Height);
+                bounds.Size -= 2 * padding * minDim;
+                bounds.Position += padding * minDim;
+                Vector2 pos = bounds.Position;
 
                 Vector2 textSize = surface.MeasureStringInPixels(sb, "White", 1f);
                 float fillScale = Math.Min(bounds.Size.X / textSize.X, bounds.Size.Y / textSize.Y);
 
-                bounds.Size -= 2 * padding;
-                bounds.Position += padding;
-                Vector2 pos = bounds.Position;
-
                 if (vertCentered)
                 {
-                    pos.Y = bounds.Center.Y - (textSize.Y * fillScale * scale) / 2;
-                }
-                else
-                {
-                    pos.Y += padding;
+                    pos.Y = bounds.Center.Y - (textSize.Y * fillScale) / 2;
                 }
 
                 switch (alignment)
@@ -83,7 +80,7 @@ namespace IngameScript
                     Data = text,
                     Position = pos,
                     Color = color,
-                    RotationOrScale = fillScale * scale,
+                    RotationOrScale = fillScale,
                     Alignment = alignment,
                     FontId = "White"
                 };

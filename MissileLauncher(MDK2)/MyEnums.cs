@@ -83,6 +83,11 @@ namespace IngameScript
 
         public static readonly ScopeScale[] ScopeScaleCycles = new ScopeScale[] { ScopeScale.Close, ScopeScale.Far };
 
+        public enum NavigationDirection
+        {
+            Left, Right, Up, Down
+        }
+
         public static string GetName(EntityRelation relation)
         {
             switch (relation)
@@ -204,11 +209,27 @@ namespace IngameScript
             return NavModeCycles[index];
         }
 
+        public static NavMode PreviousNavMode(NavMode mode)
+        {
+            int index = Array.IndexOf(NavModeCycles, mode);
+            if (index < 0) return NavModeCycles[0];
+            index = (index - 1 + NavModeCycles.Length) % NavModeCycles.Length;
+            return NavModeCycles[index];
+        }
+
         public static EntityTypeFilter NextEntityTypeFilter(EntityTypeFilter filter)
         {
             int index = Array.IndexOf(EntityTypeFilterCycles, filter);
             if (index < 0) return EntityTypeFilterCycles[0];
             index = (index + 1) % EntityTypeFilterCycles.Length;
+            return EntityTypeFilterCycles[index];
+        }
+
+        public static EntityTypeFilter PreviousEntityTypeFilter(EntityTypeFilter filter)
+        {
+            int index = Array.IndexOf(EntityTypeFilterCycles, filter);
+            if (index < 0) return EntityTypeFilterCycles[0];
+            index = (index - 1 + EntityTypeFilterCycles.Length) % EntityTypeFilterCycles.Length;
             return EntityTypeFilterCycles[index];
         }
 
@@ -220,6 +241,14 @@ namespace IngameScript
             return EntityRelationFilterCycles[index];
         }
 
+        public static EntityRelationFilter PreviousEntityRelationFilter(EntityRelationFilter filter)
+        {
+            int index = Array.IndexOf(EntityRelationFilterCycles, filter);
+            if (index < 0) return EntityRelationFilterCycles[0];
+            index = (index - 1 + EntityRelationFilterCycles.Length) % EntityRelationFilterCycles.Length;
+            return EntityRelationFilterCycles[index];
+        }
+
         public static EntitySourceFilter NextEntitySourceFilter(EntitySourceFilter filter)
         {
             int index = Array.IndexOf(EntitySourceFilterCycles, filter);
@@ -228,11 +257,27 @@ namespace IngameScript
             return EntitySourceFilterCycles[index];
         }
 
+        public static EntitySourceFilter PreviousEntitySourceFilter(EntitySourceFilter filter)
+        {
+            int index = Array.IndexOf(EntitySourceFilterCycles, filter);
+            if (index < 0) return EntitySourceFilterCycles[0];
+            index = (index - 1 + EntitySourceFilterCycles.Length) % EntitySourceFilterCycles.Length;
+            return EntitySourceFilterCycles[index];
+        }
+
         public static ScopeScale NextScopeScale(ScopeScale scale)
         {
             int index = Array.IndexOf(ScopeScaleCycles, scale);
             if (index < 0) return ScopeScaleCycles[0];
             index = (index + 1) % ScopeScaleCycles.Length;
+            return ScopeScaleCycles[index];
+        }
+
+        public static ScopeScale PreviousScopeScale(ScopeScale scale)
+        {
+            int index = Array.IndexOf(ScopeScaleCycles, scale);
+            if (index < 0) return ScopeScaleCycles[0];
+            index = (index - 1 + ScopeScaleCycles.Length) % ScopeScaleCycles.Length;
             return ScopeScaleCycles[index];
         }
 
