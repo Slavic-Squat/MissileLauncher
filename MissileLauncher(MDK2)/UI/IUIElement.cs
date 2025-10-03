@@ -22,9 +22,8 @@ namespace IngameScript
 {
     partial class Program
     {
-        public interface IUIElement
+        public interface IUIElement : IPositional2D
         {
-            Vector2 Pos { get; }
             Vector2 Size { get; }
             Vector2 Center { get; }
             RectangleF Bounds { get; }

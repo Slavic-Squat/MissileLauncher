@@ -79,9 +79,6 @@ namespace IngameScript
                 if (!string.IsNullOrEmpty(Text))
                 {
                     _textSprite = SpriteHelper.CreateText(Bounds, Text, Color.White, _surface, TextAlignment.LEFT, false, 0.75f, 25f);
-                    debugEcho(_textSprite.Data);
-                    debugEcho(_textSprite.Position.ToString());
-                    debugEcho(_textSprite.Size.ToString());
                 }
 
                 frame.Add(_borderSprite);

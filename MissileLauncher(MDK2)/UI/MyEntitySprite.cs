@@ -20,8 +20,19 @@ using VRageMath;
 
 namespace IngameScript
 {
-    public static class MyExtensions
+    partial class Program
     {
+        public struct MyEntitySprite : IPositional2D
+        {
+            public Vector2 Pos => Sprite.Pos;
+            public EntityInfoExt EntityInfo { get; set; }
+            public MySpriteExt Sprite { get; set; }
 
+            public MyEntitySprite(EntityInfoExt entityInfo, MySpriteExt sprite)
+            {
+                EntityInfo = entityInfo;
+                Sprite = sprite;
+            }
+        }
     }
 }

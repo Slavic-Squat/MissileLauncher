@@ -39,7 +39,7 @@ namespace IngameScript
             private Func<T> _stateGetter;
             private Action _onForward;
             private Action _onBackward;
-            private Dictionary<T, string> _displayNames;
+            private Func<string> _textGetter;
 
             private Color _fillColor = UIConfig.ButtonFillColor;
             private Color _borderColor = UIConfig.ButtonBorderColor;
@@ -52,7 +52,7 @@ namespace IngameScript
 
             private IMyTextSurface _surface;
 
-            public Stepper(Vector2 pos, Vector2 size, Func<T> stateGetter, Action onForward, Action onBackward, Dictionary<T, string> displayNames, IMyTextSurface surface)
+            public Stepper(Vector2 pos, Vector2 size, Func<T> stateGetter, Func<string> textGetter, Action onForward, Action onBackward, IMyTextSurface surface)
             {
                 _bounds = new RectangleF(pos, size);
                 _originalPos = pos;
@@ -61,7 +61,7 @@ namespace IngameScript
                 _stateGetter = stateGetter;
                 _onForward = onForward;
                 _onBackward = onBackward;
-                _displayNames = displayNames;
+                _textGetter = textGetter;
                 _surface = surface;
 
                 BuildSprites();
@@ -99,13 +99,13 @@ namespace IngameScript
                     Alignment = TextAlignment.CENTER
                 };
 
-                string displayName = _displayNames.ContainsKey(CurrentState) ? _displayNames[CurrentState] : "N/A";
+                string displayName = _textGetter();
                 _textSprite = SpriteHelper.CreateText(Bounds, displayName, _textColor, _surface, TextAlignment.CENTER, true, 0.75f);
             }
 
             private void OnStep()
             {
-                string displayName = _displayNames.ContainsKey(CurrentState) ? _displayNames[CurrentState] : "N/A";
+                string displayName = _textGetter();
                 _textSprite = SpriteHelper.CreateText(Bounds, displayName, _textColor, _surface, TextAlignment.CENTER, true, 0.75f);
                 BuildSprites();
             }

@@ -49,10 +49,10 @@ namespace IngameScript
             private float _maxScale = 1.5f;
             private float _zoom = 1f;
 
-            private List<DepthSprite> _spritesBeforePlane = new List<DepthSprite>();
-            private List<DepthSprite> _planeSprites = new List<DepthSprite>();
-            private List<DepthSprite> _spritesAfterPlane = new List<DepthSprite>();
-            private List<DepthSprite> _staticSpritesAfterPlane = new List<DepthSprite>();
+            private List<MySpriteExt> _spritesBeforePlane = new List<MySpriteExt>();
+            private List<MySpriteExt> _planeSprites = new List<MySpriteExt>();
+            private List<MySpriteExt> _spritesAfterPlane = new List<MySpriteExt>();
+            private List<MySpriteExt> _staticSpritesAfterPlane = new List<MySpriteExt>();
 
             private Matrix _projectionMatrix = Matrix.Identity;
             #endregion
@@ -88,7 +88,7 @@ namespace IngameScript
                 Vector3 selfPosNDC = Vector3.Transform(selfPosWorld, totalMatrix);
                 Vector2 selfPosPixel = new Vector2((1 + selfPosNDC.X) * 511, (1 - selfPosNDC.Y) * 511);
 
-                MySprite selfSprite = new MySprite()
+                MySprite tempSprite = new MySprite()
                 {
                     Type = SpriteType.TEXTURE,
                     Data = "Self_0",
@@ -99,7 +99,7 @@ namespace IngameScript
                     RotationOrScale = 0f
                 };
 
-                DepthSprite selfDepthSprite = new DepthSprite(selfSprite, selfPosNDC.Z);
+                MySpriteExt selfSpriteExt = new MySpriteExt(tempSprite, selfPosNDC.Z);
 
                 Vector3 basePosWorld = selfPosWorld - (Vector3.Dot(gridPlaneWorld.Normal, selfPosWorld) + gridPlaneWorld.D) * gridPlaneWorld.Normal;
                 Vector3 basePosNDC = Vector3.Transform(basePosWorld, totalMatrix);
@@ -107,7 +107,7 @@ namespace IngameScript
                 float basePosZView = -(_f * _n) / (_f - basePosNDC.Z * (_f - _n));
                 float baseDepthScale = _minScale + (_maxScale - _minScale) * (-basePosZView - _n) / (_f - _n);
 
-                MySprite baseSprite = new MySprite()
+                tempSprite = new MySprite()
                 {
                     Type = SpriteType.TEXTURE,
                     Data = "Base_0",
@@ -118,7 +118,7 @@ namespace IngameScript
                     RotationOrScale = 0f
                 };
 
-                DepthSprite baseDepthSprite = new DepthSprite(baseSprite, basePosNDC.Z);
+                MySpriteExt baseSpriteExt = new MySpriteExt(tempSprite, basePosNDC.Z);
 
                 Vector3 stemPosWorld = 0.5f * (selfPosWorld + basePosWorld);
                 Vector3 stemPosNDC = Vector3.Transform(stemPosWorld, totalMatrix);
@@ -128,7 +128,7 @@ namespace IngameScript
                 float stemLength = stemVector.Length();
                 float stemAngle = (float)Math.Atan2(stemVector.Y, stemVector.X);
 
-                MySprite stemSprite = new MySprite()
+                tempSprite = new MySprite()
                 {
                     Type = SpriteType.TEXTURE,
                     Data = "SquareSimple",
@@ -139,11 +139,11 @@ namespace IngameScript
                     RotationOrScale = stemAngle,
                 };
 
-                DepthSprite stemDepthSprite = new DepthSprite(stemSprite, stemPosNDC.Z);
+                MySpriteExt stemSpriteExt = new MySpriteExt(tempSprite, stemPosNDC.Z);
 
                 Vector3 cameraTargetNDC = Vector3.Transform(cameraTargetWorld.Translation, totalMatrix);
 
-                MySprite gridSprite = new MySprite()
+                tempSprite = new MySprite()
                 {
                     Type = SpriteType.TEXTURE,
                     Data = "Radial_Grid_0",
@@ -154,9 +154,9 @@ namespace IngameScript
                     RotationOrScale = 0f
                 };
 
-                DepthSprite gridDepthSprite = new DepthSprite(gridSprite, cameraTargetNDC.Z);
+                MySpriteExt gridSpriteExt = new MySpriteExt(tempSprite, cameraTargetNDC.Z);
 
-                MySprite gradSprite = new MySprite()
+                tempSprite = new MySprite()
                 {
                     Type = SpriteType.TEXTURE,
                     Data = "Radial_Grad_0",
@@ -167,21 +167,21 @@ namespace IngameScript
                     RotationOrScale = 0f
                 };
 
-                DepthSprite gradDepthSprite = new DepthSprite(gradSprite, cameraTargetNDC.Z);
+                MySpriteExt gradSpriteExt = new MySpriteExt(tempSprite, cameraTargetNDC.Z);
 
                 _planeSprites.Clear();
-                _planeSprites.Add(gridDepthSprite);
-                _planeSprites.Add(gradDepthSprite);
+                _planeSprites.Add(gridSpriteExt);
+                _planeSprites.Add(gradSpriteExt);
                 _staticSpritesAfterPlane.Clear();
-                _staticSpritesAfterPlane.Add(selfDepthSprite);
-                _staticSpritesAfterPlane.Add(baseDepthSprite);
-                _staticSpritesAfterPlane.Add(stemDepthSprite);
+                _staticSpritesAfterPlane.Add(selfSpriteExt);
+                _staticSpritesAfterPlane.Add(baseSpriteExt);
+                _staticSpritesAfterPlane.Add(stemSpriteExt);
             }
 
-            public List<DepthSprite> BuildSprites(Dictionary<long, EntityInfoExt> entityInfoExts, long targetedID, out Dictionary<long, DepthSprite> entitySprites)
+            public List<MySpriteExt> BuildSprites(Dictionary<long, EntityInfoExt> entityInfoExts, long targetedID, out Dictionary<long, MyEntitySprite> entitySprites)
             {
-                List<DepthSprite> finalSprites = new List<DepthSprite>();
-                entitySprites = new Dictionary<long, DepthSprite>();
+                List<MySpriteExt> finalSprites = new List<MySpriteExt>();
+                entitySprites = new Dictionary<long, MyEntitySprite>();
 
                 _spritesBeforePlane.Clear();
                 _spritesAfterPlane.Clear();
@@ -201,17 +201,19 @@ namespace IngameScript
 
                 Plane gridPlaneWorld = new Plane(cameraTargetWorld.Translation, cameraTargetWorld.Up);
 
-                foreach (var entityInfoKVP in entityInfoExts)
+                foreach (var entityInfoExtKVP in entityInfoExts)
                 {
-                    EntityInfoExt entityInfoExt = entityInfoKVP.Value;
+                    EntityInfoExt entityInfoExt = entityInfoExtKVP.Value;
+                    long key = entityInfoExtKVP.Key;
 
-                    if (entityInfoExt.Distance > 12000f / _zoom)
+                    float distance = Vector3.Distance(cameraTargetWorld.Translation, entityInfoExt.Position);
+
+                    if (distance > 12000f / _zoom)
                     {
                         continue;
                     }
 
-                    EntityInfo entityInfo = entityInfoExt.Info;
-                    long key = entityInfoKVP.Key;
+                    IEntityInfo entityInfo = entityInfoExt.Info;
 
                     Vector3 entityPosWorld = entityInfo.Position;
                     Vector3 entityPosNDC = Vector3.Transform(entityPosWorld, totalMatrix);
@@ -224,18 +226,18 @@ namespace IngameScript
                     Vector2 spriteSize = default(Vector2);
                     Color spriteColor = default(Color);
 
-                    switch (entityInfoExt.EntityRelation)
+                    switch (entityInfoExt.Relation)
                     {
-                        case EntityInfoExt.Relation.Me:
+                        case EntityRelation.Me:
                             spriteColor = Color.Cyan;
                             break;
-                        case EntityInfoExt.Relation.Neutral:
+                        case EntityRelation.Neutral:
                             spriteColor = Color.Orange;
                             break;
-                        case EntityInfoExt.Relation.Friendly:
+                        case EntityRelation.Friendly:
                             spriteColor = Color.Lime;
                             break;
-                        case EntityInfoExt.Relation.Hostile:
+                        case EntityRelation.Hostile:
                             spriteColor = Color.OrangeRed;
                             break;
                         default:
@@ -243,24 +245,24 @@ namespace IngameScript
                             break;
                     }                    
 
-                    if (entityInfoExt.EntityType == EntityInfoExt.Type.Missile)
+                    if (entityInfoExt.Type == EntityType.Missile)
                     {
                         spriteName = "Missile_0";
                         spriteSize = new Vector2(16, 16);
                     }
                     else
                     {
-                        switch (entityInfoExt.EntitySource)
+                        switch (entityInfoExt.Source)
                         {
-                            case EntityInfoExt.Source.Local:
+                            case EntitySource.Local:
                                 spriteName = "Target_0";
                                 spriteSize = new Vector2(32, 32);
                                 break;
-                            case EntityInfoExt.Source.Remote:
+                            case EntitySource.Remote:
                                 spriteName = "Target_1";
                                 spriteSize = new Vector2(32, 32);
                                 break;
-                            case EntityInfoExt.Source.Both:
+                            case EntitySource.Both:
                                 spriteName = "Target_2";
                                 spriteSize = new Vector2(32, 32);
                                 break;
@@ -271,7 +273,7 @@ namespace IngameScript
                         }
                     }
 
-                    MySprite entitySprite = new MySprite()
+                    MySprite tempSprite = new MySprite()
                     {
                         Type = SpriteType.TEXTURE,
                         Data = spriteName,
@@ -282,26 +284,27 @@ namespace IngameScript
                         RotationOrScale = 0f,
                     };
 
-                    DepthSprite entityDepthSprite = new DepthSprite(entitySprite, entityPosNDC.Z);
+                    MySpriteExt MySpriteExtEntity = new MySpriteExt(tempSprite, entityPosNDC.Z);
+                    MyEntitySprite entitySprite = new MyEntitySprite(entityInfoExt, MySpriteExtEntity);
 
-                    entitySprites.Add(key, entityDepthSprite);
+                    entitySprites.Add(key, entitySprite);
 
-                    DepthSprite selectorDepthSprite = default(DepthSprite);
+                    MySpriteExt selectorSpriteExt = default(MySpriteExt);
 
-                    if (key == targetedID)
+                    if (entityInfo.EntityID == targetedID)
                     {
-                        MySprite selectorSprite = new MySprite()
+                        tempSprite = new MySprite()
                         {
                             Type = SpriteType.TEXTURE,
                             Data = "Selector_0",
                             Position = entityPosPixel,
-                            Size = entitySprite.Size * 1.25f,
+                            Size = MySpriteExtEntity.Sprite.Size * 1.25f,
                             Color = Color.Yellow,
                             Alignment = TextAlignment.CENTER,
                             RotationOrScale = 0f,
                         };
 
-                        selectorDepthSprite = new DepthSprite(selectorSprite, entityPosNDC.Z - 0.001f);
+                        selectorSpriteExt = new MySpriteExt(tempSprite, entityPosNDC.Z - 0.001f);
                     }
 
                     Vector3 basePosWorld = entityPosWorld - (Vector3.Dot(gridPlaneWorld.Normal, entityPosWorld) + gridPlaneWorld.D) * gridPlaneWorld.Normal;
@@ -311,7 +314,7 @@ namespace IngameScript
 
                     float baseDepthScale = _minScale + (_maxScale - _minScale) * (-basePosZView - _n) / (_f + _n);
 
-                    MySprite baseSprite = new MySprite()
+                    tempSprite = new MySprite()
                     {
                         Type = SpriteType.TEXTURE,
                         Data = "Base_0",
@@ -322,7 +325,7 @@ namespace IngameScript
                         RotationOrScale = 0f,
                     };
 
-                    DepthSprite baseDepthSprite = new DepthSprite(baseSprite, basePosNDC.Z);
+                    MySpriteExt baseSpriteExt = new MySpriteExt(tempSprite, basePosNDC.Z);
 
                     Vector3 stemPosWorld = 0.5f * (entityPosWorld + basePosWorld);
                     Vector3 stemPosNDC = Vector3.Transform(stemPosWorld, totalMatrix);
@@ -332,7 +335,7 @@ namespace IngameScript
                     float stemLength = stemVector.Length();
                     float stemAngle = (float)Math.Atan2(stemVector.Y, stemVector.X);
 
-                    MySprite stemSprite = new MySprite()
+                    tempSprite = new MySprite()
                     {
                         Type = SpriteType.TEXTURE,
                         Data = "SquareSimple",
@@ -343,28 +346,28 @@ namespace IngameScript
                         RotationOrScale = stemAngle,
                     };
 
-                    DepthSprite stemDepthSprite = new DepthSprite(stemSprite, stemPosNDC.Z);
+                    MySpriteExt stemSpriteExt = new MySpriteExt(tempSprite, stemPosNDC.Z);
 
                     if ((Vector3.Dot(cameraPositionWorld, gridPlaneWorld.Normal) + gridPlaneWorld.D) * (Vector3.Dot(entityPosWorld, gridPlaneWorld.Normal) + gridPlaneWorld.D) > 0)
                     {
-                        _spritesAfterPlane.Add(entityDepthSprite);
-                        _spritesAfterPlane.Add(baseDepthSprite);
-                        _spritesAfterPlane.Add(stemDepthSprite);
+                        _spritesAfterPlane.Add(MySpriteExtEntity);
+                        _spritesAfterPlane.Add(baseSpriteExt);
+                        _spritesAfterPlane.Add(stemSpriteExt);
 
-                        if (key == targetedID)
+                        if (entityInfo.EntityID == targetedID)
                         {
-                            _spritesAfterPlane.Add(selectorDepthSprite);
+                            _spritesAfterPlane.Add(selectorSpriteExt);
                         }
                     }
                     else
                     {
-                        _spritesBeforePlane.Add(entityDepthSprite);
-                        _spritesBeforePlane.Add(baseDepthSprite);
-                        _spritesBeforePlane.Add(stemDepthSprite);
+                        _spritesBeforePlane.Add(MySpriteExtEntity);
+                        _spritesBeforePlane.Add(baseSpriteExt);
+                        _spritesBeforePlane.Add(stemSpriteExt);
 
-                        if (key == targetedID)
+                        if (entityInfo.EntityID == targetedID)
                         {
-                            _spritesBeforePlane.Add(selectorDepthSprite);
+                            _spritesBeforePlane.Add(selectorSpriteExt);
                         }
                     }
                 }

@@ -27,7 +27,6 @@ namespace IngameScript
             #region Properties
             public int ID { get; private set; }
             public Dictionary<long, MissileInfo> ActiveMissiles { get; private set; }
-            public HashSet<long> ActiveMissileIDs => ActiveMissiles.Keys.ToHashSet();
             #endregion
 
             #region Components
@@ -62,11 +61,11 @@ namespace IngameScript
 
                 foreach (var missileInfoKVP in ActiveMissiles)
                 {
-                    EntityInfoExt.Source source = EntityInfoExt.Source.Remote;
-                    EntityInfoExt.Relation relation = EntityInfoExt.Relation.Me;
+                    EntitySource source = EntitySource.Remote;
+                    EntityRelation relation = EntityRelation.Me;
                     float distance = Vector3.Distance(missileInfoKVP.Value.Position, _referenceBlock.GetPosition());
 
-                    allMyMissiles[missileInfoKVP.Key] = new EntityInfoExt(missileInfoKVP.Value, source, relation, distance);
+                    allMyMissiles[missileInfoKVP.Key] = new EntityInfoExt(missileInfoKVP.Value, source, relation);
                 }
 
                 return allMyMissiles;

@@ -24,52 +24,6 @@ namespace IngameScript
     {
         public static class SpriteHelper
         {
-            //public static List<MySprite> CreateBorder(Vector2 pos, Vector2 size, Color color, float borderThickness)
-            //{
-            //    List<MySprite> sprites = new List<MySprite>();
-            //    MySprite topBorder = new MySprite()
-            //    {
-            //        Type = SpriteType.TEXTURE,
-            //        Data = "SquareSimple",
-            //        Position = pos + new Vector2(0, -size.Y / 2 + borderThickness / 2),
-            //        Size = new Vector2(size.X, borderThickness),
-            //        Color = color,
-            //        Alignment = TextAlignment.CENTER
-            //    };
-            //    sprites.Add(topBorder);
-            //    MySprite bottomBorder = new MySprite()
-            //    {
-            //        Type = SpriteType.TEXTURE,
-            //        Data = "SquareSimple",
-            //        Position = pos + new Vector2(0, size.Y / 2 - borderThickness / 2),
-            //        Size = new Vector2(size.X, borderThickness),
-            //        Color = color,
-            //        Alignment = TextAlignment.CENTER
-            //    };
-            //    sprites.Add(bottomBorder);
-            //    MySprite leftBorder = new MySprite()
-            //    {
-            //        Type = SpriteType.TEXTURE,
-            //        Data = "SquareSimple",
-            //        Position = pos + new Vector2(-size.X / 2 + borderThickness / 2, 0),
-            //        Size = new Vector2(borderThickness, size.Y),
-            //        Color = color,
-            //        Alignment = TextAlignment.CENTER
-            //    };
-            //    sprites.Add(leftBorder);
-            //    MySprite rightBorder = new MySprite()
-            //    {
-            //        Type = SpriteType.TEXTURE,
-            //        Data = "SquareSimple",
-            //        Position = pos + new Vector2(size.X / 2 - borderThickness / 2, 0),
-            //        Size = new Vector2(borderThickness, size.Y),
-            //        Color = color,
-            //        Alignment = TextAlignment.CENTER
-            //    };
-            //    sprites.Add(rightBorder);
-            //    return sprites;
-            //}
-
             public static MySprite CreateText(Vector2 pos, string text, Color color, IMyTextSurface surface, float scale = 1f, TextAlignment alignment = TextAlignment.LEFT, bool vertCentered = false)
             {
                 var sb = new StringBuilder(text);
@@ -98,6 +52,8 @@ namespace IngameScript
                 Vector2 textSize = surface.MeasureStringInPixels(sb, "White", 1f);
                 float fillScale = Math.Min(bounds.Size.X / textSize.X, bounds.Size.Y / textSize.Y);
 
+                bounds.Size -= 2 * padding;
+                bounds.Position += padding;
                 Vector2 pos = bounds.Position;
 
                 if (vertCentered)
@@ -112,10 +68,9 @@ namespace IngameScript
                 switch (alignment)
                 {
                     case TextAlignment.LEFT:
-                        pos.X += padding;
                         break;
                     case TextAlignment.RIGHT:
-                        pos.X = bounds.Right - padding;
+                        pos.X = bounds.Right;
                         break;
                     case TextAlignment.CENTER:
                         pos.X = bounds.Center.X;

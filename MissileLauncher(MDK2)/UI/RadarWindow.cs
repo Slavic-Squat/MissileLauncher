@@ -37,8 +37,8 @@ namespace IngameScript
             private IMyCubeBlock ReferenceBlock => UI.UIWireManager.ReferenceBlock;
 
             private Dictionary<long, EntityInfoExt> _allEntities = new Dictionary<long, EntityInfoExt>();
-            private Dictionary<long, DepthSprite> _entitySprites = new Dictionary<long, DepthSprite>();
-            private List<DepthSprite> _targetingSprites = new List<DepthSprite>();
+            private Dictionary<long, MyEntitySprite> _entitySprites = new Dictionary<long, MyEntitySprite>();
+            private List<MySpriteExt> _targetingSprites = new List<MySpriteExt>();
 
             private TargetingSpriteBuilder _targetingSpriteBuilder;            
 
@@ -53,61 +53,12 @@ namespace IngameScript
             private IEnterable _enteredElement;
 
             private long _selectedEntityID;
-
-            private enum NavMode
-            {
-                UI, Targeting,
-            }
-            private NavMode _currentNavMode = NavMode.UI;
-            private static Dictionary<NavMode, string> _navModeDisplayNames = new Dictionary<NavMode, string>()
-            {
-                { NavMode.UI, "UI" },
-                { NavMode.Targeting, "Targeting" },
-            };
-
-            private enum TargetingNavType
-            {
-                All, Targets, Missiles,
-            }
-            private static Dictionary<TargetingNavType, string> _targetingNavTypeDisplayNames = new Dictionary<TargetingNavType, string>()
-            {
-                { TargetingNavType.All, "All" },
-                { TargetingNavType.Targets, "Targets" },
-                { TargetingNavType.Missiles, "Missiles" },
-            };
-            private Dictionary<TargetingNavType, Func<HashSet<long>>> _targetingNavTypeFilters;
-            private TargetingNavType _currentNavType = TargetingNavType.All;
-
-            private enum TargetingNavRelation
-            {
-                All, Hostile, Neutral, Friendly, Me
-            }
-            private static Dictionary<TargetingNavRelation, string> _targetingNavRelationDisplayNames = new Dictionary<TargetingNavRelation, string>()
-            {
-                { TargetingNavRelation.All, "All" },
-                { TargetingNavRelation.Hostile, "Hostile" },
-                { TargetingNavRelation.Neutral, "Neutral" },
-                { TargetingNavRelation.Friendly, "Friendly" },
-                { TargetingNavRelation.Me, "Me" },
-            };
-            private Dictionary<TargetingNavRelation, Func<HashSet<long>>> _targetingNavRelationFilters;
-            private TargetingNavRelation _currentNavRelation = TargetingNavRelation.All;
-
-            private enum ScopeScale
-            {
-                Close, Far
-            }
-            private static Dictionary<ScopeScale, string> _scopeScaleDisplayNames = new Dictionary<ScopeScale, string>()
-            {
-                { ScopeScale.Close, "6Km" },
-                { ScopeScale.Far, "12Km" },
-            };
-            private static Dictionary<ScopeScale, int> _scopeScaleValues = new Dictionary<ScopeScale, int>()
-            {
-                { ScopeScale.Close, 2 },
-                { ScopeScale.Far, 1 },
-            };
-            private ScopeScale _currentScopeScale = ScopeScale.Close;
+            
+            private NavMode _navMode = NavMode.UI;
+            private EntityTypeFilter _navTypeFilter = EntityTypeFilter.All;
+            private EntityRelationFilter _navRelationFilter = EntityRelationFilter.All;
+            private EntitySourceFilter _navSourceFilter = EntitySourceFilter.Both;
+            private ScopeScale _scopeScale = ScopeScale.Close;
 
 
             public RadarWindow(UI ui, Vector2 pos, Vector2 size)
@@ -137,22 +88,6 @@ namespace IngameScript
                 BuildSprites();
 
                 _targetingSpriteBuilder = new TargetingSpriteBuilder(ReferenceBlock);
-
-                _targetingNavTypeFilters = new Dictionary<TargetingNavType, Func<HashSet<long>>>()
-                {
-                    { TargetingNavType.All, () => _allEntities.Keys.ToHashSet() },
-                    { TargetingNavType.Targets, () => _allEntities.Where(kvp => kvp.Value.EntityType == EntityInfoExt.Type.Target).Select(kvp => kvp.Key).ToHashSet() },
-                    { TargetingNavType.Missiles, () => _allEntities.Where(kvp => kvp.Value.EntityType == EntityInfoExt.Type.Missile).Select(kvp => kvp.Key).ToHashSet() },
-                };
-
-                _targetingNavRelationFilters = new Dictionary<TargetingNavRelation, Func<HashSet<long>>>()
-                {
-                    { TargetingNavRelation.All, () => _allEntities.Keys.ToHashSet() },
-                    { TargetingNavRelation.Hostile, () => _allEntities.Where(kvp => kvp.Value.EntityRelation == EntityInfoExt.Relation.Hostile).Select(kvp => kvp.Key).ToHashSet() },
-                    { TargetingNavRelation.Neutral, () => _allEntities.Where(kvp => kvp.Value.EntityRelation == EntityInfoExt.Relation.Neutral).Select(kvp => kvp.Key).ToHashSet() },
-                    { TargetingNavRelation.Friendly, () => _allEntities.Where(kvp => kvp.Value.EntityRelation == EntityInfoExt.Relation.Friendly).Select(kvp => kvp.Key).ToHashSet() },
-                    { TargetingNavRelation.Me, () => _allEntities.Where(kvp => kvp.Value.EntityRelation == EntityInfoExt.Relation.Me).Select(kvp => kvp.Key).ToHashSet() },
-                };
 
                 Vector2 targetPanelSize = new Vector2(200, 300);
                 Vector2 targetPanelPos = Pos + new Vector2(Size.X - targetPanelSize.X, Size.Y - targetPanelSize.Y);
@@ -253,12 +188,12 @@ namespace IngameScript
             {
                 _allEntities = UI.UIWireManager.GetAllEntities();
 
-                _targetingSpriteBuilder.Zoom = _scopeScaleValues[_currentScopeScale];
+                _targetingSpriteBuilder.Zoom = GetValue(_scopeScale);
                 _targetingSprites = _targetingSpriteBuilder.BuildSprites(_allEntities, _selectedEntityID, out _entitySprites);
 
-                if (_allEntities.Keys.Contains(_selectedEntityID))
+                if (_entitySprites.Keys.Contains(_selectedEntityID))
                 {
-                    _targetPanel.Text = _allEntities[_selectedEntityID].ToString(time);
+                    _targetPanel.Text = _entitySprites[_selectedEntityID].EntityInfo.ToString(ReferenceBlock.GetPosition(), time);
                 }
                 else
                 {
@@ -307,10 +242,10 @@ namespace IngameScript
 
                 if (input.QRelease)
                 {
-                    _currentNavMode = (NavMode)_currentNavMode.Next();
+                    _navMode = NextNavMode(_navMode);
                 }
 
-                switch (_currentNavMode)
+                switch (_navMode)
                 {
                     case NavMode.UI:
                         NavigateUI(input, time);
@@ -356,13 +291,9 @@ namespace IngameScript
 
             private void NavigateTargeting(UserInput input, DateTime time)
             {
-                HashSet<long> typeFilter = _targetingNavTypeFilters[_currentNavType]();
-                HashSet<long> relationFilter = _targetingNavRelationFilters[_currentNavRelation]();
-                HashSet<long> combinedFilter = typeFilter.Intersect(relationFilter).ToHashSet();
+                Dictionary<long, MyEntitySprite> filtered = _entitySprites.Where(kvp => Matches(kvp.Value.EntityInfo, _navTypeFilter, _navRelationFilter, _navSourceFilter)).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
 
-                Dictionary<long, DepthSprite> navigableSprites = _entitySprites.Where(kvp => combinedFilter.Contains(kvp.Key)).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
-
-                if (navigableSprites.Count == 0)
+                if (filtered.Count() == 0)
                 {
                     UnselectEntity();
                     return;
@@ -374,22 +305,22 @@ namespace IngameScript
                 }
                 else if (input.WRelease)
                 {
-                    long nextEntityID = UIUtilities.Navigate(navigableSprites, _selectedEntityID, UIUtilities.NavigationDirection.Up);
+                    long nextEntityID = UIUtilities.Navigate(filtered, _selectedEntityID, UIUtilities.NavigationDirection.Up);
                     SelectEntity(nextEntityID);
                 }
                 else if (input.SRelease)
                 {
-                    long nextEntityID = UIUtilities.Navigate(navigableSprites, _selectedEntityID, UIUtilities.NavigationDirection.Down);
+                    long nextEntityID = UIUtilities.Navigate(filtered, _selectedEntityID, UIUtilities.NavigationDirection.Down);
                     SelectEntity(nextEntityID);
                 }
                 else if (input.ARelease)
                 {
-                    long nextEntityID = UIUtilities.Navigate(navigableSprites, _selectedEntityID, UIUtilities.NavigationDirection.Left);
+                    long nextEntityID = UIUtilities.Navigate(filtered, _selectedEntityID, UIUtilities.NavigationDirection.Left);
                     SelectEntity(nextEntityID);
                 }
                 else if (input.DRelease)
                 {
-                    long nextEntityID = UIUtilities.Navigate(navigableSprites, _selectedEntityID, UIUtilities.NavigationDirection.Right);
+                    long nextEntityID = UIUtilities.Navigate(filtered, _selectedEntityID, UIUtilities.NavigationDirection.Right);
                     SelectEntity(nextEntityID);
                 }
             }

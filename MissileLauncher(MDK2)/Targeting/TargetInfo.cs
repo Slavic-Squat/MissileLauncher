@@ -22,20 +22,27 @@ namespace IngameScript
 {
     partial class Program
     {
-        public class EntityInfo
+        public struct TargetInfo : IEntityInfo
         {
             public long EntityID { get; private set; }
-            public Vector3 Position { get; private set;  }
-            public Vector3 Velocity { get; private set; }
-            public DateTime TimeRecorded { get; private set; }
+            public Vector3 Position { get; set;  }
+            public Vector3 Velocity { get; set; }
+            public DateTime TimeRecorded { get; set; }
 
-            public EntityInfo(long entityID, Vector3 position, Vector3 velocity, DateTime timeRecorded)
+            public TargetInfo(long entityID, Vector3 position, Vector3 velocity, DateTime timeRecorded)
             {
                 EntityID = entityID;
                 Position = position;
                 Velocity = velocity;
                 TimeRecorded = timeRecorded;
+            }
 
+            public TargetInfo(MyDetectedEntityInfo entityInfo, DateTime timeRecorded)
+            {
+                EntityID = entityInfo.EntityId;
+                Position = entityInfo.Position;
+                Velocity = entityInfo.Velocity;
+                TimeRecorded = timeRecorded;
             }
 
             public void Transform(Matrix transform)
@@ -47,35 +54,30 @@ namespace IngameScript
                 Velocity = velocity;
             }
 
-            public static EntityInfo CreateFromRaycast(MyDetectedEntityInfo entityInfo, DateTime timeRecorded)
-            {
-                long entityID = entityInfo.EntityId;
-                Vector3 position = entityInfo.Position;
-                Vector3 velocity = entityInfo.Velocity;
-
-                return new EntityInfo(entityID, position, velocity, timeRecorded);
-            }
-
-            public void UpdateFromEntityInfo(EntityInfo entityInfo)
-            {
-                EntityID = entityInfo.EntityID;
-                Position = entityInfo.Position;
-                Velocity = entityInfo.Velocity;
-                TimeRecorded = entityInfo.TimeRecorded;
-            }
-
             public void UpdateFromRaycast(MyDetectedEntityInfo entityInfo, DateTime timeRecorded)
             {
-                EntityID = entityInfo.EntityId;
                 Position = entityInfo.Position;
                 Velocity = entityInfo.Velocity;
                 TimeRecorded = timeRecorded;
             }
 
-            public virtual byte[] Serialize()
+            public void UpdateFromEntityInfo(IEntityInfo entityInfo)
             {
-                List<byte> entityData = new List<byte>();
-                entityData.Add((byte)Deserializer.ObjectTypes.EntityInfo);
+                if (EntityID != entityInfo.EntityID || TimeRecorded > entityInfo.TimeRecorded)
+                {
+                    return;
+                }
+                Position = entityInfo.Position;
+                Velocity = entityInfo.Velocity;
+                TimeRecorded = entityInfo.TimeRecorded;
+            }
+
+            public byte[] Serialize()
+            {
+                List<byte> entityData = new List<byte>
+                {
+                    (byte)ObjectTypes.TargetInfo
+                };
 
                 entityData.AddRange(BitConverter.GetBytes(EntityID));
 
@@ -92,7 +94,7 @@ namespace IngameScript
                 return entityData.ToArray();
             }
 
-            public static EntityInfo Deserialize(byte[] data)
+            public static TargetInfo Deserialize(byte[] data)
             {
                 int index = 1;
 
@@ -126,7 +128,7 @@ namespace IngameScript
 
                 DateTime timeRecorded = new DateTime(ticks);
 
-                return new EntityInfo(entityID, pos, vel, timeRecorded);
+                return new TargetInfo(entityID, pos, vel, timeRecorded);
             }
         }
     }

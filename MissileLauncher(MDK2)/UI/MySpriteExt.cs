@@ -22,20 +22,16 @@ namespace IngameScript
 {
     partial class Program
     {
-        public struct DepthSprite : IUIElement
+        public struct MySpriteExt : IPositional2D
         {
-            public RectangleF Bounds { get; private set; }
-            public Vector2 Pos => Bounds.Position;
-            public Vector2 Size => Bounds.Size;
-            public Vector2 Center => Bounds.Center;
+            public Vector2 Pos { get; private set; }
             public MySprite Sprite { get; private set; }
             public float Depth { get; private set; }
-            public DepthSprite(MySprite sprite, float depth)
+            public MySpriteExt(MySprite sprite, float depth)
             {
                 Sprite = sprite;
                 Depth = depth;
-
-                Bounds = new RectangleF((Vector2)(sprite.Position - sprite.Size * 0.5f), (Vector2)sprite.Size);
+                Pos = (Vector2)sprite.Position;
             }
 
             public void Draw(MySpriteDrawFrame frame)

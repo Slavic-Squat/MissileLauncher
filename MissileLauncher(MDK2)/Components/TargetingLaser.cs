@@ -55,7 +55,7 @@ namespace IngameScript
             public bool HasController => Controller != null;
             public bool IsControlPaused { get; private set; }
             public bool IsUnderControl => HasController && !IsControlPaused;
-            public bool HasTarget => Target != null;
+            public bool HasTarget => !Target.IsEmpty;
             public float MaxRaycastDistance
             {
                 get
@@ -69,7 +69,7 @@ namespace IngameScript
             }
             public float Sensitivity { get; set; }
             public bool ManualOverride { get; set; }
-            public EntityInfo Target {  get; private set; }
+            public EntityInfoExt Target {  get; private set; }
             #endregion
 
             public TargetingLaser(Program program, int id, float sensitivity = 0.05f, float maxRaycastDistance = 5000, bool manualOverride = false)
@@ -159,7 +159,7 @@ namespace IngameScript
                     ForgetTarget();
                 }
 
-                if (Target != null)
+                if (HasTarget)
                 {
                     Vector3 estimatedTargetDirLocal = Vector3.Normalize(Vector3.TransformNormal(estimatedTargetPosition - _referenceMatrix.Translation, Matrix.Transpose(_referenceMatrix)));
                     float azimuthError = (float)Math.Atan2(-estimatedTargetDirLocal.X, -estimatedTargetDirLocal.Z);
@@ -180,7 +180,7 @@ namespace IngameScript
 
             private void ForgetTarget()
             {
-                Target = null;
+                Target = default(EntityInfoExt);
                 _matchingDetectionCounter = 0;
             }
 
@@ -215,7 +215,7 @@ namespace IngameScript
                         TimeSpan timeSinceLastUniqueDetection = time - _lastUniqueDetectionTime;
                         if (timeSinceLastUniqueDetection.TotalSeconds > 2 && _matchingDetectionCounter >= 3)
                         {
-                            Target = EntityInfo.CreateFromRaycast(raycastResult, time);
+                            Target = new EntityInfoExt(raycastResult, time);
                         }
                     }
                 }

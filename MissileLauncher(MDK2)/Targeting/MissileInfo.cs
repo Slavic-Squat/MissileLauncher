@@ -23,37 +23,80 @@ namespace IngameScript
 {
     partial class Program
     {
-        public class MissileInfo : MissileInfoLite
+        public struct MissileInfo : IEntityInfo
         {
-            public MissileStage Stage { get; private set; }
-            public long TargetID { get; private set; }
-
-            public enum MissileStage : byte
-            {
-                Unknown, Flying, Interception
-            }
+            public long EntityID { get; private set; }
+            public Vector3 Position { get; set; }
+            public Vector3 Velocity { get; set; }
+            public DateTime TimeRecorded { get; set; }
+            public long LauncherID { get; private set; }
+            public MissileStage Stage { get; set; }
+            public long TargetID { get; set; }
 
             public MissileInfo(long entityID, Vector3 position, Vector3 velocity, DateTime timeRecorded, long launcherID, long targetID, MissileStage stage)
-                : base(entityID, position, velocity, timeRecorded, launcherID)
             {
+                EntityID = entityID;
+                Position = position;
+                Velocity = velocity;
+                TimeRecorded = timeRecorded;
+                LauncherID = launcherID;
                 TargetID = targetID;
                 Stage = stage;
             }
 
-            public override byte[] Serialize()
+            public void Transform(Matrix transform)
             {
-                byte[] baseData = base.Serialize();
+                var postion = Vector3.Transform(Position, transform);
+                var velocity = Vector3.Transform(Velocity, transform);
 
-                List<byte> missileData = new List<byte>();
-                baseData[0] = (byte)Deserializer.ObjectTypes.MissileInfo;
-                missileData.AddRange(baseData);
+                Position = postion;
+                Velocity = velocity;
+            }
+
+            public void UpdateFromRaycast(MyDetectedEntityInfo entityInfo, DateTime timeRecorded)
+            {
+                Position = entityInfo.Position;
+                Velocity = entityInfo.Velocity;
+                TimeRecorded = timeRecorded;
+            }
+
+            public void UpdateFromEntityInfo(IEntityInfo entityInfo)
+            {
+                if (EntityID != entityInfo.EntityID || TimeRecorded > entityInfo.TimeRecorded)
+                {
+                    return;
+                }
+                Position = entityInfo.Position;
+                Velocity = entityInfo.Velocity;
+                TimeRecorded = entityInfo.TimeRecorded;
+            }
+
+            public byte[] Serialize()
+            {
+                List<byte> missileData = new List<byte>
+                {
+                    (byte)ObjectTypes.MissileInfo
+                };
+                missileData.AddRange(BitConverter.GetBytes(EntityID));
+
+                missileData.AddRange(BitConverter.GetBytes(Position.X));
+                missileData.AddRange(BitConverter.GetBytes(Position.Y));
+                missileData.AddRange(BitConverter.GetBytes(Position.Z));
+
+                missileData.AddRange(BitConverter.GetBytes(Velocity.X));
+                missileData.AddRange(BitConverter.GetBytes(Velocity.Y));
+                missileData.AddRange(BitConverter.GetBytes(Velocity.Z));
+
+                missileData.AddRange(BitConverter.GetBytes(TimeRecorded.Ticks));
+
+                missileData.AddRange(BitConverter.GetBytes(LauncherID));
                 missileData.AddRange(BitConverter.GetBytes(TargetID));
                 missileData.Add((byte)Stage);
 
                 return missileData.ToArray();
             }
 
-            public static new MissileInfo Deserialize(byte[] data)
+            public static MissileInfo Deserialize(byte[] data)
             {
                 int index = 1;
 

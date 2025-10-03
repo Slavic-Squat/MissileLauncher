@@ -58,7 +58,7 @@ namespace IngameScript
                 }
             }
             public float RaycastDistanceGrowthSpeed { get; set; }
-            public Dictionary<long, EntityInfo> Targets { get; private set; }
+            public Dictionary<long, EntityInfoExt> Targets { get; private set; }
             public Dictionary<long, bool> TargetsSyncInfo {  get; private set; }
             public List<long> TargetIDs { get; private set; }
             #endregion
@@ -69,7 +69,7 @@ namespace IngameScript
                 _program = program;
                 ID = id;
 
-                Targets = new Dictionary<long, EntityInfo>();
+                Targets = new Dictionary<long, EntityInfoExt>();
                 TargetsSyncInfo = new Dictionary<long, bool>();
                 TargetIDs = new List<long>();
 
@@ -150,7 +150,7 @@ namespace IngameScript
                             break;
                         }
 
-                        EntityInfo target = Targets[targetID];
+                        EntityInfoExt target = Targets[targetID];
                         MyDetectedEntityInfo raycastResult = default(MyDetectedEntityInfo);
                         TimeSpan timeSinceLastDetection = time - Targets[targetID].TimeRecorded;
                         Vector3 estimatedTargetPos = Targets[targetID].Position + Targets[targetID].Velocity * (float)timeSinceLastDetection.TotalSeconds;
@@ -184,7 +184,7 @@ namespace IngameScript
                 _lastRunTime = time;
             }
 
-            public void AddTarget(EntityInfo target)
+            public void AddTarget(EntityInfoExt target)
             {
                 if (!TargetIDs.Contains(target.EntityID))
                 {

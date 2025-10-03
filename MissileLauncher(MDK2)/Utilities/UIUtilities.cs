@@ -33,7 +33,7 @@ namespace IngameScript
                 Down
             }
 
-            public static T Navigate<T>(IEnumerable<T> source, T current, NavigationDirection direction) where T : IUIElement
+            public static T Navigate<T>(IEnumerable<T> source, T current, NavigationDirection direction) where T : IPositional2D
             {
                 if (EqualityComparer<T>.Default.Equals(current, default(T)))
                 {
@@ -85,7 +85,7 @@ namespace IngameScript
                 return next;
             }
 
-            public static TKey Navigate<TKey, TValue>(Dictionary<TKey, TValue> source, TKey currentKey, NavigationDirection direction) where TValue : IUIElement
+            public static TKey Navigate<TKey, TValue>(Dictionary<TKey, TValue> source, TKey currentKey, NavigationDirection direction) where TValue : IPositional2D
             {
                 if (!source.ContainsKey(currentKey))
                 {

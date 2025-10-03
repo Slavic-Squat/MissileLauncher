@@ -90,15 +90,15 @@ namespace IngameScript
 
                 foreach (var target in AWACS.Targets.Values)
                 {
-                    TargetCoordinator.AddEntity(target, false);
+                    TargetCoordinator.AddLocalTarget(target);
                 }
             }
 
             public void SyncTarget(int laserID)
             {
-                EntityInfo target = TargetingLasers[laserID].Target;
+                EntityInfoExt target = TargetingLasers[laserID].Target;
 
-                if (target != null)
+                if (!target.IsEmpty)
                     AWACS.AddTarget(target);
             }
         }

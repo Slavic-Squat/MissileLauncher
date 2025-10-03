@@ -20,8 +20,11 @@ using VRageMath;
 
 namespace IngameScript
 {
-    public static class MyExtensions
+    partial class Program
     {
-
+        public interface IPositional2D
+        {
+            Vector2 Pos { get; }
+        }
     }
 }

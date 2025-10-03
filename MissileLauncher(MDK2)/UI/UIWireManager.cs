@@ -26,7 +26,6 @@ namespace IngameScript
         {
             private SystemCoordinator _systemCoordinator;
 
-            public HashSet<long> MyMissileIDs => _systemCoordinator.MissileCoordinator.ActiveMissileIDs;
             public HashSet<long> NeutralIDs => _systemCoordinator.TargetCoordinator.NeutralIDs;
             public HashSet<long> FriendlyIDs => _systemCoordinator.TargetCoordinator.FriendlyIDs;
             public HashSet<long> HostileIDs => _systemCoordinator.TargetCoordinator.HostileIDs;

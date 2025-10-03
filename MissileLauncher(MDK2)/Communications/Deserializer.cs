@@ -24,10 +24,6 @@ namespace IngameScript
     {
         public static class Deserializer
         {
-            public enum ObjectTypes : byte
-            {
-                Command, EntityInfo, MissileInfoLite, MissileInfo
-            }
             public static object Deserialize(string dataString)
             {
                 byte[] data = Convert.FromBase64String(dataString);
@@ -37,8 +33,8 @@ namespace IngameScript
                     case ObjectTypes.Command:
                         return Encoding.ASCII.GetString(data, 1, data.Length - 1);
 
-                    case ObjectTypes.EntityInfo:
-                        return EntityInfo.Deserialize(data);
+                    case ObjectTypes.TargetInfo:
+                        return TargetInfo.Deserialize(data);
 
                     case ObjectTypes.MissileInfoLite:
                         return MissileInfoLite.Deserialize(data);

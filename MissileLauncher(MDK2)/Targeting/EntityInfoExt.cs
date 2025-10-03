@@ -25,62 +25,111 @@ namespace IngameScript
     {
         public struct EntityInfoExt
         {
-            public EntityInfo Info { get; private set; }
+            public IEntityInfo Info { get; set; }
+            public long EntityID => Info.EntityID;
+            public Vector3 Position => Info.Position;
+            public Vector3 Velocity => Info.Velocity;
+            public DateTime TimeRecorded => Info.TimeRecorded;
+            public EntitySource Source { get; set; }
+            public EntityType Type { get; set; }
+            public EntityRelation Relation { get; set; }
+            public bool IsEmpty => Info == null;
 
-            [Flags]
-            public enum Source
-            {
-                None = 0, Local = 1, Remote = 1 << 1, Both = Local | Remote
-            }
-            public static Dictionary<Source, string> SourceNames = new Dictionary<Source, string>()
-            {
-                { Source.None, "None" },
-                { Source.Local, "Local" },
-                { Source.Remote, "Remote" },
-                { Source.Both, "Remote + Local" }
-            };
-            public Source EntitySource { get; private set; }
-
-            public enum Type
-            {
-                Target, Missile
-            }
-            public static Dictionary<Type, string> TypeNames = new Dictionary<Type, string>()
-            {
-                { Type.Target, "Target" },
-                { Type.Missile, "Missile" }
-            };
-            public Type EntityType { get; private set; }
-
-            public enum Relation
-            {
-                Neutral, Hostile, Friendly, Me
-            }
-            public static Dictionary<Relation, string> RelationNames = new Dictionary<Relation, string>()
-            {
-                { Relation.Neutral, "Neutral" },
-                { Relation.Hostile, "Hostile" },
-                { Relation.Friendly, "Friendly" },
-                { Relation.Me, "Me" }
-            };
-            public Relation EntityRelation { get; private set; }
-
-            public float Distance { get; private set; }
-
-            public EntityInfoExt(EntityInfo info, Source source, Relation relation, float distance)
+            public EntityInfoExt(IEntityInfo info, EntitySource source, EntityRelation relation)
             {
                 Info = info;
-                EntitySource = source;
-                EntityType = info is MissileInfoLite ? Type.Missile : Type.Target;
-                EntityRelation = relation;
-                Distance = distance;
+                if (info is MissileInfoLite || info is MissileInfo)
+                {
+                    Type = EntityType.Missile;
+                }
+                else
+                {
+                    Type = EntityType.Target;
+                }
+                Source = source;
+                Relation = relation;
             }
 
-            public string ToString(DateTime time)
+            public EntityInfoExt(MyDetectedEntityInfo entityInfo, DateTime timeRecorded)
             {
-                StringBuilder sb = new StringBuilder($"Entity Info:\nType: {TypeNames[EntityType]}\nSource: {SourceNames[EntitySource]}\nRelation: {RelationNames[EntityRelation]}\n");
+                Info = new TargetInfo(entityInfo, timeRecorded);
+                Type = EntityType.Target;
+                Source = EntitySource.Local;
 
-                float distance = Distance;
+                MyRelationsBetweenPlayerAndBlock raycastRelation = entityInfo.Relationship;
+
+                switch (raycastRelation)
+                {
+                    case MyRelationsBetweenPlayerAndBlock.Enemies:
+                        Relation = EntityRelation.Hostile;
+                        break;
+                    case MyRelationsBetweenPlayerAndBlock.Neutral:
+                        Relation = EntityRelation.Neutral;
+                        break;
+                    case MyRelationsBetweenPlayerAndBlock.Friends:
+                        Relation = EntityRelation.Friendly;
+                        break;
+                    case MyRelationsBetweenPlayerAndBlock.Owner:
+                        Relation = EntityRelation.Me;
+                        break;
+                    default:
+                        Relation = EntityRelation.Neutral;
+                        break;
+                }
+            }
+
+            public void UpdateFromRaycast(MyDetectedEntityInfo entityInfo, DateTime timeRecorded)
+            {
+                Info.UpdateFromRaycast(entityInfo, timeRecorded);
+                Source |= EntitySource.Local;
+
+                MyRelationsBetweenPlayerAndBlock raycastRelation = entityInfo.Relationship;
+
+                switch (raycastRelation)
+                {
+                    case MyRelationsBetweenPlayerAndBlock.Enemies:
+                        Relation = EntityRelation.Hostile;
+                        break;
+                    case MyRelationsBetweenPlayerAndBlock.Neutral:
+                        Relation = EntityRelation.Neutral;
+                        break;
+                    case MyRelationsBetweenPlayerAndBlock.Friends:
+                        Relation = EntityRelation.Friendly;
+                        break;
+                    case MyRelationsBetweenPlayerAndBlock.Owner:
+                        Relation = EntityRelation.Me;
+                        break;
+                    default:
+                        break;
+                }
+            }
+
+            public void Merge(EntityInfoExt other)
+            {
+                if (EntityID != other.EntityID)
+                {
+                    return;
+                }
+                if (other.Type > Type)
+                {
+                    Type = other.Type;
+                    other.Info.UpdateFromEntityInfo(Info);
+                    Info = other.Info;
+
+                    Relation = other.Relation;
+                }
+                else
+                {
+                    Info.UpdateFromEntityInfo(other.Info);
+                }
+                Source |= other.Source;
+            }
+
+            public string ToString(Vector3 referencePos, DateTime time)
+            {
+                StringBuilder sb = new StringBuilder($"Entity Info:\n-----------------------\nType: {GetName(Type)}\nSource: {GetName(Source)}\nRelation: {GetName(Relation)}\n");
+
+                float distance = Vector3.Distance(referencePos, Position);
                 if (distance > 1000f)
                 {
                     distance /= 1000f;

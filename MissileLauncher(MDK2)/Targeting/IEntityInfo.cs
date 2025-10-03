@@ -20,8 +20,19 @@ using VRageMath;
 
 namespace IngameScript
 {
-    public static class MyExtensions
+    partial class Program
     {
+        public interface IEntityInfo
+        {
+            long EntityID { get; }
+            Vector3 Position { get; }
+            Vector3 Velocity { get; }
+            DateTime TimeRecorded { get; }
 
+            void Transform(Matrix transform);
+            void UpdateFromRaycast(MyDetectedEntityInfo entityInfo, DateTime timeRecorded);
+            void UpdateFromEntityInfo(IEntityInfo entityInfo);
+            byte[] Serialize();
+        }
     }
 }
