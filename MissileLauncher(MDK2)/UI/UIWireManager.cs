@@ -36,6 +36,8 @@ namespace IngameScript
             public IMyCubeBlock ReferenceBlock => _systemCoordinator.ReferenceBlock;
             public long SelfID => _systemCoordinator.SelfID;
 
+            public DateTime SystemTime => _systemCoordinator.Time;
+
             public UIWireManager(SystemCoordinator systemCoordinator)
             {
                 _systemCoordinator = systemCoordinator;

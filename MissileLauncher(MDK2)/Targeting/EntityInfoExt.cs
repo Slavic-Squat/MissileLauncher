@@ -127,39 +127,39 @@ namespace IngameScript
 
             public string ToString(Vector3 referencePos, DateTime time)
             {
-                StringBuilder sb = new StringBuilder($"Entity Info:\n-----------------------\nType: {GetName(Type)}\nSource: {GetName(Source)}\nRelation: {GetName(Relation)}\n");
+                StringBuilder sb = new StringBuilder($"INFO:\n-----------------------\nTYPE: {GetName(Type)}\nSRC: {GetName(Source)}\nREL: {GetName(Relation)}\n");
 
                 float distance = Vector3.Distance(referencePos, Position);
                 if (distance > 1000f)
                 {
                     distance /= 1000f;
-                    sb.Append($"Distance: {distance:0.0} km\n");
+                    sb.Append($"DIST: {distance:0.0} km\n");
                 }
                 else
                 {
-                    sb.Append($"Distance: {distance:0} m\n");
+                    sb.Append($"DIST: {distance:0} m\n");
                 }
 
                 float speed = Info.Velocity.Length();
                 if (speed > 1000f)
                 {
                     speed /= 1000f;
-                    sb.Append($"Speed: {speed:0.0} km/s\n");
+                    sb.Append($"SPD: {speed:0.0} km/s\n");
                 }
                 else
                 {
-                    sb.Append($"Speed: {speed:0} m/s\n");
+                    sb.Append($"SPD: {speed:0} m/s\n");
                 }
 
                 float age = (float)(time - Info.TimeRecorded).TotalMilliseconds;
                 if (age > 1000f)
                 {
                     age /= 1000f;
-                    sb.Append($"Age: {age:0.0} s\n");
+                    sb.Append($"AGE: {age:0.0} s\n");
                 }
                 else
                 {
-                    sb.Append($"Age: {age:0} ms\n");
+                    sb.Append($"AGE: {age:0} ms\n");
                 }
 
                 return sb.ToString().TrimEnd('\n');

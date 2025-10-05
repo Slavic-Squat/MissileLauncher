@@ -125,6 +125,12 @@ namespace IngameScript
                 }
                 return nextKey;
             }
+
+            public static float CalculateElementSize(float totalSize, int numElements, float spacingRatio)
+            {
+                if (numElements <= 0) return 0;
+                return totalSize / (numElements + spacingRatio * (numElements - 1));
+            }
         }
     }
 }

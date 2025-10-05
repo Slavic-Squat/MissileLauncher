@@ -31,6 +31,7 @@ namespace IngameScript
             public MissileCoordinator MissileCoordinator { get; private set; }
             public CommunicationHandler CommunicationHandler { get; private set; }
             public IMyCubeBlock ReferenceBlock { get; private set; }
+            public DateTime Time { get; private set; }
             public long SelfID => ReferenceBlock.CubeGrid.EntityId;
 
             private UIWireManager _uiWireManager;
@@ -65,6 +66,7 @@ namespace IngameScript
 
             public void Run(DateTime time)
             {
+                Time = time;
                 for (int i = _coroutines.Count - 1; i >= 0; i--)
                 {
                     var coroutine = _coroutines[i];

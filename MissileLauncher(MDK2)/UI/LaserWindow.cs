@@ -22,14 +22,18 @@ namespace IngameScript
 {
     partial class Program
     {
-        public class LaserWindow : IWindow, IUpdatable
+        public class LaserWindow : IWindow
         {
             public UI UI { get; private set; }
             public RectangleF Bounds => _bounds;
             public Vector2 Pos => _bounds.Position;
             public Vector2 Size => _bounds.Size;
             public Vector2 Center => _bounds.Center;
-            public bool IsInside { get; private set; }
+            public bool IsOpen { get; private set; }
+            public bool IsNavigating { get; private set; }
+            public bool IsPaused { get; private set; }
+            public event Action<IWindow> RequestClose;
+            public event Action<INavigable> RequestStopNavigation;
 
             public IMyTextSurface Display => UI.Display;
 
@@ -39,7 +43,6 @@ namespace IngameScript
             private List<MySprite> _sprites = new List<MySprite>();
             private List<IButton> _buttons = new List<IButton>();
             private IButton _highlightedButton;
-            private IEnterable _enteredElement;
 
 
             public LaserWindow(UI ui, Vector2 pos, Vector2 size)
@@ -130,20 +133,55 @@ namespace IngameScript
                 _sprites.Add(headerTextSprite);
             }
 
-            public void Enter()
+            public void Open()
             {
+                IsOpen = true;
+                StartNavigation();
+            }
+
+            public void Close()
+            {
+                RequestClose?.Invoke(this);
+                OnClose();
+            }
+
+            public void OnClose()
+            {
+                IsOpen = false;
+                StopNavigation();
+            }
+
+            public void StartNavigation()
+            {
+                IsNavigating = true;
+                ResumeNavigation();
+            }
+
+            public void StopNavigation()
+            {
+                RequestStopNavigation?.Invoke(this);
+                OnStopNavigation();
+            }
+
+            public void OnStopNavigation()
+            {
+                IsNavigating = false;
+                PauseNavigation();
+            }
+
+            public void ResumeNavigation()
+            {
+                IsPaused = false;
                 if (_buttons.Count > 0)
                 {
                     HighlightButton(_buttons[0]);
                 }
-                IsInside = true;
             }
 
-            public void Exit()
+            public void PauseNavigation()
             {
-                IsInside = false;
+                IsPaused = true;
                 UnhighlightButton(_highlightedButton);
-                ExitElement(_enteredElement);
             }
 
             private void HighlightButton(IButton button)
@@ -167,42 +205,11 @@ namespace IngameScript
                 button?.Press(time);
             }
 
-            private void EnterElement(IEnterable enterable)
-            {
-                ExitElement(_enteredElement);
-                enterable.Enter();
-                _enteredElement = enterable;
-            }
-
-            private void ExitElement(IEnterable enterable)
-            {
-                enterable?.Exit();
-                if (_enteredElement == enterable)
-                {
-                    _enteredElement = null;
-                }
-            }
-
-            private void CleanUp()
-            {
-                if (!_enteredElement?.IsInside ?? false)
-                {
-                    _enteredElement = null;
-                }
-            }
-
             public void Update(DateTime time)
             {
-                CleanUp();
-
                 foreach (var button in _buttons)
                 {
                     button.Update(time);
-                }
-
-                if (_enteredElement is IUpdatable)
-                {
-                    ((IUpdatable)_enteredElement).Update(time);
                 }
             }
 
@@ -220,23 +227,13 @@ namespace IngameScript
                     button.Draw(frame);
                 }
                 _highlightedButton?.Draw(frame);
-                _enteredElement?.Draw(frame);
             }
 
             public void Navigate(UserInput input, DateTime time)
             {
-                if (_enteredElement is INavigable)
-                {
-                    ((INavigable)_enteredElement).Navigate(input, time);
-                }
-                if (_enteredElement != null)
-                {
-                    return;
-                }
-
                 if (input.CRelease)
                 {
-                    Exit();
+                    Close();
                 }
 
                 if (_buttons.Count == 0)

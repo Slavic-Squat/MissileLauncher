@@ -22,7 +22,7 @@ namespace IngameScript
 {
     partial class Program
     {
-        public class UI : INavigable
+        public class UI
         {
             public IController Controller { get; private set; }
             public bool HasActiveWindow => _activeWindow != null;
@@ -45,7 +45,7 @@ namespace IngameScript
                 display.ScriptBackgroundColor = Color.Black;
 
                 MainWindow mainWindow = new MainWindow(this);
-                EnterWindow(mainWindow);
+                OpenWindow(mainWindow);
             }
 
             public void Run(DateTime time)
@@ -58,50 +58,55 @@ namespace IngameScript
                 }
             }
 
-            public void EnterWindow(IWindow window)
+            public void OpenWindow(IWindow window)
             {
-                ExitCurrentWindow();
+                if (window == null || ReferenceEquals(_activeWindow, window))
+                {
+                    return;
+                }
+                CloseWindow(_activeWindow);
                 _activeWindow = window;
-                _activeWindow.Enter();
+                window.Open();
+                window.RequestClose += CloseWindow;
             }
 
-            private void ExitCurrentWindow()
+            public void CloseWindow(IWindow window)
             {
-                _activeWindow?.Exit();
-                _activeWindow = null;
-            }
-
-            public void EnterModal(IModal modal)
-            {
-                _activeModal = modal;
-            }
-
-            private void CleanUp()
-            {
-                if (!_activeWindow?.IsInside ?? false)
+                if (window == null)
+                {
+                    return;
+                }
+                if (ReferenceEquals(_activeWindow, window))
                 {
                     _activeWindow = null;
                 }
-                if (_activeModal?.CanClose ?? false)
+                window.OnClose();
+                window.RequestClose -= CloseWindow;
+            }
+
+            public void OpenModal(IModal modal)
+            {
+                if (modal == null || ReferenceEquals(_activeModal, modal))
                 {
-                    _activeModal = null;
+                    return;
                 }
+                _activeModal = modal;
             }
 
             public void Update(DateTime time)
             {
-                CleanUp();
+                if (_activeModal?.CanClose ?? false)
+                {
+                    _activeModal = null;
+                }
 
                 if (!HasActiveWindow)
                 {
                     MainWindow mainWindow = new MainWindow(this);
-                    EnterWindow(mainWindow);
+                    OpenWindow(mainWindow);
                 }
 
-                if (_activeWindow is IUpdatable)
-                {
-                    ((IUpdatable)_activeWindow).Update(time);
-                }
+                _activeWindow?.Update(time);
             }
 
             public void Navigate(UserInput input, DateTime time)

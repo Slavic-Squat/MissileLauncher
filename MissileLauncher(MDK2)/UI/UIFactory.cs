@@ -24,10 +24,12 @@ namespace IngameScript
     {
         public static class UIFactory
         {
-            public static ControlPanel CreateTargetingOptionsPanel(RadarWindow radarWindow, Vector2 pos, Vector2 size, IMyTextSurface surface)
+            public static ControlPanel CreateTargetingOptionsPanel(RadarWindow window, Vector2 pos, Vector2 size)
             {
+                IMyTextSurface surface = window.Display;
+
                 RectangleF panelBounds = new RectangleF(pos, size);
-                ControlPanel panel = new ControlPanel(panelBounds.Position, panelBounds.Size, surface);
+                ControlPanel panel = new ControlPanel(panelBounds.Position, panelBounds.Size);
 
                 float padding = 0.1f;
                 float minDim = Math.Min(panelBounds.Width, panelBounds.Height);
@@ -35,57 +37,172 @@ namespace IngameScript
                 RectangleF elementSpace = new RectangleF(pos + minDim * padding, size - minDim * padding * 2f);
 
                 Vector2 elementPos = elementSpace.Position;
-                Vector2 elementSize = new Vector2(elementSpace.Size.X, elementSpace.Size.Y * 0.1f);
+                Vector2 elementSize = new Vector2(elementSpace.Size.X, elementSpace.Size.Y * 0.2f);
 
                 RectangleF labelBounds = new RectangleF(elementPos, elementSize);
-                MySprite labelSprite = SpriteHelper.CreateText(labelBounds, "TARGETING OPTIONS\n------------------", Color.White, surface, TextAlignment.CENTER, true, 0);
+                MySprite labelSprite = SpriteHelper.CreateText(labelBounds, "OPTIONS\n------------------", Color.White, surface, TextAlignment.CENTER, true, 0);
                 panel.AddSprite(labelSprite);
 
-                elementPos.Y += elementSize.Y + elementSpace.Size.Y * 0.05f;
-                elementSize.Y = elementSpace.Size.Y * 0.1f;
+                elementPos.Y += elementSize.Y;
+                float remainingHeight = elementSpace.Bottom - elementPos.Y;
 
+                int maxButtons = 4;
+                float spacingRatio = 0.25f;
 
-                Func<string> getText = () => "SCALE: " + GetName(radarWindow.ScopeScale) + " \u21BB";
-                Func<bool> action = () => { radarWindow.ScopeScale = NextScopeScale(radarWindow.ScopeScale); return true; };
+                float buttonHeight = UIUtilities.CalculateElementSize(remainingHeight, maxButtons, spacingRatio);
+                float spacing = buttonHeight * spacingRatio;
 
-                Button button = new Button("ScopeScale", elementPos, elementSize, getText, action, radarWindow.Display);
+                elementSize.Y = buttonHeight;
+
+                Func<string> getText = () => "SCALE: " + GetName(window.ScopeScale);
+                Func<bool> action = () => { window.ScopeScale = NextScopeScale(window.ScopeScale); return true; };
+
+                Button button = new Button("ScopeScale", elementPos, elementSize, getText, action, window.Display);
                 panel.AddButton(button);
 
-                elementPos.Y += elementSize.Y + elementSpace.Size.Y * 0.05f;
-                elementSize.Y = elementSpace.Size.Y * 0.1f;
+                elementPos.Y += buttonHeight + spacing;
 
-                labelBounds = new RectangleF(elementPos, elementSize);
-                labelSprite = SpriteHelper.CreateText(labelBounds, "NAVIGATION FILTERS\n-------------------", Color.White, surface, TextAlignment.CENTER, true, 0);
-                panel.AddSprite(labelSprite);
+                getText = () => "TYPE: " + GetName(window.NavTypeFilter);
+                action = () => { window.NavTypeFilter = NextEntityTypeFilter(window.NavTypeFilter); return true; };
 
-                elementPos.Y += elementSize.Y + elementSpace.Size.Y * 0.05f;
-                elementSize.Y = elementSpace.Size.Y * 0.1f;
-
-                getText = () => "TYPE: " + GetName(radarWindow.NavTypeFilter) + " \u21BB";
-                action = () => { radarWindow.NavTypeFilter = NextEntityTypeFilter(radarWindow.NavTypeFilter); return true; };
-
-                button = new Button("TypeFilter", elementPos, elementSize, getText, action, radarWindow.Display);
+                button = new Button("TypeFilter", elementPos, elementSize, getText, action, window.Display);
                 panel.AddButton(button);
 
-                elementPos.Y += elementSize.Y + elementSpace.Size.Y * 0.05f;
-                elementSize.Y = elementSpace.Size.Y * 0.1f;
+                elementPos.Y += buttonHeight + spacing;
 
-                getText = () => "RELATION: " + GetName(radarWindow.NavRelationFilter) + " \u21BB";
-                action = () => { radarWindow.NavRelationFilter = NextEntityRelationFilter(radarWindow.NavRelationFilter); return true; };
+                getText = () => "REL: " + GetName(window.NavRelationFilter);
+                action = () => { window.NavRelationFilter = NextEntityRelationFilter(window.NavRelationFilter); return true; };
 
-                button = new Button("RelationFilter", elementPos, elementSize, getText, action, radarWindow.Display);
+                button = new Button("RelationFilter", elementPos, elementSize, getText, action, window.Display);
                 panel.AddButton(button);
 
-                elementPos.Y += elementSize.Y + elementSpace.Size.Y * 0.05f;
-                elementSize.Y = elementSpace.Size.Y * 0.1f;
+                elementPos.Y += buttonHeight + spacing;
 
-                getText = () => "SOURCE: " + GetName(radarWindow.NavSourceFilter) + " \u21BB";
-                action = () => { radarWindow.NavSourceFilter = NextEntitySourceFilter(radarWindow.NavSourceFilter); return true; };
+                getText = () => "SRC: " + GetName(window.NavSourceFilter);
+                action = () => { window.NavSourceFilter = NextEntitySourceFilter(window.NavSourceFilter); return true; };
 
-                button = new Button("SourceFilter", elementPos, elementSize, getText, action, radarWindow.Display);
+                button = new Button("SourceFilter", elementPos, elementSize, getText, action, window.Display);
                 panel.AddButton(button);
 
                 return panel;
+            }
+
+            public static Menu CreateEntityMenu(RadarWindow window, Vector2 pos, Vector2 size, EntityInfoExt entity, UIWireManager wireManager)
+            {
+                IMyTextSurface surface = window.Display;
+
+                RectangleF menuBounds = new RectangleF(pos, size);
+                float padding = 0.2f;
+                float minDim = Math.Min(menuBounds.Width, menuBounds.Height);
+
+                RectangleF elementSpace = new RectangleF(pos + minDim * padding, size - minDim * padding * 2f);
+
+                int maxButtons = 4;
+                float spacingRatio = 0.25f;
+                float buttonWidth = UIUtilities.CalculateElementSize(elementSpace.Width, maxButtons, spacingRatio);
+                float buttonHeight = elementSpace.Height;
+                float spacing = buttonWidth * spacingRatio;
+
+                if (true)
+                {
+                    int numberOfButtons = 1;
+                    Vector2 usedSpace = new Vector2(numberOfButtons * buttonWidth + (numberOfButtons - 1) * spacing, buttonHeight);
+                    Vector2 freeSpace = elementSpace.Size - usedSpace;
+                    elementSpace.Position += 0.5f * freeSpace;
+                    elementSpace.Size = usedSpace;
+                    menuBounds.Position += 0.5f * freeSpace;
+                    menuBounds.Size -= freeSpace;
+
+                    Menu menu = new Menu(menuBounds.Position, menuBounds.Size);
+
+                    Vector2 elementSize = new Vector2(buttonWidth, buttonHeight);
+                    Vector2 elementPos = elementSpace.Position;
+
+                    Func<string> getText = () => "ABORT";
+                    Func<bool> action = () =>
+                    {
+                        return true;
+                    };
+                    Button button = new Button("Abort", elementPos, elementSize, getText, action, window.Display);
+                    menu.AddButton(button);
+
+                    return menu;
+                }
+                else
+                {
+                    int numberOfButtons = 4;
+                    Vector2 usedSpace = new Vector2(numberOfButtons * buttonWidth + (numberOfButtons - 1) * spacing, buttonHeight);
+                    Vector2 freeSpace = elementSpace.Size - usedSpace;
+                    elementSpace.Position += 0.5f * freeSpace;
+                    elementSpace.Size = usedSpace;
+                    menuBounds.Position += 0.5f * freeSpace;
+                    menuBounds.Size -= freeSpace;
+
+                    Menu menu = new Menu(menuBounds.Position, menuBounds.Size);
+
+                    Vector2 elementSize = new Vector2(buttonWidth, elementSpace.Height);
+                    Vector2 elementPos = elementSpace.Position + elementSpace.Size - elementSize;
+
+                    Func<string> getText;
+                    Func<bool> action;
+                    Button button;
+
+                    if (entity.Source == EntitySource.Remote)
+                    {
+                        getText = () => "FORGET";
+                        action = () =>
+                        {
+                            return true;
+                        };
+
+                        button = new Button("Forget", elementPos, elementSize, getText, action, window.Display);
+                        menu.AddButton(button);
+
+                        elementPos.X -= buttonWidth + spacing;
+                    }
+
+                    getText = () => "FORGET";
+                    action = () =>
+                    {
+                        return true;
+                    };
+
+                    button = new Button("Forget", elementPos, elementSize, getText, action, window.Display);
+                    menu.AddButton(button);
+
+                    elementPos.X -= buttonWidth + spacing;
+
+                    getText = () => "SET REL";
+                    action = () =>
+                    {
+                        return true;
+                    };
+
+                    button = new Button("SetRelation", elementPos, elementSize, getText, action, window.Display);
+                    menu.AddButton(button);
+
+                    elementPos.X -= buttonWidth + spacing;
+
+                    getText = () => "FIRE MISSILE";
+                    action = () =>
+                    {
+                        return true;
+                    };
+                    button = new Button("FireMissile", elementPos, elementSize, getText, action, window.Display);
+                    menu.AddButton(button);
+
+                    elementPos.X -= buttonWidth + spacing;
+                    getText = () => "VIEW";
+                    action = () =>
+                    {
+                        return true;
+                    };
+
+                    button = new Button("View", elementPos, elementSize, getText, action, window.Display);
+                    menu.AddButton(button);
+
+                    return menu;
+                }
             }
         }
     }

@@ -27,14 +27,14 @@ namespace IngameScript
             public static Color WindowFillColor = new Color(0, 0, 0, 255);
             public static Color WindowBorderColor = new Color(20, 20, 20, 255);
             public static Color WindowBorderColorActive = new Color(0, 76, 255, 255);
-            public static Color WindowHighlightColor = new Color(255, 200, 0, 255);
 
             public static Color MenuFillColor = new Color(10, 10, 10, 255);
+            public static Color MenuFillColorActive = new Color(12, 20, 38, 255);
             public static Color MenuBorderColor = new Color(20, 20, 20, 255);
             public static Color MenuBorderColorActive = new Color(0, 76, 255, 255);
-            public static Color MenuHighlightColor = new Color(255, 200, 0, 255);
 
             public static Color PanelFillColor = new Color(16, 16, 16, 255);
+            public static Color PanelFillColorActive = new Color(12, 20, 38, 255);
             public static Color PanelBorderColor = new Color(32, 32, 32, 255);
             public static Color PanelBorderColorActive = new Color(0, 76, 255, 255);
             public static Color PanelHighlightColor = new Color(255, 200, 0, 255);

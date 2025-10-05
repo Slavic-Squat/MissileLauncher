@@ -24,6 +24,13 @@ namespace IngameScript
     {
         public interface INavigable
         {
+            bool IsNavigating { get; }
+            bool IsPaused { get; }
+            event Action<INavigable> RequestStopNavigation;
+            void StartNavigation();
+            void OnStopNavigation();
+            void PauseNavigation();
+            void ResumeNavigation();
             void Navigate(UserInput input, DateTime time);
         }
     }

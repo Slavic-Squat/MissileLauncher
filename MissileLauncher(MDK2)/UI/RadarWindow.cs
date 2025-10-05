@@ -22,14 +22,18 @@ namespace IngameScript
 {
     partial class Program
     {
-        public class RadarWindow : IWindow, IUpdatable
+        public class RadarWindow : IWindow
         {
             public UI UI { get; private set; }
             public RectangleF Bounds => _bounds;
             public Vector2 Pos => _bounds.Position;
             public Vector2 Size => _bounds.Size;
             public Vector2 Center => _bounds.Center;
-            public bool IsInside { get; private set; }
+            public bool IsOpen { get; private set; }
+            public bool IsNavigating { get; private set; }
+            public bool IsPaused { get; private set; }
+            public event Action<IWindow> RequestClose;
+            public event Action<INavigable> RequestStopNavigation;
 
             public IMyTextSurface Display => UI.Display;
             public NavMode NavMode { get; set; } = NavMode.UI;
@@ -50,12 +54,14 @@ namespace IngameScript
             private List<MySprite> _sprites = new List<MySprite>();
 
             private List<IHighlightable> _highlightables = new List<IHighlightable>();
-            private Stack<IMenu> _menuStack = new Stack<IMenu>();
-            private TextPanel _targetPanel;
-            private ControlPanel _optionsPanel;
-
             private IHighlightable _highlightedElement;
-            private IEnterable _enteredElement;
+            private List<IUpdatable> _updateables = new List<IUpdatable>();
+            private List<IUIElement> _uiElements = new List<IUIElement>();
+            private List<INavigable> _navigables = new List<INavigable>();
+            private INavigable _navigatedElement;
+
+            private InfoPanel _targetPanel;
+            private ControlPanel _optionsPanel;            
 
             private long _selectedEntityID;
 
@@ -88,14 +94,25 @@ namespace IngameScript
 
                 _targetingSpriteBuilder = new TargetingSpriteBuilder(ReferenceBlock);
 
-                Vector2 targetPanelSize = new Vector2(200, 300);
-                Vector2 targetPanelPos = Pos + new Vector2(Size.X - targetPanelSize.X, Size.Y - targetPanelSize.Y);
-                _targetPanel = new TextPanel(targetPanelPos, targetPanelSize, "", Display);
+                Vector2 targetPanelSize = new Vector2(150, 200);
+                Vector2 targetPanelPos = Pos + new Vector2(Size.X - targetPanelSize.X, Size.Y * 0.5f - targetPanelSize.Y * 0.5f);
+                Func<string> targetInfoGetter = () =>
+                {
+                    if (_entitySprites.Keys.Contains(_selectedEntityID))
+                    {
+                        return _entitySprites[_selectedEntityID].EntityInfo.ToString(ReferenceBlock.GetPosition(), UI.UIWireManager.SystemTime);
+                    }
+                    else
+                    {
+                        return "No Target Selected";
+                    }
+                };
+                _targetPanel = new InfoPanel(targetPanelPos, targetPanelSize, targetInfoGetter, Display);
 
-                Vector2 optionsPanelSize = new Vector2(200, 300);
-                Vector2 optionsPanelPos = Pos;
+                Vector2 optionsPanelSize = new Vector2(150, 300);
+                Vector2 optionsPanelPos = Pos + new Vector2(0, Size.Y * 0.5f - optionsPanelSize.Y * 0.5f);
 
-                _optionsPanel = UIFactory.CreateTargetingOptionsPanel(this, optionsPanelPos, optionsPanelSize, Display);
+                _optionsPanel = UIFactory.CreateTargetingOptionsPanel(this, optionsPanelPos, optionsPanelSize);
                 _highlightables.Add(_optionsPanel);
             }
 
@@ -114,20 +131,55 @@ namespace IngameScript
                 _sprites.Add(fillSprite);
             }
 
-            public void Enter()
+            public void Open()
             {
+                IsOpen = true;
+                StartNavigation();
+            }
+
+            private void Close()
+            {
+                RequestClose?.Invoke(this);
+                OnClose();
+            }
+
+            public void OnClose()
+            {
+                IsOpen = false;
+                StopNavigation();
+            }
+
+            public void StartNavigation()
+            {
+                IsNavigating = true;
+                ResumeNavigation();
+            }
+
+            private void StopNavigation()
+            {
+                RequestStopNavigation?.Invoke(this);
+                OnStopNavigation();
+            }
+
+            public void OnStopNavigation()
+            {
+                IsNavigating = false;
+                PauseNavigation();
+            }
+
+            public void ResumeNavigation()
+            {
+                IsPaused = false;
                 if (_highlightables.Count > 0)
                 {
                     HighlightElement(_highlightables[0]);
                 }
-                IsInside = true;
             }
 
-            public void Exit()
+            public void PauseNavigation()
             {
-                IsInside = false;
+                IsPaused = true;
                 UnhighlightElement(_highlightedElement);
-                ExitElement(_enteredElement);
             }
 
             private void HighlightElement(IHighlightable highlightable)
@@ -153,9 +205,62 @@ namespace IngameScript
                 {
                     ((IButton)highlightable).Press(time);
                 }
-                else if (highlightable is IEnterable)
+                else if (highlightable is INavigable)
                 {
-                    EnterElement((IEnterable)highlightable);
+                    NavigateElement((INavigable)highlightable);
+                }
+            }
+
+            public void NavigateElement(INavigable navigable)
+            {
+                StopNavigatingElement(_navigatedElement);
+                _navigables.Add(navigable);
+                _navigatedElement = navigable;
+                navigable.StartNavigation();
+                navigable.RequestStopNavigation += StopNavigatingElement;
+            }
+
+            public void StopNavigatingElement(INavigable navigable)
+            {
+                if (ReferenceEquals(navigable, _navigatedElement))
+                {
+                    _navigatedElement = null;
+                }
+                _navigables.Remove(navigable);
+                navigable.OnStopNavigation();
+                navigable.RequestStopNavigation -= StopNavigatingElement;
+            }
+
+            public void OpenMenu(IMenu menu)
+            {
+                _updateables.Add(menu);
+                _uiElements.Add(menu);
+
+                NavigateElement(menu);
+
+                menu.Open();
+                menu.RequestClose += CloseMenu;
+            }
+
+            public void CloseMenu(IMenu menu)
+            {
+                _updateables.Remove(menu);
+                _uiElements.Remove(menu);
+
+                StopNavigatingElement(menu);
+                menu.RequestClose -= CloseMenu;
+                menu.OnClose();
+            }
+
+            private void OpenEntityMenu(long entityID)
+            {
+                if (_allEntities.Keys.Contains(entityID))
+                {
+                    EntityInfoExt entity = _allEntities[entityID];
+                    Vector2 menuSize = new Vector2(500, 100);
+                    Vector2 menuPos = Pos + new Vector2(Size.X * 0.5f - menuSize.X * 0.5f, Size.Y - menuSize.Y);
+                    Menu menu = UIFactory.CreateEntityMenu(this, menuPos, menuSize, entity, UI.UIWireManager);
+                    OpenMenu(menu);
                 }
             }
 
@@ -169,30 +274,6 @@ namespace IngameScript
                 _selectedEntityID = -1;
             }
 
-            private void EnterElement(IEnterable enterable)
-            {
-                ExitElement(_enteredElement);
-                enterable?.Enter();
-                _enteredElement = enterable;
-            }
-
-            private void ExitElement(IEnterable enterable)
-            {
-                enterable?.Exit();
-                if (_enteredElement == enterable)
-                {
-                    _enteredElement = null;
-                }
-            }
-
-            private void CleanUp()
-            {
-                if (!_enteredElement?.IsInside ?? false)
-                {
-                    _enteredElement = null;
-                }
-            }
-
             public void Update(DateTime time)
             {
                 _allEntities = UI.UIWireManager.GetAllEntities();
@@ -200,19 +281,7 @@ namespace IngameScript
                 _targetingSpriteBuilder.Zoom = GetValue(ScopeScale);
                 _targetingSprites = _targetingSpriteBuilder.BuildSprites(_allEntities, _selectedEntityID, out _entitySprites);
 
-                if (_entitySprites.Keys.Contains(_selectedEntityID))
-                {
-                    _targetPanel.Text = _entitySprites[_selectedEntityID].EntityInfo.ToString(ReferenceBlock.GetPosition(), time);
-                }
-                else
-                {
-                    UnselectEntity();
-                    _targetPanel.Text = "No Target Selected";
-                }
-
                 _optionsPanel.Update(time);
-
-                CleanUp();
             }
 
             public void Draw(MySpriteDrawFrame frame)
@@ -230,18 +299,9 @@ namespace IngameScript
 
             public void Navigate(UserInput input, DateTime time)
             {
-                if (_enteredElement is INavigable)
-                {
-                    ((INavigable)_enteredElement).Navigate(input, time);
-                }
-                if (_enteredElement != null)
-                {
-                    return;
-                }
-
                 if (input.CRelease)
                 {
-                    Exit();
+                    Close();
                 }
 
                 if (input.QRelease)
@@ -307,10 +367,6 @@ namespace IngameScript
                     UnselectEntity();
                 }
 
-                if (input.CRelease)
-                {
-                    Exit();
-                }
                 else if (input.WRelease)
                 {
                     long nextEntityID = UIUtilities.Navigate(filtered, _selectedEntityID, NavigationDirection.Up);
@@ -330,6 +386,10 @@ namespace IngameScript
                 {
                     long nextEntityID = UIUtilities.Navigate(filtered, _selectedEntityID, NavigationDirection.Right);
                     SelectEntity(nextEntityID);
+                }
+                else if (input.SpaceRelease)
+                {
+                    OpenEntityMenu(_selectedEntityID);
                 }
             }
         }

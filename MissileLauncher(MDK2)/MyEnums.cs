@@ -92,11 +92,11 @@ namespace IngameScript
         {
             switch (relation)
             {
-                case EntityRelation.Neutral: return "Neutral";
-                case EntityRelation.Hostile: return "Hostile";
-                case EntityRelation.Friendly: return "Friendly";
-                case EntityRelation.Me: return "Me";
-                default: return "Unknown";
+                case EntityRelation.Neutral: return "NTRL";
+                case EntityRelation.Hostile: return "HSTL";
+                case EntityRelation.Friendly: return "FRND";
+                case EntityRelation.Me: return "ME";
+                default: return "N/A";
             }
         }
 
@@ -104,9 +104,9 @@ namespace IngameScript
         {
             switch (type)
             {
-                case EntityType.Target: return "Target";
-                case EntityType.Missile: return "Missile";
-                default: return "Unknown";
+                case EntityType.Target: return "TRGT";
+                case EntityType.Missile: return "MISL";
+                default: return "N/A";
             }
         }
 
@@ -114,11 +114,11 @@ namespace IngameScript
         {
             switch (source)
             {
-                case EntitySource.None: return "None";
-                case EntitySource.Local: return "Local";
-                case EntitySource.Remote: return "Remote";
-                case EntitySource.Both: return "Both";
-                default: return "Unknown";
+                case EntitySource.None: return "NONE";
+                case EntitySource.Local: return "LOCAL";
+                case EntitySource.Remote: return "REMOTE";
+                case EntitySource.Both: return "BOTH";
+                default: return "N/A";
             }
         }
 
@@ -126,10 +126,10 @@ namespace IngameScript
         {
             switch (stage)
             {
-                case MissileStage.Unknown: return "Unknown";
-                case MissileStage.Flying: return "Flying";
-                case MissileStage.Interception: return "Interception";
-                default: return "Unknown";
+                case MissileStage.Unknown: return "N/A";
+                case MissileStage.Flying: return "FLYING";
+                case MissileStage.Interception: return "INTERCEPTION";
+                default: return "N/A";
             }
         }
 
@@ -138,8 +138,8 @@ namespace IngameScript
             switch (mode)
             {
                 case NavMode.UI: return "UI";
-                case NavMode.Targeting: return "Targeting";
-                default: return "Unknown";
+                case NavMode.Targeting: return "TARGETING";
+                default: return "N/A";
             }
         }
 
@@ -147,11 +147,11 @@ namespace IngameScript
         {
             switch (filter)
             {
-                case EntityTypeFilter.None: return "None";
-                case EntityTypeFilter.Targets: return "Targets";
-                case EntityTypeFilter.Missiles: return "Missiles";
-                case EntityTypeFilter.All: return "All";
-                default: return "Unknown";
+                case EntityTypeFilter.None: return "NONE";
+                case EntityTypeFilter.Targets: return "TRGT";
+                case EntityTypeFilter.Missiles: return "MISL";
+                case EntityTypeFilter.All: return "ALL";
+                default: return "N/A";
             }
         }
 
@@ -159,13 +159,13 @@ namespace IngameScript
         {
             switch (filter)
             {
-                case EntityRelationFilter.None: return "None";
-                case EntityRelationFilter.Hostile: return "Hostile";
-                case EntityRelationFilter.Neutral: return "Neutral";
-                case EntityRelationFilter.Friendly: return "Friendly";
-                case EntityRelationFilter.Me: return "Me";
-                case EntityRelationFilter.All: return "All";
-                default: return "Unknown";
+                case EntityRelationFilter.None: return "NONE";
+                case EntityRelationFilter.Hostile: return "HSTL";
+                case EntityRelationFilter.Neutral: return "NTRL";
+                case EntityRelationFilter.Friendly: return "FRND";
+                case EntityRelationFilter.Me: return "ME";
+                case EntityRelationFilter.All: return "ALL";
+                default: return "N/A";
             }
         }
 
@@ -173,10 +173,10 @@ namespace IngameScript
         {
             switch (filter)
             {
-                case EntitySourceFilter.None: return "None";
-                case EntitySourceFilter.Local: return "Local";
-                case EntitySourceFilter.Remote: return "Remote";
-                case EntitySourceFilter.Both: return "Both";
+                case EntitySourceFilter.None: return "NONE";
+                case EntitySourceFilter.Local: return "LOCAL";
+                case EntitySourceFilter.Remote: return "REMOTE";
+                case EntitySourceFilter.Both: return "BOTH";
                 default: return "Unknown";
             }
         }
@@ -185,9 +185,9 @@ namespace IngameScript
         {
             switch (scale)
             {
-                case ScopeScale.Close: return "6Km";
-                case ScopeScale.Far: return "12Km";
-                default: return "Unknown";
+                case ScopeScale.Close: return "6_km";
+                case ScopeScale.Far: return "12_km";
+                default: return "N/A";
             }
         }
 

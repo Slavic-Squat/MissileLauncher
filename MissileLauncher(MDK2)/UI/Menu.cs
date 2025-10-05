@@ -18,92 +18,67 @@ using VRage.Game.ModAPI.Ingame.Utilities;
 using VRage.Game.ObjectBuilders.Definitions;
 using VRageMath;
 
+
 namespace IngameScript
 {
     partial class Program
     {
-        public class MainWindow : IWindow
+        public class Menu : IMenu
         {
-            public UI UI { get; private set; }
             public RectangleF Bounds => _bounds;
             public Vector2 Pos => _bounds.Position;
             public Vector2 Size => _bounds.Size;
             public Vector2 Center => _bounds.Center;
             public bool IsOpen { get; private set; }
-            public bool IsNavigating { get; private set; }
             public bool IsPaused { get; private set; }
-            public event Action<IWindow> RequestClose;
+            public bool IsNavigating { get; private set; }
+            public event Action<IMenu> RequestClose;
             public event Action<INavigable> RequestStopNavigation;
 
-            public IMyTextSurface Display => UI.Display;
 
             private RectangleF _bounds;
-            private List<MySprite> _sprites = new List<MySprite>();
             private List<IButton> _buttons = new List<IButton>();
             private IButton _highlightedButton;
 
+            private MySprite _fillSprite;
+            private Color _fillColor = UIConfig.PanelFillColor;
+            private MySprite _borderSprite;
+            private Color _borderColor = UIConfig.PanelBorderColor;
 
-            public MainWindow(UI ui, Vector2 pos, Vector2 size)
+            private List<MySprite> _sprites = new List<MySprite>();
+
+            public Menu(Vector2 pos, Vector2 size)
             {
-                UI = ui;
-
                 _bounds = new RectangleF(pos, size);
+                Open();
 
-                Init();
-            }
-
-            public MainWindow(UI ui)
-            {
-                UI = ui;
-                Vector2 pos = (ui.TextureSize - ui.SurfaceSize) * 0.5f;
-                Vector2 size = new Vector2(ui.SurfaceSize.X, ui.SurfaceSize.Y);
-
-                _bounds = new RectangleF(pos, size);
-
-                Init();
-            }
-
-            private void Init()
-            {
                 BuildSprites();
-
-                Vector2 laserButtonSize = new Vector2(400, 100);
-                Vector2 laserButtonPos = Pos + new Vector2(50, Size.Y * 0.5f - laserButtonSize.Y * 0.5f);
-                
-                Button laserButton = new Button("LASER CTRL", laserButtonPos, laserButtonSize, () => "LASER CTRL", () =>
-                {
-                    UI.OpenWindow(new LaserWindow(UI));
-                    return true;
-                },
-                Display);
-
-                Vector2 radarButtonSize = new Vector2(400, 100);
-                Vector2 radarButtonPos = Pos + new Vector2(Bounds.Right - radarButtonSize.X - 50, Size.Y * 0.5f - radarButtonSize.Y * 0.5f);
-                
-                Button radarButton = new Button("RADAR", radarButtonPos, radarButtonSize, () => "RADAR", () => 
-                { 
-                    UI.OpenWindow(new RadarWindow(UI));
-                    return true; 
-                },
-                Display);
-
-                _buttons.Add(laserButton);
-                _buttons.Add(radarButton);
             }
 
-            private void BuildSprites()
+            public void BuildSprites()
             {
-                _sprites.Clear();
-                MySprite fillSprite = new MySprite()
+                float minDim = Math.Min(_bounds.Width, _bounds.Height);
+
+                _fillSprite = new MySprite()
+                {
+                    Type = SpriteType.TEXTURE,
+                    Data = "SquareSimple",
+                    Position = Center,
+                    Size = Size - 0.5f * 0.1f * minDim,
+                    RotationOrScale = 0f,
+                    Color = _fillColor,
+                    Alignment = TextAlignment.CENTER,
+                };
+                _borderSprite = new MySprite()
                 {
                     Type = SpriteType.TEXTURE,
                     Data = "SquareSimple",
                     Position = Center,
                     Size = Size,
-                    Color = UIConfig.WindowFillColor,
-                    Alignment = TextAlignment.CENTER
+                    RotationOrScale = 0f,
+                    Color = _borderColor,
+                    Alignment = TextAlignment.CENTER,
                 };
-                _sprites.Add(fillSprite);
             }
 
             public void Open()
@@ -112,7 +87,7 @@ namespace IngameScript
                 StartNavigation();
             }
 
-            public void Close()
+            private void Close()
             {
                 RequestClose?.Invoke(this);
                 OnClose();
@@ -130,7 +105,7 @@ namespace IngameScript
                 ResumeNavigation();
             }
 
-            public void StopNavigation()
+            private void StopNavigation()
             {
                 RequestStopNavigation?.Invoke(this);
                 OnStopNavigation();
@@ -141,20 +116,36 @@ namespace IngameScript
                 IsNavigating = false;
                 PauseNavigation();
             }
-
-            public void ResumeNavigation()
-            {
-                IsPaused = false;
-                if (_buttons.Count > 0)
-                {
-                    HighlightButton(_buttons[0]);
-                }
-            }
-
+            
             public void PauseNavigation()
             {
                 IsPaused = true;
                 UnhighlightButton(_highlightedButton);
+                _fillColor = UIConfig.MenuFillColor;
+                _borderColor = UIConfig.MenuBorderColor;
+                BuildSprites();
+            }
+
+            public void ResumeNavigation()
+            {
+                IsPaused = false;
+                _fillColor = UIConfig.MenuFillColorActive;
+                _borderColor = UIConfig.MenuBorderColorActive;
+                if (_buttons.Count > 0)
+                {
+                    HighlightButton(_buttons[0]);
+                }
+                BuildSprites();
+            }
+
+            public void AddButton(IButton button)
+            {
+                _buttons.Add(button);
+            }
+
+            public void AddSprite(MySprite sprite)
+            {
+                _sprites.Add(sprite);
             }
 
             private void HighlightButton(IButton button)
@@ -167,15 +158,11 @@ namespace IngameScript
             private void UnhighlightButton(IButton button)
             {
                 button?.Unhighlight();
-                if (button == _highlightedButton)
+
+                if (_highlightedButton == button)
                 {
                     _highlightedButton = null;
                 }
-            }
-
-            private void ActivateButton(IButton button, DateTime time)
-            {
-                button?.Press(time);
             }
 
             public void Update(DateTime time)
@@ -186,9 +173,20 @@ namespace IngameScript
                 }
             }
 
+            private void ActivateButton(IButton button, DateTime time)
+            {
+                button?.Press(time);
+            }
+
             public void Draw(MySpriteDrawFrame frame)
             {
-                frame.AddRange(_sprites);
+                frame.Add(_borderSprite);
+                frame.Add(_fillSprite);
+
+                foreach (var sprite in _sprites)
+                {
+                    frame.Add(sprite);
+                }
 
                 foreach (var button in _buttons)
                 {
@@ -196,7 +194,6 @@ namespace IngameScript
                     {
                         continue;
                     }
-
                     button.Draw(frame);
                 }
                 _highlightedButton?.Draw(frame);
@@ -204,11 +201,14 @@ namespace IngameScript
 
             public void Navigate(UserInput input, DateTime time)
             {
+                if (!IsNavigating || IsPaused)
+                {
+                    return;
+                }
                 if (input.CRelease)
                 {
-
+                    Close();
                 }
-
                 if (_buttons.Count == 0)
                 {
                     return;

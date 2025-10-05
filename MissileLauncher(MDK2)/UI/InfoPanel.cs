@@ -22,28 +22,16 @@ namespace IngameScript
 {
     partial class Program
     {
-        public class TextPanel : IPanel
+        public class InfoPanel : IPanel, IUpdatable
         {
             public RectangleF Bounds => _bounds;
             public Vector2 Pos => _bounds.Position;
             public Vector2 Size => _bounds.Size;
             public Vector2 Center => _bounds.Center;
 
-            public string Text
-            {
-                get
-                {
-                    return _text;
-                }
-                set
-                {
-                    _text = value;
-                    _textSprite = SpriteHelper.CreateText(Bounds, Text, Color.White, _surface, TextAlignment.LEFT, false, 0.1f);
-                }
-            }
+            public Func<string> TextGetter { get; set; }
 
             private RectangleF _bounds;
-            private string _text;
 
             private IMyTextSurface _surface;
 
@@ -51,11 +39,10 @@ namespace IngameScript
             private MySprite _borderSprite;
             private MySprite _textSprite;
 
-            public TextPanel(Vector2 pos, Vector2 size, string text, IMyTextSurface surface)
+            public InfoPanel(Vector2 pos, Vector2 size, Func<string> textGetter, IMyTextSurface surface)
             {
                 _bounds = new RectangleF(pos, size);
-
-                _text = text;
+                TextGetter = textGetter;
                 _surface = surface;
 
                 BuildSprites();
@@ -70,7 +57,7 @@ namespace IngameScript
                     Type = SpriteType.TEXTURE,
                     Data = "SquareSimple",
                     Position = Center,
-                    Size = Size - 20f,
+                    Size = Size - 0.5f * 0.1f * minDim,
                     RotationOrScale = 0f,
                     Color = UIConfig.PanelFillColor,
                     Alignment = TextAlignment.CENTER,
@@ -85,7 +72,12 @@ namespace IngameScript
                     Color = UIConfig.PanelBorderColor,
                     Alignment = TextAlignment.CENTER,
                 };
-                _textSprite = SpriteHelper.CreateText(Bounds, Text, Color.White, _surface, TextAlignment.LEFT, false, 0.2f);
+                _textSprite = SpriteHelper.CreateText(Bounds, TextGetter(), Color.White, _surface, TextAlignment.LEFT, false, 0.1f);
+            }
+
+            public void Update(DateTime time)
+            {
+                _textSprite = SpriteHelper.CreateText(Bounds, TextGetter(), Color.White, _surface, TextAlignment.LEFT, false, 0.1f);
             }
 
             public void Draw(MySpriteDrawFrame frame)

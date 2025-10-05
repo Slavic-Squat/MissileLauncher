@@ -104,7 +104,7 @@ namespace IngameScript
                     Type = SpriteType.TEXTURE,
                     Data = "SquareSimple",
                     Position = Center,
-                    Size = Size + 2f * 0.1f * minDim,
+                    Size = Size + 1f * 0.1f * minDim,
                     Color = UIConfig.ButtonHighlightColor,
                     Alignment = TextAlignment.CENTER
                 };
