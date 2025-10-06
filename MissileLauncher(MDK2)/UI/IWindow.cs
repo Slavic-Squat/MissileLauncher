@@ -22,7 +22,7 @@ namespace IngameScript
 {
     partial class Program
     {
-        public interface IWindow : INavigable, IUpdatable, IUIElement
+        public interface IWindow : INavigable, IUpdatable
         {
             UI UI { get; }
             bool IsOpen { get; }

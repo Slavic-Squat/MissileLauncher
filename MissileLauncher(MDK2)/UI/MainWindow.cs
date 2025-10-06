@@ -38,27 +38,30 @@ namespace IngameScript
             public IMyTextSurface Display => UI.Display;
 
             private RectangleF _bounds;
+            private float _borderThickness;
             private List<MySprite> _sprites = new List<MySprite>();
             private List<IButton> _buttons = new List<IButton>();
             private IButton _highlightedButton;
 
 
-            public MainWindow(UI ui, Vector2 pos, Vector2 size)
+            public MainWindow(UI ui, Vector2 pos, Vector2 size, float borderThickness)
             {
                 UI = ui;
 
                 _bounds = new RectangleF(pos, size);
+                _borderThickness = borderThickness;
 
                 Init();
             }
 
-            public MainWindow(UI ui)
+            public MainWindow(UI ui, float borderThickness)
             {
                 UI = ui;
                 Vector2 pos = (ui.TextureSize - ui.SurfaceSize) * 0.5f;
                 Vector2 size = new Vector2(ui.SurfaceSize.X, ui.SurfaceSize.Y);
 
                 _bounds = new RectangleF(pos, size);
+                _borderThickness = borderThickness;
 
                 Init();
             }
@@ -70,9 +73,9 @@ namespace IngameScript
                 Vector2 laserButtonSize = new Vector2(400, 100);
                 Vector2 laserButtonPos = Pos + new Vector2(50, Size.Y * 0.5f - laserButtonSize.Y * 0.5f);
                 
-                Button laserButton = new Button("LASER CTRL", laserButtonPos, laserButtonSize, () => "LASER CTRL", () =>
+                Button laserButton = new Button("LASER CTRL", laserButtonPos, laserButtonSize, 15f, 10f, 5f, () => "LASER CTRL", () =>
                 {
-                    UI.OpenWindow(new LaserWindow(UI));
+                    UI.OpenWindow(new LaserWindow(UI, 10f));
                     return true;
                 },
                 Display);
@@ -80,9 +83,9 @@ namespace IngameScript
                 Vector2 radarButtonSize = new Vector2(400, 100);
                 Vector2 radarButtonPos = Pos + new Vector2(Bounds.Right - radarButtonSize.X - 50, Size.Y * 0.5f - radarButtonSize.Y * 0.5f);
                 
-                Button radarButton = new Button("RADAR", radarButtonPos, radarButtonSize, () => "RADAR", () => 
+                Button radarButton = new Button("RADAR", radarButtonPos, radarButtonSize, 15f, 10f, 5f, () => "RADAR", () => 
                 { 
-                    UI.OpenWindow(new RadarWindow(UI));
+                    UI.OpenWindow(new RadarWindow(UI, 10f));
                     return true; 
                 },
                 Display);

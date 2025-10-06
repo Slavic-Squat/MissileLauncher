@@ -40,21 +40,23 @@ namespace IngameScript
             private List<TargetingLaser> Lasers => UI.UIWireManager.TargetingLasers;
 
             private RectangleF _bounds;
+            private float _borderThickness;
             private List<MySprite> _sprites = new List<MySprite>();
             private List<IButton> _buttons = new List<IButton>();
             private IButton _highlightedButton;
 
 
-            public LaserWindow(UI ui, Vector2 pos, Vector2 size)
+            public LaserWindow(UI ui, Vector2 pos, Vector2 size, float borderThickness)
             {
                 UI = ui;
 
                 _bounds = new RectangleF(pos, size);
+                _borderThickness = borderThickness;
 
                 Init();
             }
 
-            public LaserWindow(UI ui)
+            public LaserWindow(UI ui, float borderThickness)
             {
                 UI = ui;
 
@@ -62,6 +64,7 @@ namespace IngameScript
                 Vector2 size = new Vector2(ui.SurfaceSize.X, ui.SurfaceSize.Y);
 
                 _bounds = new RectangleF(pos, size);
+                _borderThickness = borderThickness;
 
                 Init();
             }
@@ -76,7 +79,7 @@ namespace IngameScript
                     Vector2 size = new Vector2(240, 80);
                     Vector2 pos = Pos + new Vector2(i % 2 * (size.X + 50) + 50, i / 2 * (size.Y + 50) + 100);
                     
-                    Button button = new Button($"Laser [{i}]", pos, size, () => $"Laser [{i}]", () =>
+                    Button button = new Button($"Laser [{i}]", pos, size, 12f, 8f, 4f, () => $"Laser [{i}]", () =>
                     {
                         UI.Controller.TakeControl(laser);
                         return true;
@@ -105,8 +108,6 @@ namespace IngameScript
                 Vector2 headerPos = Pos + new Vector2(Center.X - headerSize.X * 0.5f, 0);
                 RectangleF headerBounds = new RectangleF(headerPos, headerSize);
 
-                float minDim = Math.Min(headerBounds.Width, headerBounds.Height);
-
                 MySprite headerBorderSprite = new MySprite()
                 {
                     Type = SpriteType.TEXTURE,
@@ -123,13 +124,13 @@ namespace IngameScript
                     Type = SpriteType.TEXTURE,
                     Data = "SquareSimple",
                     Position = headerBounds.Center,
-                    Size = headerBounds.Size - 2 * 0.1f * minDim,
+                    Size = headerBounds.Size - 10f,
                     Color = new Color(32, 32, 32, 255),
                     Alignment = TextAlignment.CENTER
                 };
                 _sprites.Add(headerFillSprite);
 
-                MySprite headerTextSprite = SpriteHelper.CreateText(headerBounds, "Select Laser To Control:", Color.White, Display, TextAlignment.CENTER, true, 0.2f);
+                MySprite headerTextSprite = SpriteHelper.CreateText(headerBounds, "Select Laser To Control:", Color.White, Display, TextAlignment.CENTER, true, 10f);
                 _sprites.Add(headerTextSprite);
             }
 

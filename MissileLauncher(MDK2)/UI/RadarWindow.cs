@@ -50,6 +50,7 @@ namespace IngameScript
             private TargetingSpriteBuilder _targetingSpriteBuilder;            
 
             private RectangleF _bounds;
+            private float _borderThickness;
 
             private List<MySprite> _sprites = new List<MySprite>();
 
@@ -58,30 +59,29 @@ namespace IngameScript
             private List<IUpdatable> _updateables = new List<IUpdatable>();
             private List<IUIElement> _uiElements = new List<IUIElement>();
             private List<INavigable> _navigables = new List<INavigable>();
-            private INavigable _navigatedElement;
-
-            private InfoPanel _targetPanel;
-            private ControlPanel _optionsPanel;            
+            private INavigable _navigatedElement;        
 
             private long _selectedEntityID;
 
 
-            public RadarWindow(UI ui, Vector2 pos, Vector2 size)
+            public RadarWindow(UI ui, Vector2 pos, Vector2 size, float borderThickness)
             {
                 UI = ui;
 
                 _bounds = new RectangleF(pos, size);
+                _borderThickness = borderThickness;
 
                 Init();
             }
 
-            public RadarWindow(UI ui)
+            public RadarWindow(UI ui, float borderThickness)
             {
                 UI = ui;
                 Vector2 pos = (ui.TextureSize - ui.SurfaceSize) * 0.5f;
                 Vector2 size = new Vector2(ui.SurfaceSize.X, ui.SurfaceSize.Y);
 
                 _bounds = new RectangleF(pos, size);
+                _borderThickness = borderThickness;
 
                 Init();
             }
@@ -107,13 +107,16 @@ namespace IngameScript
                         return "No Target Selected";
                     }
                 };
-                _targetPanel = new InfoPanel(targetPanelPos, targetPanelSize, targetInfoGetter, Display);
+                InfoPanel targetPanel = new InfoPanel(targetPanelPos, targetPanelSize, 5f, targetInfoGetter, Display);
+                _uiElements.Add(targetPanel);
+                _updateables.Add(targetPanel);
 
-                Vector2 optionsPanelSize = new Vector2(150, 300);
-                Vector2 optionsPanelPos = Pos + new Vector2(0, Size.Y * 0.5f - optionsPanelSize.Y * 0.5f);
+                Vector2 optionsPanelPos = Pos + new Vector2(0, Size.Y * 0.5f);
 
-                _optionsPanel = UIFactory.CreateTargetingOptionsPanel(this, optionsPanelPos, optionsPanelSize);
-                _highlightables.Add(_optionsPanel);
+                ControlPanel optionsPanel = UIFactory.CreateTargetingOptionsPanel(optionsPanelPos, this, true);
+                _highlightables.Add(optionsPanel);
+                _uiElements.Add(optionsPanel);
+                _updateables.Add(optionsPanel);
             }
 
             private void BuildSprites()
@@ -184,6 +187,10 @@ namespace IngameScript
 
             private void HighlightElement(IHighlightable highlightable)
             {
+                if (highlightable == null || ReferenceEquals(highlightable, _highlightedElement))
+                {
+                    return;
+                }
                 UnhighlightElement(_highlightedElement);
                 highlightable.Highlight();
                 _highlightedElement = highlightable;
@@ -191,6 +198,10 @@ namespace IngameScript
 
             private void UnhighlightElement(IHighlightable hightlightable)
             {
+                if (hightlightable == null)
+                {
+                    return;
+                }
                 hightlightable?.Unhighlight();
                 
                 if (_highlightedElement == hightlightable)
@@ -213,6 +224,10 @@ namespace IngameScript
 
             public void NavigateElement(INavigable navigable)
             {
+                if (navigable == null || ReferenceEquals(navigable, _navigatedElement))
+                {
+                    return;
+                }
                 StopNavigatingElement(_navigatedElement);
                 _navigables.Add(navigable);
                 _navigatedElement = navigable;
@@ -222,6 +237,10 @@ namespace IngameScript
 
             public void StopNavigatingElement(INavigable navigable)
             {
+                if (navigable == null)
+                {
+                    return;
+                }
                 if (ReferenceEquals(navigable, _navigatedElement))
                 {
                     _navigatedElement = null;
@@ -229,6 +248,8 @@ namespace IngameScript
                 _navigables.Remove(navigable);
                 navigable.OnStopNavigation();
                 navigable.RequestStopNavigation -= StopNavigatingElement;
+
+                NavigateElement(_navigables.LastOrDefault());
             }
 
             public void OpenMenu(IMenu menu)
@@ -257,9 +278,8 @@ namespace IngameScript
                 if (_allEntities.Keys.Contains(entityID))
                 {
                     EntityInfoExt entity = _allEntities[entityID];
-                    Vector2 menuSize = new Vector2(500, 100);
-                    Vector2 menuPos = Pos + new Vector2(Size.X * 0.5f - menuSize.X * 0.5f, Size.Y - menuSize.Y);
-                    Menu menu = UIFactory.CreateEntityMenu(this, menuPos, menuSize, entity, UI.UIWireManager);
+                    Vector2 menuPos = Pos + new Vector2(Size.X * 0.5f, Size.Y - 100f);
+                    Menu menu = UIFactory.CreateEntityMenu(menuPos, entity, this, UI.UIWireManager, false, true);
                     OpenMenu(menu);
                 }
             }
@@ -281,7 +301,10 @@ namespace IngameScript
                 _targetingSpriteBuilder.Zoom = GetValue(ScopeScale);
                 _targetingSprites = _targetingSpriteBuilder.BuildSprites(_allEntities, _selectedEntityID, out _entitySprites);
 
-                _optionsPanel.Update(time);
+                foreach (var updatable in _updateables)
+                {
+                    updatable.Update(time);
+                }
             }
 
             public void Draw(MySpriteDrawFrame frame)
@@ -293,20 +316,52 @@ namespace IngameScript
                     sprite.Draw(frame);
                 }
 
-                _targetPanel.Draw(frame);
-                _optionsPanel.Draw(frame);
+                foreach (var element in _uiElements)
+                {
+                    element.Draw(frame);
+
+                    if (ReferenceEquals(element, _navigatedElement) || ReferenceEquals(element, _highlightedElement))
+                    {
+                        continue;
+                    }
+                }
+
+                if (_navigatedElement != null)
+                {
+                    _navigatedElement.Draw(frame);
+                }
+                else
+                {
+                    _highlightedElement?.Draw(frame);
+                }
+            }
+
+            public void CycleNavMode()
+            {
+                switch (NavMode)
+                {
+                    case NavMode.UI:
+                        PauseNavigation();
+                        break;
+                    case NavMode.Targeting:
+                        ResumeNavigation();
+                        break;
+                }
+
+                NavMode = NextNavMode(NavMode);
             }
 
             public void Navigate(UserInput input, DateTime time)
             {
-                if (input.CRelease)
+                if (_navigatedElement != null)
                 {
-                    Close();
+                    _navigatedElement.Navigate(input, time);
+                    return;
                 }
 
                 if (input.QRelease)
                 {
-                    NavMode = NextNavMode(NavMode);
+                    CycleNavMode();
                 }
 
                 switch (NavMode)
@@ -322,6 +377,11 @@ namespace IngameScript
 
             private void NavigateUI(UserInput input, DateTime time)
             {
+                if (input.CRelease)
+                {
+                    Close();
+                }
+
                 if (_highlightables.Count == 0)
                 {
                     return;
@@ -355,6 +415,11 @@ namespace IngameScript
 
             private void NavigateTargeting(UserInput input, DateTime time)
             {
+                if (input.CRelease)
+                {
+                    Close();
+                }
+
                 Dictionary<long, MyEntitySprite> filtered = _entitySprites.Where(kvp => Matches(kvp.Value.EntityInfo, NavTypeFilter, NavRelationFilter, NavSourceFilter)).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
 
                 if (filtered.Count() == 0)
@@ -367,7 +432,7 @@ namespace IngameScript
                     UnselectEntity();
                 }
 
-                else if (input.WRelease)
+                if (input.WRelease)
                 {
                     long nextEntityID = UIUtilities.Navigate(filtered, _selectedEntityID, NavigationDirection.Up);
                     SelectEntity(nextEntityID);

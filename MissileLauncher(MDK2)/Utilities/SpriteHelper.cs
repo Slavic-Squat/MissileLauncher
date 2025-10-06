@@ -49,9 +49,8 @@ namespace IngameScript
             {
                 var sb = new StringBuilder(text);
 
-                float minDim = Math.Min(bounds.Width, bounds.Height);
-                bounds.Size -= 2 * padding * minDim;
-                bounds.Position += padding * minDim;
+                bounds.Size -= 2 * padding;
+                bounds.Position += padding;
                 Vector2 pos = bounds.Position;
 
                 Vector2 textSize = surface.MeasureStringInPixels(sb, "White", 1f);

@@ -36,6 +36,8 @@ namespace IngameScript
 
 
             private RectangleF _bounds;
+            private float _borderThickness;
+            private float _highlightThickness;
             private List<IButton> _buttons = new List<IButton>();
             private IButton _highlightedButton;
 
@@ -48,23 +50,23 @@ namespace IngameScript
 
             private List<MySprite> _sprites = new List<MySprite>();
 
-            public ControlPanel(Vector2 pos, Vector2 size)
+            public ControlPanel(Vector2 pos, Vector2 size, float borderThickness, float highlightThickness)
             {
                 _bounds = new RectangleF(pos, size);
+                _borderThickness = borderThickness;
+                _highlightThickness = highlightThickness;
 
                 BuildSprites();
             }
 
             public void BuildSprites()
             {
-                float minDim = Math.Min(_bounds.Width, _bounds.Height);
-
                 _fillSprite = new MySprite()
                 {
                     Type = SpriteType.TEXTURE,
                     Data = "SquareSimple",
                     Position = Center,
-                    Size = Size - 0.5f * 0.1f * minDim,
+                    Size = Size - 2 * _borderThickness,
                     RotationOrScale = 0f,
                     Color = _fillColor,
                     Alignment = TextAlignment.CENTER,
@@ -84,7 +86,7 @@ namespace IngameScript
                     Type = SpriteType.TEXTURE,
                     Data = "SquareSimple",
                     Position = Center,
-                    Size = Size + 0.25f * 0.1f * minDim,
+                    Size = Size + 2 * _highlightThickness,
                     Color = _highlightColor,
                     Alignment = TextAlignment.CENTER
                 };
@@ -142,11 +144,19 @@ namespace IngameScript
                 IsPaused = false;
                 _fillColor = UIConfig.PanelFillColorActive;
                 _borderColor = UIConfig.PanelBorderColorActive;
+                if (_buttons.Count > 0 && _highlightedButton == null)
+                {
+                    HighlightButton(_buttons[0]);
+                }
                 BuildSprites();
             }
 
             private void HighlightButton(IButton button)
             {
+                if (button == null || ReferenceEquals(button, _highlightedButton))
+                {
+                    return;
+                }
                 UnhighlightButton(_highlightedButton);
                 button.Highlight();
                 _highlightedButton = button;
@@ -156,7 +166,7 @@ namespace IngameScript
             {
                 button?.Unhighlight();
 
-                if (_highlightedButton == button)
+                if (ReferenceEquals(button, _highlightedButton))
                 {
                     _highlightedButton = null;
                 }
@@ -177,7 +187,7 @@ namespace IngameScript
 
             public void Draw(MySpriteDrawFrame frame)
             {
-                if (IsHighlighted && (!IsPaused && IsNavigating))
+                if (IsHighlighted && (IsPaused || !IsNavigating))
                 {
                     frame.Add(_highlightSprite);
                 }

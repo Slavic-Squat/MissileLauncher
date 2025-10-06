@@ -24,153 +24,128 @@ namespace IngameScript
     {
         public static class UIFactory
         {
-            public static ControlPanel CreateTargetingOptionsPanel(RadarWindow window, Vector2 pos, Vector2 size)
+            public static ControlPanel CreateTargetingOptionsPanel(Vector2 pos, RadarWindow window, bool vertCent = false, bool horCent = false)
             {
                 IMyTextSurface surface = window.Display;
 
-                RectangleF panelBounds = new RectangleF(pos, size);
-                ControlPanel panel = new ControlPanel(panelBounds.Position, panelBounds.Size);
+                int numButtons = 4;
+                float padding = 15f;
+                float spacing = 10f;
 
-                float padding = 0.1f;
-                float minDim = Math.Min(panelBounds.Width, panelBounds.Height);
+                Vector2 labelSize = new Vector2(125f, 40f);
+                Vector2 buttonSize = new Vector2(125f, 35f);
 
-                RectangleF elementSpace = new RectangleF(pos + minDim * padding, size - minDim * padding * 2f);
+                float totalWidth = labelSize.X + 2 * padding;
+                float totalHeight = labelSize.Y + numButtons * buttonSize.Y + (numButtons - 1) * spacing + 2 * padding;
+                Vector2 panelSize = new Vector2(totalWidth, totalHeight);
+                Vector2 panelPos = pos;
+                if (horCent) panelPos.X -= panelSize.X / 2f;
+                if (vertCent) panelPos.Y -= panelSize.Y / 2f;
 
-                Vector2 elementPos = elementSpace.Position;
-                Vector2 elementSize = new Vector2(elementSpace.Size.X, elementSpace.Size.Y * 0.2f);
+                ControlPanel panel = new ControlPanel(panelPos, panelSize, 5f, 2.5f);
 
-                RectangleF labelBounds = new RectangleF(elementPos, elementSize);
+                Vector2 labelPos = panel.Pos + new Vector2(panel.Size.X / 2f - labelSize.X / 2f, padding);
+                RectangleF labelBounds = new RectangleF(labelPos, labelSize);
                 MySprite labelSprite = SpriteHelper.CreateText(labelBounds, "OPTIONS\n------------------", Color.White, surface, TextAlignment.CENTER, true, 0);
                 panel.AddSprite(labelSprite);
 
-                elementPos.Y += elementSize.Y;
-                float remainingHeight = elementSpace.Bottom - elementPos.Y;
-
-                int maxButtons = 4;
-                float spacingRatio = 0.25f;
-
-                float buttonHeight = UIUtilities.CalculateElementSize(remainingHeight, maxButtons, spacingRatio);
-                float spacing = buttonHeight * spacingRatio;
-
-                elementSize.Y = buttonHeight;
+                Vector2 buttonPos = panel.Pos + new Vector2(panel.Size.X / 2f - buttonSize.X / 2f, padding + labelSize.Y);
 
                 Func<string> getText = () => "SCALE: " + GetName(window.ScopeScale);
                 Func<bool> action = () => { window.ScopeScale = NextScopeScale(window.ScopeScale); return true; };
 
-                Button button = new Button("ScopeScale", elementPos, elementSize, getText, action, window.Display);
+                Button button = new Button("ScopeScale", buttonPos, buttonSize, 8f, 3f, 1f, getText, action, window.Display);
                 panel.AddButton(button);
 
-                elementPos.Y += buttonHeight + spacing;
+                buttonPos.Y += buttonSize.Y + spacing;
 
                 getText = () => "TYPE: " + GetName(window.NavTypeFilter);
                 action = () => { window.NavTypeFilter = NextEntityTypeFilter(window.NavTypeFilter); return true; };
 
-                button = new Button("TypeFilter", elementPos, elementSize, getText, action, window.Display);
+                button = new Button("TypeFilter", buttonPos, buttonSize, 8f, 3f, 1f, getText, action, window.Display);
                 panel.AddButton(button);
 
-                elementPos.Y += buttonHeight + spacing;
+                buttonPos.Y += buttonSize.Y + spacing;
 
                 getText = () => "REL: " + GetName(window.NavRelationFilter);
                 action = () => { window.NavRelationFilter = NextEntityRelationFilter(window.NavRelationFilter); return true; };
 
-                button = new Button("RelationFilter", elementPos, elementSize, getText, action, window.Display);
+                button = new Button("RelationFilter", buttonPos, buttonSize, 8f, 3f, 1f, getText, action, window.Display);
                 panel.AddButton(button);
 
-                elementPos.Y += buttonHeight + spacing;
+                buttonPos.Y += buttonSize.Y + spacing;
 
                 getText = () => "SRC: " + GetName(window.NavSourceFilter);
                 action = () => { window.NavSourceFilter = NextEntitySourceFilter(window.NavSourceFilter); return true; };
 
-                button = new Button("SourceFilter", elementPos, elementSize, getText, action, window.Display);
+                button = new Button("SourceFilter", buttonPos, buttonSize, 8f, 3f, 1f, getText, action, window.Display);
                 panel.AddButton(button);
 
                 return panel;
             }
 
-            public static Menu CreateEntityMenu(RadarWindow window, Vector2 pos, Vector2 size, EntityInfoExt entity, UIWireManager wireManager)
+            public static Menu CreateEntityMenu(Vector2 pos, EntityInfoExt entity, RadarWindow window, UIWireManager wireManager, bool vertCent = false, bool horCent = false)
             {
                 IMyTextSurface surface = window.Display;
 
-                RectangleF menuBounds = new RectangleF(pos, size);
-                float padding = 0.2f;
-                float minDim = Math.Min(menuBounds.Width, menuBounds.Height);
+                Vector2 buttonSize = new Vector2(125f, 35f);
+                float padding = 15f;
+                float spacing = 10f;
 
-                RectangleF elementSpace = new RectangleF(pos + minDim * padding, size - minDim * padding * 2f);
-
-                int maxButtons = 4;
-                float spacingRatio = 0.25f;
-                float buttonWidth = UIUtilities.CalculateElementSize(elementSpace.Width, maxButtons, spacingRatio);
-                float buttonHeight = elementSpace.Height;
-                float spacing = buttonWidth * spacingRatio;
-
-                if (true)
+                if (entity.Type == EntityType.Missile && entity.Relation == EntityRelation.Me)
                 {
-                    int numberOfButtons = 1;
-                    Vector2 usedSpace = new Vector2(numberOfButtons * buttonWidth + (numberOfButtons - 1) * spacing, buttonHeight);
-                    Vector2 freeSpace = elementSpace.Size - usedSpace;
-                    elementSpace.Position += 0.5f * freeSpace;
-                    elementSpace.Size = usedSpace;
-                    menuBounds.Position += 0.5f * freeSpace;
-                    menuBounds.Size -= freeSpace;
+                    int numButtons = 1;
+                    float totalWidth = numButtons * buttonSize.X + (numButtons - 1) * spacing + 2 * padding;
+                    float totalHeight = buttonSize.Y + 2 * padding;
 
-                    Menu menu = new Menu(menuBounds.Position, menuBounds.Size);
+                    Vector2 menuSize = new Vector2(totalWidth, totalHeight);
+                    Vector2 menuPos = pos;
+                    if (horCent) menuPos.X -= menuSize.X / 2f;
+                    if (vertCent) menuPos.Y -= menuSize.Y / 2f;
 
-                    Vector2 elementSize = new Vector2(buttonWidth, buttonHeight);
-                    Vector2 elementPos = elementSpace.Position;
+                    Menu menu = new Menu(menuPos, menuSize, 5f);
 
+                    Vector2 buttonPos = menu.Pos + padding;
                     Func<string> getText = () => "ABORT";
                     Func<bool> action = () =>
                     {
                         return true;
                     };
-                    Button button = new Button("Abort", elementPos, elementSize, getText, action, window.Display);
+                    Button button = new Button("Abort", buttonPos, buttonSize, 8f, 3f, 1f, getText, action, window.Display);
                     menu.AddButton(button);
 
                     return menu;
                 }
-                else
+                else if (entity.Source == EntitySource.Remote)
                 {
-                    int numberOfButtons = 4;
-                    Vector2 usedSpace = new Vector2(numberOfButtons * buttonWidth + (numberOfButtons - 1) * spacing, buttonHeight);
-                    Vector2 freeSpace = elementSpace.Size - usedSpace;
-                    elementSpace.Position += 0.5f * freeSpace;
-                    elementSpace.Size = usedSpace;
-                    menuBounds.Position += 0.5f * freeSpace;
-                    menuBounds.Size -= freeSpace;
+                    int numButtons = 3;
+                    float totalWidth = numButtons * buttonSize.X + (numButtons - 1) * spacing + 2 * padding;
+                    float totalHeight = buttonSize.Y + 2 * padding;
+                    Vector2 menuSize = new Vector2(totalWidth, totalHeight);
+                    Vector2 menuPos = pos;
+                    if (horCent) menuPos.X -= menuSize.X / 2f;
+                    if (vertCent) menuPos.Y -= menuSize.Y / 2f;
 
-                    Menu menu = new Menu(menuBounds.Position, menuBounds.Size);
-
-                    Vector2 elementSize = new Vector2(buttonWidth, elementSpace.Height);
-                    Vector2 elementPos = elementSpace.Position + elementSpace.Size - elementSize;
-
-                    Func<string> getText;
-                    Func<bool> action;
-                    Button button;
-
-                    if (entity.Source == EntitySource.Remote)
+                    Menu menu = new Menu(menuPos, menuSize, 5f);
+                    Vector2 buttonPos = menu.Pos + padding;
+                    Func<string> getText = () => "VIEW";
+                    Func<bool> action = () =>
                     {
-                        getText = () => "FORGET";
-                        action = () =>
-                        {
-                            return true;
-                        };
+                        return true;
+                    };
+                    Button button = new Button("View", buttonPos, buttonSize, 8f, 3f, 1f, getText, action, window.Display);
+                    menu.AddButton(button);
 
-                        button = new Button("Forget", elementPos, elementSize, getText, action, window.Display);
-                        menu.AddButton(button);
-
-                        elementPos.X -= buttonWidth + spacing;
-                    }
-
-                    getText = () => "FORGET";
+                    buttonPos.X += buttonSize.X + spacing;
+                    getText = () => "FIRE MISL";
                     action = () =>
                     {
                         return true;
                     };
-
-                    button = new Button("Forget", elementPos, elementSize, getText, action, window.Display);
+                    button = new Button("FireMissile", buttonPos, buttonSize, 8f, 3f, 1f, getText, action, window.Display);
                     menu.AddButton(button);
 
-                    elementPos.X -= buttonWidth + spacing;
+                    buttonPos.X += buttonSize.X + spacing;
 
                     getText = () => "SET REL";
                     action = () =>
@@ -178,31 +153,112 @@ namespace IngameScript
                         return true;
                     };
 
-                    button = new Button("SetRelation", elementPos, elementSize, getText, action, window.Display);
+                    button = new Button("SetRelation", buttonPos, buttonSize, 8f, 3f, 1f, getText, action, window.Display);
                     menu.AddButton(button);
 
-                    elementPos.X -= buttonWidth + spacing;
+                    return menu;
 
+                }
+                else
+                {
+                    int numButtons = 4;
+                    float totalWidth = numButtons * buttonSize.X + (numButtons - 1) * spacing + 2 * padding;
+                    float totalHeight = buttonSize.Y + 2 * padding;
+                    Vector2 menuSize = new Vector2(totalWidth, totalHeight);
+                    Vector2 menuPos = pos;
+                    if (horCent) menuPos.X -= menuSize.X / 2f;
+                    if (vertCent) menuPos.Y -= menuSize.Y / 2f;
+
+                    Menu menu = new Menu(menuPos, menuSize, 5f);
+                    Vector2 buttonPos = menu.Pos + padding;
+                    Func<string> getText = () => "VIEW";
+                    Func<bool> action = () =>
+                    {
+                        return true;
+                    };
+                    Button button = new Button("View", buttonPos, buttonSize, 8f, 3f, 1f, getText, action, window.Display);
+                    menu.AddButton(button);
+
+                    buttonPos.X += buttonSize.X + spacing;
                     getText = () => "FIRE MISSILE";
                     action = () =>
                     {
                         return true;
                     };
-                    button = new Button("FireMissile", elementPos, elementSize, getText, action, window.Display);
+                    button = new Button("FireMissile", buttonPos, buttonSize, 8f, 3f, 1f, getText, action, window.Display);
                     menu.AddButton(button);
 
-                    elementPos.X -= buttonWidth + spacing;
-                    getText = () => "VIEW";
+                    buttonPos.X += buttonSize.X + spacing;
+
+                    getText = () => "SET REL";
                     action = () =>
                     {
                         return true;
                     };
 
-                    button = new Button("View", elementPos, elementSize, getText, action, window.Display);
+                    button = new Button("SetRelation", buttonPos, buttonSize, 8f, 3f, 1f, getText, action, window.Display);
+                    menu.AddButton(button);
+
+                    buttonPos.X += buttonSize.X + spacing;
+
+                    getText = () => "FORGET";
+                    action = () =>
+                    {
+                        return true;
+                    };
+
+                    button = new Button("Forget", buttonPos, buttonSize, 8f, 3f, 1f, getText, action, window.Display);
                     menu.AddButton(button);
 
                     return menu;
                 }
+            }
+
+            public static Menu CreateMissileArmMenu(Vector2 pos, RadarWindow window, UIWireManager wireManger, bool vertCent = false, bool horCent = false)
+            {
+                int numBays = 6;
+                int numColumns = 5;
+                int numRows = (int)Math.Ceiling((float)numBays / (float)numColumns);
+
+                float padding = 20f;
+                float spacing = 10f;
+
+                Vector2 lableSize = new Vector2(150f, 30f);
+                Vector2 panelSize = new Vector2(150f, 75f);
+                Vector2 buttonSize = new Vector2(100f, 25f);
+
+                float totalWidth = lableSize.X + panelSize.X * numColumns + spacing * (numColumns - 1) + 2 * padding;
+                float totalHeight = lableSize.Y + panelSize.Y * numRows + spacing * (numRows - 1) + 2 * padding;
+
+                Vector2 menuSize = new Vector2(totalWidth, totalHeight);
+                Vector2 menuPos = pos;
+                if (horCent) menuPos.X -= menuSize.X / 2f;
+                if (vertCent) menuPos.Y -= menuSize.Y / 2f;
+
+                Menu menu = new Menu(menuPos, menuSize, 5f);
+
+                Vector2 labelPos = menu.Pos + new Vector2(menu.Size.X / 2f - lableSize.X / 2f, padding);
+                RectangleF labelBounds = new RectangleF(labelPos, lableSize);
+                MySprite labelSprite = SpriteHelper.CreateText(labelBounds, "MISSILE BAYS\n------------------", Color.White, window.Display, TextAlignment.CENTER, true, 0);
+                menu.AddSprite(labelSprite);
+
+                Vector2 panelPos = menu.Pos + new Vector2(padding, labelPos.Y);
+                int bayIndex = 0;
+
+                for (int i = 0; i < numRows; i++)
+                {
+                    panelPos.Y += (panelSize.Y + spacing) * i;
+
+                    for (int j = 0; j < numColumns; j++)
+                    {
+                        Func<string> getText = () => $"Bay [{bayIndex}]";
+                        InfoPanel panel = new InfoPanel(panelPos, panelSize, 5f, getText, window.Display);
+                        menu.AddInfoPanel(panel);
+                        panelPos.X += panelSize.X + spacing;
+                        bayIndex++;
+                    }
+                }
+                return menu;
             }
         }
     }

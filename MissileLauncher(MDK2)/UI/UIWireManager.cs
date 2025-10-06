@@ -32,6 +32,7 @@ namespace IngameScript
 
             public List<TargetingLaser> TargetingLasers => _systemCoordinator.TargetingLasers;
             public List<ControlStation> ControlStations => _systemCoordinator.ControlStations;
+            public List<MissileBay> MissileBays => _systemCoordinator.MissileCoordinator.MissileBays;
 
             public IMyCubeBlock ReferenceBlock => _systemCoordinator.ReferenceBlock;
             public long SelfID => _systemCoordinator.SelfID;

@@ -31,6 +31,7 @@ namespace IngameScript
             public bool CanClose => _condition.Invoke();
 
             private RectangleF _bounds;
+            private float _borderThickness;
             private string _text;
             private Func<bool> _condition;
             private MySprite _fillSprite;
@@ -39,9 +40,10 @@ namespace IngameScript
 
             private IMyTextSurface _surface;
 
-            public InfoModal(Vector2 pos, Vector2 size, Func<bool> condition, string text, IMyTextSurface surface)
+            public InfoModal(Vector2 pos, Vector2 size, float borderThickness, Func<bool> condition, string text, IMyTextSurface surface)
             {
                 _bounds = new RectangleF(pos, size);
+                _borderThickness = borderThickness;
                 _text = text;
                 _condition = condition;
                 _surface = surface;
@@ -56,7 +58,7 @@ namespace IngameScript
                     Type = SpriteType.TEXTURE,
                     Data = "SquareSimple",
                     Position = Center,
-                    Size = Size - 20f,
+                    Size = Size - 2 * _borderThickness,
                     Color = new Color(0, 0, 0, 200),
                     Alignment = TextAlignment.CENTER
                 };
@@ -71,7 +73,7 @@ namespace IngameScript
                     Alignment = TextAlignment.CENTER
                 };
 
-                _textSprite = SpriteHelper.CreateText(Bounds, _text, Color.White, _surface, TextAlignment.CENTER, true, 0.2f);
+                _textSprite = SpriteHelper.CreateText(Bounds, _text, Color.White, _surface, TextAlignment.CENTER, true, 10f);
             }
 
             public void Draw(MySpriteDrawFrame frame)

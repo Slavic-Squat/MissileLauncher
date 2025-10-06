@@ -185,8 +185,8 @@ namespace IngameScript
         {
             switch (scale)
             {
-                case ScopeScale.Close: return "6_km";
-                case ScopeScale.Far: return "12_km";
+                case ScopeScale.Close: return "6km";
+                case ScopeScale.Far: return "12km";
                 default: return "N/A";
             }
         }

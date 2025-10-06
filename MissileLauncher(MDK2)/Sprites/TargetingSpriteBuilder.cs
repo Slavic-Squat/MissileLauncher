@@ -105,7 +105,7 @@ namespace IngameScript
                 Vector3 basePosNDC = Vector3.Transform(basePosWorld, totalMatrix);
                 Vector2 basePosPixel = new Vector2((1 + basePosNDC.X) * 511, (1 - basePosNDC.Y) * 511);
                 float basePosZView = -(_f * _n) / (_f - basePosNDC.Z * (_f - _n));
-                float baseDepthScale = _minScale + (_maxScale - _minScale) * (-basePosZView - _n) / (_f - _n);
+                float baseDepthScale = _maxScale + (_minScale - _maxScale) * (-basePosZView - _n) / (_f - _n);
 
                 tempSprite = new MySprite()
                 {
@@ -220,7 +220,7 @@ namespace IngameScript
                     Vector2 entityPosPixel = new Vector2((1 + entityPosNDC.X) * 511, (1 - entityPosNDC.Y) * 511);
                     float entityPosZView = -(_f * _n) / (_f - entityPosNDC.Z * (_f - _n));
 
-                    float entityDepthScale = _minScale + (_maxScale - _minScale) * (-entityPosZView - _n) / (_f - _n);
+                    float entityDepthScale = _maxScale + (_minScale - _maxScale) * (-entityPosZView - _n) / (_f - _n);
 
                     string spriteName = default(string);
                     Vector2 spriteSize = default(Vector2);
@@ -298,7 +298,7 @@ namespace IngameScript
                             Type = SpriteType.TEXTURE,
                             Data = "Selector_0",
                             Position = entityPosPixel,
-                            Size = MySpriteExtEntity.Sprite.Size * 1.25f,
+                            Size = MySpriteExtEntity.Sprite.Size * 1.5f,
                             Color = Color.Yellow,
                             Alignment = TextAlignment.CENTER,
                             RotationOrScale = 0f,
@@ -312,7 +312,7 @@ namespace IngameScript
                     Vector2 basePosPixel = new Vector2((1 + basePosNDC.X) * 511, (1 - basePosNDC.Y) * 511);
                     float basePosZView = -(_f * _n) / (_f - basePosNDC.Z * (_f - _n));
 
-                    float baseDepthScale = _minScale + (_maxScale - _minScale) * (-basePosZView - _n) / (_f + _n);
+                    float baseDepthScale = _maxScale + (_minScale - _maxScale) * (-basePosZView - _n) / (_f + _n);
 
                     tempSprite = new MySprite()
                     {

@@ -102,7 +102,7 @@ namespace IngameScript
                 Controllable = controllable;
                 controllable.AssignControl(this);
 
-                _ui.OpenModal(new InfoModal((_ui.TextureSize - _ui.SurfaceSize) * 0.5f, _ui.SurfaceSize * 0.75f, () => !IsControlling, $"UI Navigation Disabled\nReason: Controlling Object", PrimaryDisplay));
+                _ui.OpenModal(new InfoModal((_ui.TextureSize - _ui.SurfaceSize) * 0.5f, _ui.SurfaceSize * 0.75f, 10f, () => !IsControlling, $"UI Navigation Disabled\nReason: Controlling Object", PrimaryDisplay));
             }
 
             public void ReleaseControl()

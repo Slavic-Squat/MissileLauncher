@@ -50,12 +50,15 @@ namespace IngameScript
 
                 for (int i = 0; i < numOfControlStations; i++)
                 {
-                    ControlStations.Add(new ControlStation(program, i, _uiWireManager));
+                    ControlStation controlStation = new ControlStation(program, i, _uiWireManager);
+                    ControlStations.Add(controlStation);
                 }
 
                 for (int i = 0; i < numOfTargetingLasers;  i++)
                 {
-                    TargetingLasers.Add(new TargetingLaser(program, i));
+                    TargetingLaser laser = new TargetingLaser(program, i);
+                    laser.SyncRequested += SyncTarget;
+                    TargetingLasers.Add(laser);
                 }
 
                 CommunicationHandler = new CommunicationHandler(program, 0);
@@ -88,17 +91,15 @@ namespace IngameScript
                 AWACS.Run(time);
                 TargetCoordinator.Run(time);
 
-                SyncTarget(0);
-
                 foreach (var target in AWACS.Targets.Values)
                 {
                     TargetCoordinator.AddLocalTarget(target);
                 }
             }
 
-            public void SyncTarget(int laserID)
+            public void SyncTarget(TargetingLaser laser)
             {
-                EntityInfoExt target = TargetingLasers[laserID].Target;
+                EntityInfoExt target = laser.Target;
 
                 if (!target.IsEmpty)
                     AWACS.AddTarget(target);

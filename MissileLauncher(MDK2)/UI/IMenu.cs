@@ -22,7 +22,7 @@ namespace IngameScript
 {
     partial class Program
     {
-        public interface IMenu : INavigable, IUpdatable, IUIElement
+        public interface IMenu : INavigable, IUpdatable
         {
             bool IsOpen { get; }
             event Action<IMenu> RequestClose;

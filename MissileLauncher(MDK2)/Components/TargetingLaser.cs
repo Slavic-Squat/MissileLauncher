@@ -70,6 +70,7 @@ namespace IngameScript
             public float Sensitivity { get; set; }
             public bool ManualOverride { get; set; }
             public EntityInfoExt Target {  get; private set; }
+            public event Action<TargetingLaser> SyncRequested;
             #endregion
 
             public TargetingLaser(Program program, int id, float sensitivity = 0.05f, float maxRaycastDistance = 5000, bool manualOverride = false)
@@ -135,6 +136,10 @@ namespace IngameScript
                 if (IsUnderControl)
                 {
                     ControlLaser(time);
+                }
+                else
+                {
+                    MoveLaser(0, 0);
                 }
 
                 if (HasTarget && !ManualOverride)
@@ -226,6 +231,11 @@ namespace IngameScript
                 if (!IsUnderControl)
                     return;
 
+                if (Controller.Input.QRelease)
+                {
+                    SyncRequested?.Invoke(this);
+                }
+
                 if (!HasTarget || ManualOverride)
                 {
                     MoveLaser(-Controller.Input.MouseInput.Y, -Controller.Input.MouseInput.X);
@@ -239,6 +249,7 @@ namespace IngameScript
                 if (Controller.Input.CHeldAndReleased)
                 {
                     UnAssignControl();
+                    return;
                 }
                 else if (Controller.Input.CRelease)
                 {

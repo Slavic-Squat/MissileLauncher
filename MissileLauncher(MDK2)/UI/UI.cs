@@ -44,7 +44,7 @@ namespace IngameScript
                 display.Script = "";
                 display.ScriptBackgroundColor = Color.Black;
 
-                MainWindow mainWindow = new MainWindow(this);
+                MainWindow mainWindow = new MainWindow(this, 10f);
                 OpenWindow(mainWindow);
             }
 
@@ -102,7 +102,7 @@ namespace IngameScript
 
                 if (!HasActiveWindow)
                 {
-                    MainWindow mainWindow = new MainWindow(this);
+                    MainWindow mainWindow = new MainWindow(this, 10f);
                     OpenWindow(mainWindow);
                 }
 

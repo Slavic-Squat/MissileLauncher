@@ -22,7 +22,7 @@ namespace IngameScript
 {
     partial class Program
     {
-        public interface INavigable
+        public interface INavigable : IUIElement
         {
             bool IsNavigating { get; }
             bool IsPaused { get; }

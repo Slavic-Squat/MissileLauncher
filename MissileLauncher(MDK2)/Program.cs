@@ -28,7 +28,7 @@ namespace IngameScript
         #endregion
 
         #region State Info
-        private DateTime time;
+        private DateTime time = DateTime.Now;
         #endregion
 
         private SystemCoordinator _systemCoordinator;
@@ -43,7 +43,6 @@ namespace IngameScript
             IMyCubeBlock referenceBlock = tempList.Count > 0 ? tempList[0] as IMyCubeBlock : null;
 
             _systemCoordinator = new SystemCoordinator(this, referenceBlock, 1, 1);
-            //_systemCoordinator.ControlStations[0].TakeControl(_systemCoordinator.TargetingLasers[0]);
 
             _commandHandler = new CommandHandler(Me, commands);
 
@@ -66,7 +65,6 @@ namespace IngameScript
             _commandHandler.RunCustomDataCommands();
             _systemCoordinator.Run(time);
             Echo(time.ToString());
-            _systemCoordinator.SyncTarget(0);
         }
     }
 }

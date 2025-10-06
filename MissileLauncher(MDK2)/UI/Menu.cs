@@ -37,7 +37,10 @@ namespace IngameScript
 
 
             private RectangleF _bounds;
+            private float _borderThickness;
             private List<IButton> _buttons = new List<IButton>();
+            private List<IUpdatable> _updateables = new List<IUpdatable>();
+            private List<IUIElement> _uiElements = new List<IUIElement>();
             private IButton _highlightedButton;
 
             private MySprite _fillSprite;
@@ -47,9 +50,10 @@ namespace IngameScript
 
             private List<MySprite> _sprites = new List<MySprite>();
 
-            public Menu(Vector2 pos, Vector2 size)
+            public Menu(Vector2 pos, Vector2 size, float borderThickness)
             {
                 _bounds = new RectangleF(pos, size);
+                _borderThickness = borderThickness;
                 Open();
 
                 BuildSprites();
@@ -57,14 +61,12 @@ namespace IngameScript
 
             public void BuildSprites()
             {
-                float minDim = Math.Min(_bounds.Width, _bounds.Height);
-
                 _fillSprite = new MySprite()
                 {
                     Type = SpriteType.TEXTURE,
                     Data = "SquareSimple",
                     Position = Center,
-                    Size = Size - 0.5f * 0.1f * minDim,
+                    Size = Size - 2 * _borderThickness,
                     RotationOrScale = 0f,
                     Color = _fillColor,
                     Alignment = TextAlignment.CENTER,
@@ -131,7 +133,7 @@ namespace IngameScript
                 IsPaused = false;
                 _fillColor = UIConfig.MenuFillColorActive;
                 _borderColor = UIConfig.MenuBorderColorActive;
-                if (_buttons.Count > 0)
+                if (_buttons.Count > 0 && _highlightedButton == null)
                 {
                     HighlightButton(_buttons[0]);
                 }
@@ -141,6 +143,8 @@ namespace IngameScript
             public void AddButton(IButton button)
             {
                 _buttons.Add(button);
+                _updateables.Add(button);
+                _uiElements.Add(button);
             }
 
             public void AddSprite(MySprite sprite)
@@ -148,8 +152,18 @@ namespace IngameScript
                 _sprites.Add(sprite);
             }
 
+            public void AddInfoPanel(InfoPanel panel)
+            {
+                _updateables.Add(panel);
+                _uiElements.Add(panel);
+            }
+
             private void HighlightButton(IButton button)
             {
+                if (button == null || ReferenceEquals(button, _highlightedButton))
+                {
+                    return;
+                }
                 UnhighlightButton(_highlightedButton);
                 button.Highlight();
                 _highlightedButton = button;
@@ -159,7 +173,7 @@ namespace IngameScript
             {
                 button?.Unhighlight();
 
-                if (_highlightedButton == button)
+                if (ReferenceEquals(button, _highlightedButton))
                 {
                     _highlightedButton = null;
                 }
@@ -167,9 +181,9 @@ namespace IngameScript
 
             public void Update(DateTime time)
             {
-                foreach (var button in _buttons)
+                foreach (var updateable in _updateables)
                 {
-                    button.Update(time);
+                    updateable.Update(time);
                 }
             }
 
@@ -188,13 +202,13 @@ namespace IngameScript
                     frame.Add(sprite);
                 }
 
-                foreach (var button in _buttons)
+                foreach (var element in _uiElements)
                 {
-                    if (button == _highlightedButton)
+                    if (ReferenceEquals(element, _highlightedButton))
                     {
                         continue;
                     }
-                    button.Draw(frame);
+                    element.Draw(frame);
                 }
                 _highlightedButton?.Draw(frame);
             }
