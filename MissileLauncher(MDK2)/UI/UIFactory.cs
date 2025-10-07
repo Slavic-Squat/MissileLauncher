@@ -111,7 +111,7 @@ namespace IngameScript
                     {
                         return true;
                     };
-                    Button button = new Button("Abort", buttonPos, buttonSize, 8f, 3f, 1f, getText, action, window.Display);
+                    Button button = new Button("Abort", buttonPos, buttonSize, 8f, 3f, 1f, getText, action, surface);
                     menu.AddButton(button);
 
                     return menu;
@@ -133,16 +133,20 @@ namespace IngameScript
                     {
                         return true;
                     };
-                    Button button = new Button("View", buttonPos, buttonSize, 8f, 3f, 1f, getText, action, window.Display);
+                    Button button = new Button("View", buttonPos, buttonSize, 8f, 3f, 1f, getText, action, surface);
                     menu.AddButton(button);
 
                     buttonPos.X += buttonSize.X + spacing;
                     getText = () => "FIRE MISL";
                     action = () =>
                     {
+                        Vector2 missileMenuPos = window.Center;
+                        ModalMenu missileMenu = CreateMissileArmMenu(missileMenuPos, window, wireManager, true, true);
+                        window.CloseMenu(menu);
+                        window.OpenMenu(missileMenu);
                         return true;
                     };
-                    button = new Button("FireMissile", buttonPos, buttonSize, 8f, 3f, 1f, getText, action, window.Display);
+                    button = new Button("FireMissile", buttonPos, buttonSize, 8f, 3f, 1f, getText, action, surface);
                     menu.AddButton(button);
 
                     buttonPos.X += buttonSize.X + spacing;
@@ -153,7 +157,7 @@ namespace IngameScript
                         return true;
                     };
 
-                    button = new Button("SetRelation", buttonPos, buttonSize, 8f, 3f, 1f, getText, action, window.Display);
+                    button = new Button("SetRelation", buttonPos, buttonSize, 8f, 3f, 1f, getText, action, surface);
                     menu.AddButton(button);
 
                     return menu;
@@ -176,16 +180,20 @@ namespace IngameScript
                     {
                         return true;
                     };
-                    Button button = new Button("View", buttonPos, buttonSize, 8f, 3f, 1f, getText, action, window.Display);
+                    Button button = new Button("View", buttonPos, buttonSize, 8f, 3f, 1f, getText, action, surface);
                     menu.AddButton(button);
 
                     buttonPos.X += buttonSize.X + spacing;
-                    getText = () => "FIRE MISSILE";
+                    getText = () => "FIRE MISL";
                     action = () =>
                     {
+                        Vector2 missileMenuPos = window.Center;
+                        ModalMenu missileMenu = CreateMissileArmMenu(missileMenuPos, window, wireManager, true, true);
+                        window.CloseMenu(menu);
+                        window.OpenMenu(missileMenu);
                         return true;
                     };
-                    button = new Button("FireMissile", buttonPos, buttonSize, 8f, 3f, 1f, getText, action, window.Display);
+                    button = new Button("FireMissile", buttonPos, buttonSize, 8f, 3f, 1f, getText, action, surface);
                     menu.AddButton(button);
 
                     buttonPos.X += buttonSize.X + spacing;
@@ -196,7 +204,7 @@ namespace IngameScript
                         return true;
                     };
 
-                    button = new Button("SetRelation", buttonPos, buttonSize, 8f, 3f, 1f, getText, action, window.Display);
+                    button = new Button("SetRelation", buttonPos, buttonSize, 8f, 3f, 1f, getText, action, surface);
                     menu.AddButton(button);
 
                     buttonPos.X += buttonSize.X + spacing;
@@ -207,55 +215,78 @@ namespace IngameScript
                         return true;
                     };
 
-                    button = new Button("Forget", buttonPos, buttonSize, 8f, 3f, 1f, getText, action, window.Display);
+                    button = new Button("Forget", buttonPos, buttonSize, 8f, 3f, 1f, getText, action, surface);
                     menu.AddButton(button);
 
                     return menu;
                 }
             }
 
-            public static Menu CreateMissileArmMenu(Vector2 pos, RadarWindow window, UIWireManager wireManger, bool vertCent = false, bool horCent = false)
+            public static ModalMenu CreateMissileArmMenu(Vector2 pos, RadarWindow window, UIWireManager wireManger, bool vertCent = false, bool horCent = false)
             {
-                int numBays = 6;
+                IMyTextSurface surface = window.Display;
+
+                int numBays = 25;
                 int numColumns = 5;
-                int numRows = (int)Math.Ceiling((float)numBays / (float)numColumns);
+                int numRows = 2;
 
                 float padding = 20f;
                 float spacing = 10f;
 
-                Vector2 lableSize = new Vector2(150f, 30f);
-                Vector2 panelSize = new Vector2(150f, 75f);
-                Vector2 buttonSize = new Vector2(100f, 25f);
+                Vector2 labelSize = new Vector2(150f, 30f);
+                Vector2 panelSize = new Vector2(175f, 200f);
+                Vector2 buttonSize = new Vector2(125f, 35f);
 
-                float totalWidth = lableSize.X + panelSize.X * numColumns + spacing * (numColumns - 1) + 2 * padding;
-                float totalHeight = lableSize.Y + panelSize.Y * numRows + spacing * (numRows - 1) + 2 * padding;
+                float totalWidth = panelSize.X * numColumns + spacing * (numColumns - 1) + 2 * padding;
+                float totalHeight = labelSize.Y + panelSize.Y * numRows + spacing * (numRows - 1) + 2 * padding;
 
                 Vector2 menuSize = new Vector2(totalWidth, totalHeight);
                 Vector2 menuPos = pos;
                 if (horCent) menuPos.X -= menuSize.X / 2f;
                 if (vertCent) menuPos.Y -= menuSize.Y / 2f;
 
-                Menu menu = new Menu(menuPos, menuSize, 5f);
+                ModalMenu menu = new ModalMenu(menuPos, menuSize, 5f, () => false, surface);
 
-                Vector2 labelPos = menu.Pos + new Vector2(menu.Size.X / 2f - lableSize.X / 2f, padding);
-                RectangleF labelBounds = new RectangleF(labelPos, lableSize);
+                Vector2 labelPos = menu.Pos + new Vector2(menu.Size.X / 2f - labelSize.X / 2f, padding);
+                RectangleF labelBounds = new RectangleF(labelPos, labelSize);
                 MySprite labelSprite = SpriteHelper.CreateText(labelBounds, "MISSILE BAYS\n------------------", Color.White, window.Display, TextAlignment.CENTER, true, 0);
-                menu.AddSprite(labelSprite);
-
-                Vector2 panelPos = menu.Pos + new Vector2(padding, labelPos.Y);
+                menu.AddSprite(labelSprite, -1);
+                
                 int bayIndex = 0;
 
-                for (int i = 0; i < numRows; i++)
-                {
-                    panelPos.Y += (panelSize.Y + spacing) * i;
+                int numPages = (int)Math.Ceiling((float)numBays / (numRows * numColumns));
 
-                    for (int j = 0; j < numColumns; j++)
+                for (int i = 0; i < numPages; i++)
+                {
+                    Vector2 pageLabelSize = new Vector2(50f, 30f);
+                    Vector2 pageLabelPos = menu.Pos + new Vector2(menu.Size.X - padding - pageLabelSize.X, padding);
+                    RectangleF pageLabelBounds = new RectangleF(pageLabelPos, pageLabelSize);
+                    MySprite pageLabelSprite = SpriteHelper.CreateText(pageLabelBounds, $"PAGE: {i + 1} / {numPages}", Color.White, surface, TextAlignment.LEFT, true, 0);
+                    menu.AddSprite(pageLabelSprite, i);
+
+                    for (int j = 0; j < numRows; j++)
                     {
-                        Func<string> getText = () => $"Bay [{bayIndex}]";
-                        InfoPanel panel = new InfoPanel(panelPos, panelSize, 5f, getText, window.Display);
-                        menu.AddInfoPanel(panel);
-                        panelPos.X += panelSize.X + spacing;
-                        bayIndex++;
+                        Vector2 panelPos = Vector2.Zero;
+                        panelPos.Y = menu.Pos.Y + padding + labelSize.Y + (panelSize.Y + spacing) * j;
+
+                        for (int k = 0; k < numColumns; k++)
+                        {
+                            if (bayIndex >= numBays) break;
+                            panelPos.X = menu.Pos.X + padding + (panelSize.X + spacing) * k;
+                            Func<string> getText = () => $"Bay [{bayIndex}]\n-------------------";
+                            InfoPanel panel = new InfoPanel(panelPos, panelSize, 5f, getText, surface);
+                            menu.AddInfoPanel(panel, i);
+
+                            Vector2 buttonPos = panel.Pos + new Vector2(panel.Size.X * 0.5f - buttonSize.X * 0.5f, panel.Size.Y - buttonSize.Y - 10f);
+                            getText = () => "ARM";
+                            Func<bool> action = () =>
+                            {
+                                return true;
+                            };
+                            Button button = new Button("Arm", buttonPos, buttonSize, 8f, 3f, 1f, getText, action, surface);
+                            menu.AddButton(button, i);
+                            bayIndex++;
+                        }
                     }
                 }
                 return menu;

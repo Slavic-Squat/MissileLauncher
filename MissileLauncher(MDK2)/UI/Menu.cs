@@ -54,7 +54,6 @@ namespace IngameScript
             {
                 _bounds = new RectangleF(pos, size);
                 _borderThickness = borderThickness;
-                Open();
 
                 BuildSprites();
             }
@@ -133,10 +132,6 @@ namespace IngameScript
                 IsPaused = false;
                 _fillColor = UIConfig.MenuFillColorActive;
                 _borderColor = UIConfig.MenuBorderColorActive;
-                if (_buttons.Count > 0 && _highlightedButton == null)
-                {
-                    HighlightButton(_buttons[0]);
-                }
                 BuildSprites();
             }
 
@@ -226,6 +221,11 @@ namespace IngameScript
                 if (_buttons.Count == 0)
                 {
                     return;
+                }
+
+                if (_highlightedButton == null)
+                {
+                    HighlightButton(_buttons.FirstOrDefault());
                 }
 
                 if (input.WRelease)
