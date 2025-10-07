@@ -37,6 +37,7 @@ namespace IngameScript
             public event Action<INavigable> RequestStopNavigation;
 
             private Func<bool> _closeCondition;
+            private bool _obscure;
             private RectangleF _bounds;
             private float _borderThickness;
             private List<IButton> _commonButtons = new List<IButton>();
@@ -55,12 +56,13 @@ namespace IngameScript
 
             private List<MySprite> _commonSprites = new List<MySprite>();
 
-            public ModalMenu(Vector2 pos, Vector2 size, float borderThickness, Func<bool> closeCondition, IMyTextSurface surface)
+            public ModalMenu(Vector2 pos, Vector2 size, float borderThickness, Func<bool> closeCondition, IMyTextSurface surface, bool obscure = true)
             {
                 _bounds = new RectangleF(pos, size);
                 _borderThickness = borderThickness;
                 _closeCondition = closeCondition;
                 _surface = surface;
+                _obscure = obscure;
 
                 BuildSprites();
             }
@@ -267,7 +269,10 @@ namespace IngameScript
 
             public void Draw(MySpriteDrawFrame frame)
             {
-                frame.Add(_obscureSprite);
+                if (_obscure)
+                {
+                    frame.Add(_obscureSprite);
+                }
                 frame.Add(_borderSprite);
                 frame.Add(_fillSprite);
 
@@ -303,12 +308,12 @@ namespace IngameScript
                     if (input.QRelease)
                     {
                         _currentPageIndex--;
-                        _currentPageIndex = (int)MiscUtilities.LoopInRange(_currentPageIndex, 0, _pages.Count - 1);
+                        _currentPageIndex = MiscUtilities.LoopInRange(_currentPageIndex, 0, _pages.Count);
                     }
                     else if (input.ERelease)
                     {
                         _currentPageIndex++;
-                        _currentPageIndex = (int)MiscUtilities.LoopInRange(_currentPageIndex, 0, _pages.Count - 1);
+                        _currentPageIndex = MiscUtilities.LoopInRange(_currentPageIndex, 0, _pages.Count);
                     }
                     var currentPage = _pages[_currentPageIndex];
                     allButtons.AddRange(currentPage.Buttons);

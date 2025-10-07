@@ -29,12 +29,28 @@ namespace IngameScript
                 if (min >= max)
                     throw new ArgumentException("min must be less than max");
 
-                if (value >= min && value <= max)
+                if (value >= min && value < max)
                     return value;
 
                 float range = max - min;
                 float shifted = value - min;
                 shifted -= range * (float)Math.Floor(shifted / range);
+                return min + shifted;
+            }
+
+            public static int LoopInRange(int value, int min, int max)
+            {
+                if (min >= max)
+                    throw new ArgumentException("min must be less than max");
+
+                if (value >= min && value < max)
+                    return value;
+
+                int range = max - min;
+                int shifted = value - min;
+                shifted %= range;
+                if (shifted < 0)
+                    shifted += range;
                 return min + shifted;
             }
         }

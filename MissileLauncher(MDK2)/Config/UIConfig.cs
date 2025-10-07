@@ -52,6 +52,13 @@ namespace IngameScript
             public static Color ButtonTextColorDisabled = new Color(128, 128, 128, 255);
             public static Color ButtonTextColorErrored = new Color(255, 0, 76, 255);
             public static Color ButtonHighlightColor = new Color(255, 200, 0, 255);
+
+            public static Color ToggleButtonFillColorReleased = new Color(64, 0, 0, 255);
+            public static Color ToggleButtonFillColorPressed = new Color(0, 64, 0, 255);
+            public static Color ToggleButtonBorderColorReleased = new Color(255, 0, 0, 255);
+            public static Color ToggleButtonBorderColorPressed = new Color(0, 255, 0, 255);
+            public static Color ToggleButtonTextColorReleased = new Color(255, 0, 0, 255);
+            public static Color ToggleButtonTextColorPressed = new Color(0, 255, 0, 255);
         }
     }
 }
