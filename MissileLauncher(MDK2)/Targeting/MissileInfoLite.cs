@@ -56,11 +56,27 @@ namespace IngameScript
                 TimeRecorded = timeRecorded;
             }
 
-            public void UpdateFromEntityInfo(IEntityInfo entityInfo)
+            public void Merge(IEntityInfo entityInfo)
             {
                 if (EntityID != entityInfo.EntityID || TimeRecorded > entityInfo.TimeRecorded)
                 {
                     return;
+                }
+                if (entityInfo is MissileInfoLite)
+                {
+                    var other = (MissileInfoLite)entityInfo;
+                    if (LauncherID != other.LauncherID)
+                    {
+                        return;
+                    }
+                }
+                else if (entityInfo is MissileInfo)
+                {
+                    var other = (MissileInfo)entityInfo;
+                    if (LauncherID != other.LauncherID)
+                    {
+                        return;
+                    }
                 }
                 Position = entityInfo.Position;
                 Velocity = entityInfo.Velocity;

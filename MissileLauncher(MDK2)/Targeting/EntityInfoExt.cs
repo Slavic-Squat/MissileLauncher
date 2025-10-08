@@ -113,14 +113,17 @@ namespace IngameScript
                 if (other.Type > Type)
                 {
                     Type = other.Type;
-                    other.Info.UpdateFromEntityInfo(Info);
+                    other.Info.Merge(Info);
                     Info = other.Info;
-
-                    Relation = other.Relation;
                 }
                 else
                 {
-                    Info.UpdateFromEntityInfo(other.Info);
+                    Info.Merge(other.Info);
+                }
+
+                if (other.TimeRecorded > TimeRecorded)
+                {
+                    Relation = other.Relation;
                 }
                 Source |= other.Source;
             }
@@ -160,6 +163,12 @@ namespace IngameScript
                 else
                 {
                     sb.Append($"AGE: {age:0} ms\n");
+                }
+
+                if (Info is MissileInfo)
+                {
+                    var missileInfo = (MissileInfo)Info;
+                    sb.Append($"STAGE: {GetName(missileInfo.Stage)}\n");
                 }
 
                 return sb.ToString().TrimEnd('\n');

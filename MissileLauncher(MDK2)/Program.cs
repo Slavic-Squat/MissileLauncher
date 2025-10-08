@@ -32,21 +32,24 @@ namespace IngameScript
         #endregion
 
         private SystemCoordinator _systemCoordinator;
-        public static Action<string> debugEcho;
+        public static Action<string> DebugEcho { get; private set; }
+        public static IMyGridTerminalSystem GTS { get; private set; }
+        public static IMyIntergridCommunicationSystem IGCS { get; private set; }
 
         public Program()
         {
+            DebugEcho = Echo;
+            GTS = GridTerminalSystem;
+            IGCS = IGC;
             Runtime.UpdateFrequency = UpdateFrequency.Update1;
 
             List<IMyShipController> tempList = new List<IMyShipController>();
-            GridTerminalSystem.GetBlocksOfType(tempList, ctrl => ctrl.IsMainCockpit);
+            GTS.GetBlocksOfType(tempList, ctrl => ctrl.IsMainCockpit);
             IMyCubeBlock referenceBlock = tempList.Count > 0 ? tempList[0] as IMyCubeBlock : null;
 
-            _systemCoordinator = new SystemCoordinator(this, referenceBlock, 1, 1);
+            _systemCoordinator = new SystemCoordinator(referenceBlock, 1, 1);
 
             _commandHandler = new CommandHandler(Me, commands);
-
-            debugEcho = Echo;
         }
 
         public void Save()

@@ -34,10 +34,8 @@ namespace IngameScript
             private IMyShipController _controllerReference;
             private UI _ui;
             private UIWireManager _uiWireManager;
-            private Program _program;
-            public ControlStation(Program program, int iD, UIWireManager uiWireManager)
+            public ControlStation(int iD, UIWireManager uiWireManager)
             {
-                _program = program;
                 ID = iD;
                 _uiWireManager = uiWireManager;
 
@@ -52,7 +50,7 @@ namespace IngameScript
             {
                 try
                 {
-                    _controllerReference = _program.GridTerminalSystem.GetBlockWithName($"Control Station [{ID}]") as IMyShipController;
+                    _controllerReference = GTS.GetBlockWithName($"Control Station [{ID}]") as IMyShipController;
                     if (_controllerReference == null)
                     {
                         throw new Exception();
@@ -62,12 +60,12 @@ namespace IngameScript
                     {
                         _displays.Add((_controllerReference as IMyTextSurfaceProvider).GetSurface(i));
                     }
-                    _program.GridTerminalSystem.GetBlockGroupWithName($"Control Station [{ID}] Displays")?.GetBlocksOfType(_displays);
+                    GTS.GetBlockGroupWithName($"Control Station [{ID}] Displays")?.GetBlocksOfType(_displays);
                     return true;
                 }
                 catch (Exception ex)
                 {
-                    _program.Echo("Error in Control Station Construction");
+                    DebugEcho("Error in Control Station Construction");
                     return false;
                     throw;
                 }

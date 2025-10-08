@@ -26,18 +26,16 @@ namespace IngameScript
         public class CommunicationHandler
         {
             public int ID { get; private set; }
-            public long SelfAddress => _program.IGC.Me;
+            public long SelfAddress => IGCS.Me;
 
-            private Program _program;
             private HashSet<IMyBroadcastListener> _broadcastListeners = new HashSet<IMyBroadcastListener>();
             private IMyUnicastListener _unicastListener;
             private Dictionary<string, Queue<MyIGCMessage>> _messages = new Dictionary<string, Queue<MyIGCMessage>>();
 
-            public CommunicationHandler(Program program, int iD)
+            public CommunicationHandler(int iD)
             {
-                _program = program;
                 ID = iD;
-                _unicastListener = _program.IGC.UnicastListener;
+                _unicastListener = IGCS.UnicastListener;
             }
 
             public void Recieve()
@@ -79,18 +77,18 @@ namespace IngameScript
             public void SendBroadcast(byte[] data, string tag)
             {
                 string dataString = Convert.ToBase64String(data);
-                _program.IGC.SendBroadcastMessage(tag, dataString);
+                IGCS.SendBroadcastMessage(tag, dataString);
             }
 
             public void SendUnicast(byte[] data, long targetAddress, string tag)
             {
                 string dataString = Convert.ToBase64String(data);
-                _program.IGC.SendUnicastMessage(targetAddress, tag, dataString);
+                IGCS.SendUnicastMessage(targetAddress, tag, dataString);
             }
 
             public void RegisterBroadcastListener(string tag)
             {
-                var listener = _program.IGC.RegisterBroadcastListener(tag);
+                var listener = IGCS.RegisterBroadcastListener(tag);
                 _broadcastListeners.Add(listener);
                 RegisterTag(tag);
             }
@@ -127,6 +125,11 @@ namespace IngameScript
                 }
                 message = default(MyIGCMessage);
                 return false;
+            }
+
+            public bool CanReach(long targetAddress)
+            {
+                return IGCS.IsEndpointReachable(targetAddress);
             }
         }
     }

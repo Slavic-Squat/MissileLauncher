@@ -32,8 +32,9 @@ namespace IngameScript
             public long LauncherID { get; private set; }
             public MissileStage Stage { get; set; }
             public long TargetID { get; set; }
+            public long Address { get; set; }
 
-            public MissileInfo(long entityID, Vector3 position, Vector3 velocity, DateTime timeRecorded, long launcherID, long targetID, MissileStage stage)
+            public MissileInfo(long entityID, Vector3 position, Vector3 velocity, DateTime timeRecorded, long launcherID, long targetID, MissileStage stage, long address)
             {
                 EntityID = entityID;
                 Position = position;
@@ -42,6 +43,7 @@ namespace IngameScript
                 LauncherID = launcherID;
                 TargetID = targetID;
                 Stage = stage;
+                Address = address;
             }
 
             public void Transform(Matrix transform)
@@ -60,11 +62,21 @@ namespace IngameScript
                 TimeRecorded = timeRecorded;
             }
 
-            public void UpdateFromEntityInfo(IEntityInfo entityInfo)
+            public void Merge(IEntityInfo entityInfo)
             {
                 if (EntityID != entityInfo.EntityID || TimeRecorded > entityInfo.TimeRecorded)
                 {
                     return;
+                }
+                if (entityInfo is MissileInfo)
+                {
+                    var other = (MissileInfo)entityInfo;
+                    if (other.LauncherID != LauncherID)
+                    {
+                        return;
+                    }
+                    TargetID = other.TargetID;
+                    Stage = other.Stage;
                 }
                 Position = entityInfo.Position;
                 Velocity = entityInfo.Velocity;
@@ -92,6 +104,7 @@ namespace IngameScript
                 missileData.AddRange(BitConverter.GetBytes(LauncherID));
                 missileData.AddRange(BitConverter.GetBytes(TargetID));
                 missileData.Add((byte)Stage);
+                missileData.AddRange(BitConverter.GetBytes(Address));
 
                 return missileData.ToArray();
             }
@@ -139,7 +152,10 @@ namespace IngameScript
                 MissileStage stage = (MissileStage)data[index];
                 index += 1;
 
-                return new MissileInfo(entityID, pos, vel, timeRecorded, launcherID, targetID, stage);
+                long address = BitConverter.ToInt64(data, index);
+                index += 8;
+
+                return new MissileInfo(entityID, pos, vel, timeRecorded, launcherID, targetID, stage, address);
             }
         }
     }

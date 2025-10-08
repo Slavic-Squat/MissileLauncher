@@ -29,10 +29,13 @@ namespace IngameScript
             public HashSet<long> NeutralIDs => _systemCoordinator.TargetCoordinator.NeutralIDs;
             public HashSet<long> FriendlyIDs => _systemCoordinator.TargetCoordinator.FriendlyIDs;
             public HashSet<long> HostileIDs => _systemCoordinator.TargetCoordinator.HostileIDs;
+            public Dictionary<long, EntityInfoExt> AllTargetsExt => _systemCoordinator.TargetCoordinator.AllTargetsExt;
+            public Dictionary<long, EntityInfoExt> AllMyMissilesExt => _systemCoordinator.MissileCoordinator.ActiveMissilesExt;
 
             public List<TargetingLaser> TargetingLasers => _systemCoordinator.TargetingLasers;
             public List<ControlStation> ControlStations => _systemCoordinator.ControlStations;
             public List<MissileBay> MissileBays => _systemCoordinator.MissileCoordinator.MissileBays;
+            public HashSet<int> SelectedBays => _systemCoordinator.MissileCoordinator.SelectedBays;
 
             public IMyCubeBlock ReferenceBlock => _systemCoordinator.ReferenceBlock;
             public long SelfID => _systemCoordinator.SelfID;
@@ -53,19 +56,21 @@ namespace IngameScript
 
                 return true;
             }
-            public Dictionary<long, EntityInfoExt> GetAllTargets() => _systemCoordinator.TargetCoordinator.GetAllTargets();
-            public Dictionary<long, EntityInfoExt> GetAllMyMissiles() => _systemCoordinator.MissileCoordinator.GetAllMyMissiles();
 
             public Dictionary<long, EntityInfoExt> GetAllEntities()
             {
-                var allEntities = new Dictionary<long, EntityInfoExt>(GetAllTargets());
-                foreach (var missile in GetAllMyMissiles())
+                var allEntities = new Dictionary<long, EntityInfoExt>(AllTargetsExt);
+                foreach (var missile in AllMyMissilesExt)
                 {
                     allEntities[missile.Key] = missile.Value;
                 }
 
                 return allEntities;
             }
+
+            public void SelectBay(int bayID) => _systemCoordinator.MissileCoordinator.SelectBay(bayID);
+            public void DeselectBay(int bayID) => _systemCoordinator.MissileCoordinator.DeselectBay(bayID);
+            public void ClearSelectedBays() => _systemCoordinator.MissileCoordinator.ClearSelectedBays();
         }
     }
 }

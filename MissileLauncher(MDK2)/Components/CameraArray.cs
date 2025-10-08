@@ -25,7 +25,6 @@ namespace IngameScript
     {
         public class CameraArray
         {
-            private Program _program;
             private List<IMyCameraBlock> _cameras = new List<IMyCameraBlock>();
             private DateTime _lastUpdateTime;
             private int _cameraIndex;
@@ -34,9 +33,8 @@ namespace IngameScript
             public int ID { get; private set; }
             public float MaxRaycastDistance { get; set; }
             public bool Recharging => _totalAvailableRaycastDistance < 2 * MaxRaycastDistance * _cameras.Count;
-            public CameraArray(Program program, int id, float maxRaycastDistance)
+            public CameraArray(int id, float maxRaycastDistance)
             {
-                _program = program;
                 ID = id;
                 MaxRaycastDistance = maxRaycastDistance;
 
@@ -48,12 +46,12 @@ namespace IngameScript
             {
                 try
                 {
-                    _program.GridTerminalSystem.GetBlockGroupWithName($"Camera Array [{ID}]").GetBlocksOfType(_cameras);
+                    GTS.GetBlockGroupWithName($"Camera Array [{ID}]").GetBlocksOfType(_cameras);
                     return true;
                 }
                 catch (Exception ex)
                 {
-                    _program.Echo($"Error in Camera Array [{ID}] Construction");
+                    DebugEcho($"Error in Camera Array [{ID}] Construction");
                     return false;
                 }
             }

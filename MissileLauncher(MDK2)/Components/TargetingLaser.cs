@@ -26,7 +26,6 @@ namespace IngameScript
         public class TargetingLaser : IControllable
         {
             #region Parts
-            private Program _program;
             private IMyMotorStator _azimuthRotor;
             private IMyMotorStator _elevationRotor;
             private CameraArray _cameraArray;
@@ -73,16 +72,15 @@ namespace IngameScript
             public event Action<TargetingLaser> SyncRequested;
             #endregion
 
-            public TargetingLaser(Program program, int id, float sensitivity = 0.05f, float maxRaycastDistance = 5000, bool manualOverride = false)
+            public TargetingLaser(int id, float sensitivity = 0.05f, float maxRaycastDistance = 5000, bool manualOverride = false)
             {
-                _program = program;
                 ID = id;
                 Sensitivity = sensitivity;
 
                 TryGetBlocks();
                 Init();
 
-                _cameraArray = new CameraArray(_program, 0, maxRaycastDistance);
+                _cameraArray = new CameraArray(0, maxRaycastDistance);
                 _azimuthPID = new PIDControl(25, 2, 0.1f);
                 _elevationPID = new PIDControl(25, 2, 0.1f);
             }
@@ -91,12 +89,12 @@ namespace IngameScript
             {
                 try
                 {
-                    _azimuthRotor = _program.GridTerminalSystem.GetBlockWithName($"Azimuth Rotor [{ID}]") as IMyMotorStator;
+                    _azimuthRotor = GTS.GetBlockWithName($"Azimuth Rotor [{ID}]") as IMyMotorStator;
                     if (_azimuthRotor == null)
                     {
                         throw new Exception();
                     }
-                    _elevationRotor = _program.GridTerminalSystem.GetBlockWithName($"Elevation Rotor [{ID}]") as IMyMotorStator;
+                    _elevationRotor = GTS.GetBlockWithName($"Elevation Rotor [{ID}]") as IMyMotorStator;
                     if (_elevationRotor == null)
                     {
                         throw new Exception();
@@ -105,7 +103,7 @@ namespace IngameScript
                 }
                 catch (Exception ex)
                 {
-                    _program.Echo("Error in TargetingLaser construction");
+                    DebugEcho("Error in TargetingLaser construction");
                     return false;
                 }
             }

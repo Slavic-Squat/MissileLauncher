@@ -61,7 +61,7 @@ namespace IngameScript
                 TimeRecorded = timeRecorded;
             }
 
-            public void UpdateFromEntityInfo(IEntityInfo entityInfo)
+            public void Merge(IEntityInfo entityInfo)
             {
                 if (EntityID != entityInfo.EntityID || TimeRecorded > entityInfo.TimeRecorded)
                 {

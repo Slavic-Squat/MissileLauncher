@@ -33,43 +33,43 @@ namespace IngameScript
             public IMyCubeBlock ReferenceBlock { get; private set; }
             public DateTime Time { get; private set; }
             public long SelfID => ReferenceBlock.CubeGrid.EntityId;
+            public UIWireManager UIWireManager { get; private set; }
 
-            private UIWireManager _uiWireManager;
-            private Program _program;
             private List<IEnumerator<bool>> _coroutines = new List<IEnumerator<bool>>(); 
 
-            public SystemCoordinator(Program program, IMyCubeBlock referenceBlock, int numOfControlStations, int numOfTargetingLasers)
+            public SystemCoordinator(IMyCubeBlock referenceBlock, int numOfControlStations, int numOfTargetingLasers)
             {
-                _program = program;
                 ReferenceBlock = referenceBlock;
 
                 ControlStations = new List<ControlStation>();
                 TargetingLasers = new List<TargetingLaser>();
 
-                _uiWireManager = new UIWireManager(this);
+                UIWireManager = new UIWireManager(this);
 
                 for (int i = 0; i < numOfControlStations; i++)
                 {
-                    ControlStation controlStation = new ControlStation(program, i, _uiWireManager);
+                    ControlStation controlStation = new ControlStation(i, UIWireManager);
                     ControlStations.Add(controlStation);
                 }
 
                 for (int i = 0; i < numOfTargetingLasers;  i++)
                 {
-                    TargetingLaser laser = new TargetingLaser(program, i);
+                    TargetingLaser laser = new TargetingLaser(i);
                     laser.SyncRequested += SyncTarget;
                     TargetingLasers.Add(laser);
                 }
 
-                CommunicationHandler = new CommunicationHandler(program, 0);
-                AWACS = new AWACS(program, 0);
+                CommunicationHandler = new CommunicationHandler(0);
+                AWACS = new AWACS(0);
                 TargetCoordinator = new TargetCoordinator(0, SelfID, ReferenceBlock, CommunicationHandler);
-                MissileCoordinator = new MissileCoordinator(program, 0, 0, ReferenceBlock, SelfID, CommunicationHandler);
+                MissileCoordinator = new MissileCoordinator(0, 8, ReferenceBlock, SelfID, CommunicationHandler, TargetCoordinator.AllTargetsExt);
             }
 
             public void Run(DateTime time)
             {
                 Time = time;
+                CommunicationHandler.Recieve();
+
                 for (int i = _coroutines.Count - 1; i >= 0; i--)
                 {
                     var coroutine = _coroutines[i];
@@ -90,6 +90,7 @@ namespace IngameScript
 
                 AWACS.Run(time);
                 TargetCoordinator.Run(time);
+                MissileCoordinator.Run(time);
 
                 foreach (var target in AWACS.Targets.Values)
                 {

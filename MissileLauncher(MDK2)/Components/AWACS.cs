@@ -62,21 +62,18 @@ namespace IngameScript
             public Dictionary<long, bool> TargetsSyncInfo {  get; private set; }
             public List<long> TargetIDs { get; private set; }
             #endregion
-
-            private Program _program;
-            public AWACS(Program program, int id, float maxRaycastDistance = 5000)
+            public AWACS(int id, float maxRaycastDistance = 5000)
             {
-                _program = program;
                 ID = id;
 
                 Targets = new Dictionary<long, EntityInfoExt>();
                 TargetsSyncInfo = new Dictionary<long, bool>();
                 TargetIDs = new List<long>();
 
-                _cameraArray0 = new CameraArray(_program, 1, maxRaycastDistance);
-                _cameraArray1 = new CameraArray(_program, 2, maxRaycastDistance);
-                _cameraArray2 = new CameraArray(_program, 3, maxRaycastDistance);
-                _cameraArray3 = new CameraArray(_program, 4, maxRaycastDistance);
+                _cameraArray0 = new CameraArray(1, maxRaycastDistance);
+                _cameraArray1 = new CameraArray(2, maxRaycastDistance);
+                _cameraArray2 = new CameraArray(3, maxRaycastDistance);
+                _cameraArray3 = new CameraArray(4, maxRaycastDistance);
 
                 TryGetBlocks();
                 Init();
@@ -86,7 +83,7 @@ namespace IngameScript
             {
                 try
                 {
-                    _spinRotor = _program.GridTerminalSystem.GetBlockWithName($"Spin Rotor [{ID}]") as IMyMotorStator;
+                    _spinRotor = GTS.GetBlockWithName($"Spin Rotor [{ID}]") as IMyMotorStator;
                     if (_spinRotor == null)
                     {
                         throw new Exception();
@@ -95,7 +92,7 @@ namespace IngameScript
                 }
                 catch (Exception ex)
                 {
-                    _program.Echo("Error in AWACS construction");
+                    DebugEcho("Error in AWACS construction");
                     return false;
                 }
             }

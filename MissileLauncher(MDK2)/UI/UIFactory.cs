@@ -141,7 +141,7 @@ namespace IngameScript
                     action = () =>
                     {
                         Vector2 missileMenuPos = window.Center;
-                        ModalMenu missileMenu = CreateMissileArmMenu(missileMenuPos, window, wireManager, true, true);
+                        ModalMenu missileMenu = CreateBayMenu(missileMenuPos, window, wireManager, true, true);
                         window.CloseMenu(menu);
                         window.OpenMenu(missileMenu);
                         return true;
@@ -192,7 +192,7 @@ namespace IngameScript
                     action = () =>
                     {
                         Vector2 missileMenuPos = window.Center;
-                        ModalMenu missileMenu = CreateMissileArmMenu(missileMenuPos, window, wireManager, true, true);
+                        ModalMenu missileMenu = CreateBayMenu(missileMenuPos, window, wireManager, true, true);
                         window.CloseMenu(menu);
                         window.OpenMenu(missileMenu);
                         return true;
@@ -215,11 +215,12 @@ namespace IngameScript
                 }
             }
 
-            public static ModalMenu CreateMissileArmMenu(Vector2 pos, RadarWindow window, UIWireManager wireManager, bool vertCent = false, bool horCent = false)
+            public static ModalMenu CreateBayMenu(Vector2 pos, RadarWindow window, UIWireManager wireManager, bool vertCent = false, bool horCent = false)
             {
                 IMyTextSurface surface = window.Display;
+                var bays = wireManager.MissileBays;
 
-                int numBays = 25;
+                int numBays = bays.Count;
                 int numColumns = 5;
                 int numRows = 2;
 
@@ -230,7 +231,7 @@ namespace IngameScript
                 float footerHeight = 100f;
                 Vector2 labelSize = new Vector2(300f, 50f);
                 Vector2 panelSize = new Vector2(150f, 175f);
-                Vector2 armButtonSize = new Vector2(100f, 35f);
+                Vector2 selectButtonSize = new Vector2(100f, 35f);
 
                 float totalWidth = panelSize.X * numColumns + spacing * (numColumns - 1) + 2 * padding;
                 float totalHeight = headerHeight + footerHeight + panelSize.Y * numRows + spacing * (numRows - 1);
@@ -267,26 +268,32 @@ namespace IngameScript
                         for (int k = 0; k < numColumns; k++)
                         {
                             if (bayIndex >= numBays) break;
+                            var bay = bays[bayIndex];
                             panelPos.X = menu.Pos.X + padding + (panelSize.X + spacing) * k;
-                            Func<string> getText = () => $"Bay [{bayIndex}]\n-------------------";
+                            Func<string> getText = () => bay.ToString();
                             InfoPanel panel = new InfoPanel(panelPos, panelSize, 5f, getText, surface);
                             menu.AddInfoPanel(panel, i);
 
-                            Vector2 buttonPos = panel.Pos + new Vector2(panel.Size.X * 0.5f - armButtonSize.X * 0.5f, panel.Size.Y - armButtonSize.Y - 10f);
-                            getText = () => "ARM";
+                            Vector2 buttonPos = panel.Pos + new Vector2(panel.Size.X * 0.5f - selectButtonSize.X * 0.5f, panel.Size.Y - selectButtonSize.Y - 10f);
+                            getText = () =>
+                            {
+                                return bay.IsSelected ? "SELECTED" : "SELECT";
+                            };
                             Func<bool> onPress = () =>
                             {
+                                wireManager.SelectBay(bay.ID);
                                 return true;
                             };
                             Func<bool> onRelease = () =>
                             {
+                                wireManager.DeselectBay(bay.ID);
                                 return true;
                             };
                             Func<bool> isPressed = () =>
                             {
-                                return false;
+                                return bay.IsSelected;
                             };
-                            ToggleButton button = new ToggleButton("Arm", buttonPos, armButtonSize, 8f, 3f, 1f, getText, onPress, onRelease, isPressed, surface);
+                            ToggleButton button = new ToggleButton("SELECT", buttonPos, selectButtonSize, 10f, 3f, 1f, getText, onPress, onRelease, isPressed, surface);
                             menu.AddButton(button, i);
                             bayIndex++;
                         }
@@ -311,6 +318,7 @@ namespace IngameScript
                 Func<string> cancelText = () => "CANCEL";
                 action = () =>
                 {
+                    wireManager.ClearSelectedBays();
                     window.CloseMenu(menu);
                     return true;
                 };

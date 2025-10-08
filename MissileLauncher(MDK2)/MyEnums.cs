@@ -28,9 +28,14 @@ namespace IngameScript
             None = 0, Local = 1, Remote = 1 << 1, Both = Local | Remote
         }
 
+        public enum BayStatus : byte
+        {
+            Empty, Loaded, Ready, Launching
+        }
+
         public enum MissileStage : byte
         {
-            Unknown, Flying, Interception
+            Unknown, Active, Launching, Flying, Interception
         }
 
         public enum EntityType : byte
@@ -55,6 +60,7 @@ namespace IngameScript
 
         public static readonly NavMode[] NavModeCycles = new NavMode[] { NavMode.UI, NavMode.Targeting };
 
+        [Flags]
         public enum EntityTypeFilter : byte
         {
             None = 0, Targets = 1 << 0, Missiles = 1 << 1, All = Targets | Missiles,
@@ -62,6 +68,7 @@ namespace IngameScript
 
         public static readonly EntityTypeFilter[] EntityTypeFilterCycles = new EntityTypeFilter[] { EntityTypeFilter.Targets, EntityTypeFilter.Missiles, EntityTypeFilter.All };
 
+        [Flags]
         public enum EntityRelationFilter : byte
         {
             None = 0, Hostile = 1 << 0, Neutral = 1 << 1, Friendly = 1 << 2, Me = 1 << 3, All = Hostile | Neutral | Friendly | Me,
@@ -69,6 +76,7 @@ namespace IngameScript
 
         public static readonly EntityRelationFilter[] EntityRelationFilterCycles = new EntityRelationFilter[] { EntityRelationFilter.Hostile, EntityRelationFilter.Neutral, EntityRelationFilter.Friendly, EntityRelationFilter.Me, EntityRelationFilter.All };
 
+        [Flags]
         public enum EntitySourceFilter : byte
         {
             None = 0, Local = 1 << 0, Remote = 1 << 1, Both = Local | Remote
@@ -127,6 +135,7 @@ namespace IngameScript
             switch (stage)
             {
                 case MissileStage.Unknown: return "N/A";
+                case MissileStage.Launching: return "LAUNCHING";
                 case MissileStage.Flying: return "FLYING";
                 case MissileStage.Interception: return "INTERCEPTION";
                 default: return "N/A";
@@ -198,6 +207,18 @@ namespace IngameScript
                 case ScopeScale.Close: return 2;
                 case ScopeScale.Far: return 1;
                 default: return 0;
+            }
+        }
+
+        public static string GetName(BayStatus status)
+        {
+            switch (status)
+            {
+                case BayStatus.Empty: return "EMPTY";
+                case BayStatus.Loaded: return "LOADED";
+                case BayStatus.Ready: return "READY";
+                case BayStatus.Launching: return "LAUNCHING";
+                default: return "N/A";
             }
         }
 

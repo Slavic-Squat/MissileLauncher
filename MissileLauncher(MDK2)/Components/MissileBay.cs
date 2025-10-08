@@ -24,97 +24,115 @@ namespace IngameScript
     {
         public class MissileBay
         {
-            #region Fields
-            private Program _program;
-            #endregion
-
             #region Parts
+            private Dictionary<long, MissileInfo> _activeMissiles = new Dictionary<long, MissileInfo>();
             private IMyProgrammableBlock _missileComputer;
+            private long _missileID = -1;
+            private IMyShipConnector _connector;
             private long _selfID;
             private long _selfAddress;
             #endregion
 
             #region Properties
-            public int ID {  get; private set; }      
-            public Status State { get; private set; }
+            public int ID {  get; private set; }
+            public BayStatus Status { get; private set; } = BayStatus.Empty;
+            public bool IsSelected { get; set; } = false;
             #endregion
 
-            public enum Status
+            public MissileBay(int id, long selfID, long selfAddress, Dictionary<long, MissileInfo> activeMissiles)
             {
-                Empty, Exists, Building, Fueling, Ready, Firing, Error
-            }
-
-            public MissileBay(Program program, int id, long selfID, long selfAddress)
-            {
-                _program = program;
                 ID = id;
                 _selfID = selfID;
                 _selfAddress = selfAddress;
+                _activeMissiles = activeMissiles;
 
+                TryGetBlocks();
                 RegisterMissile();
             }
 
-            public IEnumerator<Status> StateUpdate()
+            public bool TryGetBlocks()
             {
-                switch (State)
+                try
                 {
-                    case Status.Firing:
-
-                        while (_program.GridTerminalSystem.CanAccess(_missileComputer))
-                        {
-                            yield return Status.Firing;
-                        }
-                        State = Status.Empty;
-                        yield return Status.Empty;
-                        break;
+                    _connector = GTS.GetBlockWithName($"Missile Bay Connector [{ID}]") as IMyShipConnector;
+                    if (_connector == null)
+                    {
+                        throw new Exception();
+                    }
                 }
+                catch
+                {
+                    return false;
+                }
+                return true;
             }
 
             public void RegisterMissile()
             {
-                _missileComputer = _program.GridTerminalSystem.GetBlockWithName($"Missile Computer [{ID}]") as IMyProgrammableBlock;
+                IMyShipConnector missileConnector = _connector.OtherConnector;
+                if (missileConnector == null)
+                {
+                    return;
+                }
+                List<IMyProgrammableBlock> temp = new List<IMyProgrammableBlock>();
+                GTS.GetBlocksOfType(temp, pb => pb.IsSameConstructAs(missileConnector) && pb.CustomName == "Missile Computer");
+                _missileComputer = temp.FirstOrDefault();
 
                 if (_missileComputer != null)
                 {
-                    State = Status.Exists;
+                    Status = BayStatus.Loaded;
+                    _missileID = _missileComputer.CubeGrid.EntityId;
+                }
+                else
+                {
+                    Status = BayStatus.Empty;
+                    _missileID = -1;
+                }
+            }
+
+            public void Run(DateTime time)
+            {
+                if (!GTS.CanAccess(_missileComputer))
+                {
+                    Status = BayStatus.Empty;
+                    _missileID = -1;
+                    return;
                 }
             }
 
             public void InitMissile()
             {
-                if (State == Status.Exists)
+                if (Status == BayStatus.Loaded)
                 {
-                    _missileComputer.CustomData = $"InitMissile {_selfAddress} {_selfID}";
-                    if (_missileComputer.TryRun("-CommandSent"))
-                    {
-                        State = Status.Ready;
-                    }
-                    else
-                    {
-                        _missileComputer.CustomData = "";
-                    }
+                    _missileComputer.Enabled = true;
+                    _missileComputer.CustomData += $"\nInitMissile {_selfAddress} {_selfID}";
+                    _missileComputer.TryRun("Init");
+                    Status = BayStatus.Ready;
                 }
             }
 
             public void Launch(long targetID)
             {
-                if (State == Status.Ready)
+                if (Status == BayStatus.Ready)
                 {
-                    _missileComputer.CustomData = $"Launch {targetID}";
-                    if (_missileComputer.TryRun("-CommandSent"))
-                    {
-                        State = Status.Firing;
-                    }
-                    else
-                    {
-                        _missileComputer.CustomData = "";
-                    }
+                    _missileComputer.CustomData += $"\nLaunch {targetID}";
+                    Status = BayStatus.Launching;
                 }
             }
 
             public void ResetMissile()
             {
+                if (Status == BayStatus.Ready)
+                {
+                    _missileComputer.CustomData += $"\nReset";
+                    Status = BayStatus.Loaded;
+                    _missileComputer.Enabled = false;
+                }
+            }
 
+            public override string ToString()
+            {
+                return $"Bay [{ID}]\n----------------\nSTATUS: {GetName(Status)}\nSELECTED: {IsSelected.ToString().ToUpper()}";
             }
         }
     }

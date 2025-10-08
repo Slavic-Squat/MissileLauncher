@@ -31,7 +31,7 @@ namespace IngameScript
 
             void Transform(Matrix transform);
             void UpdateFromRaycast(MyDetectedEntityInfo entityInfo, DateTime timeRecorded);
-            void UpdateFromEntityInfo(IEntityInfo entityInfo);
+            void Merge(IEntityInfo entityInfo);
             byte[] Serialize();
         }
     }
