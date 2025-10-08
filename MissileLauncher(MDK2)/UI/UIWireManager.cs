@@ -71,6 +71,8 @@ namespace IngameScript
             public void SelectBay(int bayID) => _systemCoordinator.MissileCoordinator.SelectBay(bayID);
             public void DeselectBay(int bayID) => _systemCoordinator.MissileCoordinator.DeselectBay(bayID);
             public void ClearSelectedBays() => _systemCoordinator.MissileCoordinator.ClearSelectedBays();
+            public void LaunchMissiles(long targetID) => _systemCoordinator.MissileCoordinator.LaunchMissiles(targetID);
+            public void ForgetTarget(long targetID) => _systemCoordinator.AWACS.RemoveTarget(targetID);
         }
     }
 }

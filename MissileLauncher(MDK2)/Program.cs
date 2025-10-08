@@ -27,20 +27,18 @@ namespace IngameScript
         private Dictionary<string, Action<string[]>> commands = new Dictionary<string, Action<string[]>>();
         #endregion
 
-        #region State Info
-        private DateTime time = DateTime.Now;
-        #endregion
-
         private SystemCoordinator _systemCoordinator;
         public static Action<string> DebugEcho { get; private set; }
         public static IMyGridTerminalSystem GTS { get; private set; }
         public static IMyIntergridCommunicationSystem IGCS { get; private set; }
+        public static DateTime Time { get; private set; }
 
         public Program()
         {
             DebugEcho = Echo;
             GTS = GridTerminalSystem;
             IGCS = IGC;
+            Time = DateTime.Now;
             Runtime.UpdateFrequency = UpdateFrequency.Update1;
 
             List<IMyShipController> tempList = new List<IMyShipController>();
@@ -59,15 +57,15 @@ namespace IngameScript
 
         public void Main(string argument, UpdateType updateSource)
         {
-            time += Runtime.TimeSinceLastRun;
+            Time += Runtime.TimeSinceLastRun;
 
             if (argument != null)
             {
                 _commandHandler.TryRunCommands(argument);
             }
             _commandHandler.RunCustomDataCommands();
-            _systemCoordinator.Run(time);
-            Echo(time.ToString());
+            _systemCoordinator.Run(Time);
+            Echo(Time.ToString());
         }
     }
 }

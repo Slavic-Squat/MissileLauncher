@@ -205,6 +205,7 @@ namespace IngameScript
                     getText = () => "FORGET";
                     action = () =>
                     {
+                        wireManager.ForgetTarget(entity.EntityID);
                         return true;
                     };
 
@@ -293,7 +294,12 @@ namespace IngameScript
                             {
                                 return bay.IsSelected;
                             };
-                            ToggleButton button = new ToggleButton("SELECT", buttonPos, selectButtonSize, 10f, 3f, 1f, getText, onPress, onRelease, isPressed, surface);
+                            Func<bool> canPress = () =>
+                            {
+                                return bay.IsSelectable;
+                            };
+                            Func<bool> canRelease = canPress;
+                            ToggleButton button = new ToggleButton("SELECT", buttonPos, selectButtonSize, 10f, 3f, 1f, getText, onPress, onRelease, isPressed, surface, canPress, canRelease);
                             menu.AddButton(button, i);
                             bayIndex++;
                         }
@@ -311,7 +317,7 @@ namespace IngameScript
                     window.OpenMenu(missileFireMenu);
                     return true;
                 };
-                Button confirmButton = new Button("Confirm", confirmButtonPos, confirmButtonSize, 10f, 4f, 1f, confirmText, action, surface);
+                Button confirmButton = new Button("Confirm", confirmButtonPos, confirmButtonSize, 14f, 4f, 1f, confirmText, action, surface);
                 menu.AddButton(confirmButton, -1);
                 Vector2 cancelButtonSize = new Vector2(150f, 50f);
                 Vector2 cancelButtonPos = menu.Pos + new Vector2(menu.Size.X * 0.5f + 20f, menu.Size.Y - footerHeight * 0.5f - confirmButtonSize.Y * 0.5f);
@@ -322,7 +328,7 @@ namespace IngameScript
                     window.CloseMenu(menu);
                     return true;
                 };
-                Button cancelButton = new Button("Cancel", cancelButtonPos, cancelButtonSize, 10f, 4f, 1f, cancelText, action, surface);
+                Button cancelButton = new Button("Cancel", cancelButtonPos, cancelButtonSize, 14f, 4f, 1f, cancelText, action, surface);
                 menu.AddButton(cancelButton, -1);
                 return menu;
             }
@@ -352,6 +358,7 @@ namespace IngameScript
                 Func<string> getText = () => "FIRE";
                 Func<bool> action = () =>
                 {
+                    wireManager.LaunchMissiles(window.SelectedEntityID);
                     window.CloseMenu(menu);
                     return true;
                 };
@@ -362,6 +369,7 @@ namespace IngameScript
                 getText = () => "ABORT";
                 action = () =>
                 {
+                    wireManager.ClearSelectedBays();
                     window.CloseMenu(menu);
                     return true;
                 };

@@ -33,6 +33,16 @@ namespace IngameScript
             Empty, Loaded, Ready, Launching
         }
 
+        public enum MissileType : byte
+        {
+            Unknown, MCLOS,
+        }
+
+        public enum MissilePayload : byte
+        {
+            Unknown, HE, Nuclear, Kinectic
+        }
+
         public enum MissileStage : byte
         {
             Unknown, Active, Launching, Flying, Interception
@@ -218,6 +228,28 @@ namespace IngameScript
                 case BayStatus.Loaded: return "LOADED";
                 case BayStatus.Ready: return "READY";
                 case BayStatus.Launching: return "LAUNCHING";
+                default: return "N/A";
+            }
+        }
+
+        public static string GetName(MissileType type)
+        {
+            switch (type)
+            {
+                case MissileType.Unknown: return "N/A";
+                case MissileType.MCLOS: return "MCLOS";
+                default: return "N/A";
+            }
+        }
+
+        public static string GetName(MissilePayload payload)
+        {
+            switch (payload)
+            {
+                case MissilePayload.Unknown: return "N/A";
+                case MissilePayload.HE: return "HE";
+                case MissilePayload.Nuclear: return "NUKE";
+                case MissilePayload.Kinectic: return "KINECTIC";
                 default: return "N/A";
             }
         }

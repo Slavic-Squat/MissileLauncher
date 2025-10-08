@@ -24,7 +24,7 @@ namespace IngameScript
     {
         public static class ConfigUtilties
         {
-            
+            public static MyIni Config = new MyIni();
         }
     }
 }

@@ -27,16 +27,31 @@ namespace IngameScript
             #region Parts
             private Dictionary<long, MissileInfo> _activeMissiles = new Dictionary<long, MissileInfo>();
             private IMyProgrammableBlock _missileComputer;
-            private long _missileID = -1;
             private IMyShipConnector _connector;
+            private MyIni _missileConfig = new MyIni();
             private long _selfID;
             private long _selfAddress;
+            private bool _isSelected = false;
             #endregion
 
             #region Properties
             public int ID {  get; private set; }
             public BayStatus Status { get; private set; } = BayStatus.Empty;
-            public bool IsSelected { get; set; } = false;
+            public MissileType MissileType { get; private set; } = MissileType.Unknown;
+            public MissilePayload MissilePayload { get; private set; } = MissilePayload.Unknown;
+            public long MissileID { get; private set; } = -1;
+            public bool IsSelected
+            {
+                get
+                {
+                    return _isSelected;
+                }
+                set
+                {
+                    _isSelected = IsSelectable && value;
+                }
+            }
+            public bool IsSelectable => Status == BayStatus.Loaded || Status == BayStatus.Ready;
             #endregion
 
             public MissileBay(int id, long selfID, long selfAddress, Dictionary<long, MissileInfo> activeMissiles)
@@ -78,15 +93,23 @@ namespace IngameScript
                 GTS.GetBlocksOfType(temp, pb => pb.IsSameConstructAs(missileConnector) && pb.CustomName == "Missile Computer");
                 _missileComputer = temp.FirstOrDefault();
 
+                if (_missileConfig.TryParse(missileConnector.CustomData))
+                {
+                    byte missileType = _missileConfig.Get("Data", "Type").ToByte();
+                    byte missilePayload = _missileConfig.Get("Data", "Payload").ToByte();
+
+                    MissileType = (MissileType)missileType;
+                    MissilePayload = (MissilePayload)missilePayload;
+                }
                 if (_missileComputer != null)
                 {
                     Status = BayStatus.Loaded;
-                    _missileID = _missileComputer.CubeGrid.EntityId;
+                    MissileID = _missileComputer.CubeGrid.EntityId;
                 }
                 else
                 {
                     Status = BayStatus.Empty;
-                    _missileID = -1;
+                    MissileID = -1;
                 }
             }
 
@@ -95,29 +118,40 @@ namespace IngameScript
                 if (!GTS.CanAccess(_missileComputer))
                 {
                     Status = BayStatus.Empty;
-                    _missileID = -1;
+                    MissileID = -1;
+                    _missileConfig.Clear();
+                    MissileType = MissileType.Unknown;
+                    MissilePayload = MissilePayload.Unknown;
                     return;
                 }
             }
 
-            public void InitMissile()
+            public bool InitMissile()
             {
                 if (Status == BayStatus.Loaded)
                 {
                     _missileComputer.Enabled = true;
                     _missileComputer.CustomData += $"\nInitMissile {_selfAddress} {_selfID}";
-                    _missileComputer.TryRun("Init");
+                    if (!_missileComputer.TryRun("Init"))
+                    {
+                        _missileComputer.CustomData = "";
+                        return false;
+                    }
                     Status = BayStatus.Ready;
+                    return true;
                 }
+                return false;
             }
 
-            public void Launch(long targetID)
+            public bool Launch(long targetID)
             {
                 if (Status == BayStatus.Ready)
                 {
                     _missileComputer.CustomData += $"\nLaunch {targetID}";
                     Status = BayStatus.Launching;
+                    return true;
                 }
+                return false;
             }
 
             public void ResetMissile()
@@ -132,7 +166,7 @@ namespace IngameScript
 
             public override string ToString()
             {
-                return $"Bay [{ID}]\n----------------\nSTATUS: {GetName(Status)}\nSELECTED: {IsSelected.ToString().ToUpper()}";
+                return $"Bay [{ID}]\n----------------\nSTATUS: {GetName(Status)}\nMISL TYPE: {GetName(MissileType)}\nMISL PAYLOAD: {GetName(MissilePayload)}\n";
             }
         }
     }

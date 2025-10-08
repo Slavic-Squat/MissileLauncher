@@ -26,6 +26,7 @@ namespace IngameScript
         {
             #region Properties
             public int ID { get; private set; }
+            public DateTime Time { get; private set; }
             public Dictionary<long, EntityInfoExt> ActiveMissilesExt
             {
                 get
@@ -55,7 +56,7 @@ namespace IngameScript
 
             private Dictionary<long, EntityInfoExt> _targetInfo = new Dictionary<long, EntityInfoExt>();
 
-            private List<IEnumerator<bool>> _coroutines = new List<IEnumerator<bool>>();
+            private IEnumerator<bool> _launchCoroutine;
 
             public MissileCoordinator(int id, int numberOfMissileBays, IMyCubeBlock referenceBlock, long selfID, CommunicationHandler communicationHandler, Dictionary<long, EntityInfoExt> targetInfo)
             {
@@ -76,6 +77,7 @@ namespace IngameScript
 
             public void Run(DateTime time)
             {
+                Time = time;
                 _activeMissilesStale = true;
 
                 foreach (var bay in MissileBays)
@@ -110,17 +112,13 @@ namespace IngameScript
                     }
                 }
 
-                for (int i = _coroutines.Count - 1; i >= 0; i--)
+                if (_launchCoroutine != null && !_launchCoroutine.MoveNext())
                 {
-                    var coroutine = _coroutines[i];
-                    if (coroutine.MoveNext())
-                    {
-                        _coroutines.RemoveAt(i);
-                    }
+                    _launchCoroutine = null;
                 }
             }
 
-            public void AddMissile(MissileInfo missileInfo)
+            private void AddMissile(MissileInfo missileInfo)
             {
                 long key = missileInfo.EntityID;
                 if (!_activeMissiles.ContainsKey(key))
@@ -133,7 +131,7 @@ namespace IngameScript
                 }
             }
 
-            public void RemoveMissile(long entityID)
+            private void RemoveMissile(long entityID)
             {
                 _activeMissiles.Remove(entityID);
             }
@@ -159,17 +157,20 @@ namespace IngameScript
             {
                 if (bayID >= 0 && bayID < MissileBays.Count)
                 {
+                    var bay = MissileBays[bayID];
+                    if (!bay.IsSelectable) return;
                     SelectedBays.Add(bayID);
-                    MissileBays[bayID].IsSelected = true;
+                    bay.IsSelected = true;
                 }
             }
 
             public void DeselectBay(int bayID)
             {
-                SelectedBays.Remove(bayID);
                 if (bayID >= 0 && bayID < MissileBays.Count)
                 {
-                    MissileBays[bayID].IsSelected = false;
+                    var bay = MissileBays[bayID];
+                    bay.IsSelected = false;
+                    SelectedBays.Remove(bayID);
                 }
             }
 
@@ -195,11 +196,32 @@ namespace IngameScript
 
             public void LaunchMissiles(long targetID)
             {
-                foreach (int bayID in SelectedBays)
+                if (_launchCoroutine != null) return;
+                _launchCoroutine = HandleLaunch(targetID);
+            }
+
+            private IEnumerator<bool> HandleLaunch(long targetID)
+            {
+                DateTime timeOfLastLaunch = DateTime.MinValue;
+                foreach (var bayID in SelectedBays.ToList())
                 {
-                    MissileBays[bayID].Launch(targetID);
+                    while (Time - timeOfLastLaunch < TimeSpan.FromSeconds(1))
+                    {
+                        yield return false;
+                    }
+                    while (MissileBays[bayID].Status == BayStatus.Loaded && !MissileBays[bayID].InitMissile())
+                    {
+                        DebugEcho("Failed to initialize missile.");
+                        yield return false;
+                    }
+
+                    if (MissileBays[bayID].Launch(targetID))
+                    {
+                        timeOfLastLaunch = Time;
+                    }                    
                     DeselectBay(bayID);
                 }
+                yield return true;
             }
         }
     }

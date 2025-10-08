@@ -41,6 +41,7 @@ namespace IngameScript
             public EntityRelationFilter NavRelationFilter { get; set; } = EntityRelationFilter.All;
             public EntitySourceFilter NavSourceFilter { get; set; } = EntitySourceFilter.Both;
             public ScopeScale ScopeScale { get; set; } = ScopeScale.Close;
+            public long SelectedEntityID { get; private set; }
             private IMyCubeBlock ReferenceBlock => UI.UIWireManager.ReferenceBlock;
 
             private Dictionary<long, EntityInfoExt> _allEntities = new Dictionary<long, EntityInfoExt>();
@@ -59,9 +60,7 @@ namespace IngameScript
             private List<IUpdatable> _updateables = new List<IUpdatable>();
             private List<IUIElement> _uiElements = new List<IUIElement>();
             private List<INavigable> _navigables = new List<INavigable>();
-            private INavigable _navigatedElement;        
-
-            private long _selectedEntityID;
+            private INavigable _navigatedElement;
 
 
             public RadarWindow(UI ui, Vector2 pos, Vector2 size, float borderThickness)
@@ -98,9 +97,9 @@ namespace IngameScript
                 Vector2 targetPanelPos = Pos + new Vector2(Size.X - targetPanelSize.X, Size.Y * 0.5f - targetPanelSize.Y * 0.5f);
                 Func<string> targetInfoGetter = () =>
                 {
-                    if (_entitySprites.Keys.Contains(_selectedEntityID))
+                    if (_entitySprites.Keys.Contains(SelectedEntityID))
                     {
-                        return _entitySprites[_selectedEntityID].EntityInfo.ToString(ReferenceBlock.GetPosition(), UI.UIWireManager.SystemTime);
+                        return _entitySprites[SelectedEntityID].EntityInfo.ToString(ReferenceBlock.GetPosition(), UI.UIWireManager.SystemTime);
                     }
                     else
                     {
@@ -286,12 +285,12 @@ namespace IngameScript
 
             private void SelectEntity(long entityID)
             {
-                _selectedEntityID = entityID;
+                SelectedEntityID = entityID;
             }
 
             private void UnselectEntity()
             {
-                _selectedEntityID = -1;
+                SelectedEntityID = -1;
             }
 
             public void Update(DateTime time)
@@ -299,7 +298,7 @@ namespace IngameScript
                 _allEntities = UI.UIWireManager.GetAllEntities();
 
                 _targetingSpriteBuilder.Zoom = GetValue(ScopeScale);
-                _targetingSprites = _targetingSpriteBuilder.BuildSprites(_allEntities, _selectedEntityID, out _entitySprites);
+                _targetingSprites = _targetingSpriteBuilder.BuildSprites(_allEntities, SelectedEntityID, out _entitySprites);
 
                 foreach (var updatable in _updateables)
                 {
@@ -427,34 +426,34 @@ namespace IngameScript
                     UnselectEntity();
                     return;
                 }
-                else if (!filtered.Keys.Contains(_selectedEntityID))
+                else if (!filtered.Keys.Contains(SelectedEntityID))
                 {
                     UnselectEntity();
                 }
 
                 if (input.WRelease)
                 {
-                    long nextEntityID = UIUtilities.Navigate(filtered, _selectedEntityID, NavigationDirection.Up);
+                    long nextEntityID = UIUtilities.Navigate(filtered, SelectedEntityID, NavigationDirection.Up);
                     SelectEntity(nextEntityID);
                 }
                 else if (input.SRelease)
                 {
-                    long nextEntityID = UIUtilities.Navigate(filtered, _selectedEntityID, NavigationDirection.Down);
+                    long nextEntityID = UIUtilities.Navigate(filtered, SelectedEntityID, NavigationDirection.Down);
                     SelectEntity(nextEntityID);
                 }
                 else if (input.ARelease)
                 {
-                    long nextEntityID = UIUtilities.Navigate(filtered, _selectedEntityID, NavigationDirection.Left);
+                    long nextEntityID = UIUtilities.Navigate(filtered, SelectedEntityID, NavigationDirection.Left);
                     SelectEntity(nextEntityID);
                 }
                 else if (input.DRelease)
                 {
-                    long nextEntityID = UIUtilities.Navigate(filtered, _selectedEntityID, NavigationDirection.Right);
+                    long nextEntityID = UIUtilities.Navigate(filtered, SelectedEntityID, NavigationDirection.Right);
                     SelectEntity(nextEntityID);
                 }
                 else if (input.SpaceRelease)
                 {
-                    OpenEntityMenu(_selectedEntityID);
+                    OpenEntityMenu(SelectedEntityID);
                 }
             }
         }
