@@ -103,7 +103,7 @@ namespace IngameScript
                 EntityInfoExt target = laser.Target;
                 DebugEcho("SYNCING");
 
-                if (!target.IsEmpty)
+                if (target.IsValid)
                     AWACS.AddTarget(target);
             }
         }

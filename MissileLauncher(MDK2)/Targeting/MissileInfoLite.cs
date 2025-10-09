@@ -26,10 +26,12 @@ namespace IngameScript
         public struct MissileInfoLite
         {
             public long LauncherID { get; private set; }
+            public bool IsValid { get; private set; }
 
             public MissileInfoLite(long launcherID)
             {
                 LauncherID = launcherID;
+                IsValid = true;
             }
 
             public byte[] Serialize()

@@ -131,7 +131,8 @@ namespace IngameScript
                 }
                 else
                 {
-                    _activeMissiles[key].Merge(entityInfo);
+                    var original = _activeMissiles[key];
+                    _activeMissiles[key] = original.Merge(entityInfo);
                 }
             }
 

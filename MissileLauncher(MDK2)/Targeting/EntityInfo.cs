@@ -32,6 +32,7 @@ namespace IngameScript
             public DateTime TimeRecorded { get; private set; }
             public MissileInfoLite? MissileInfoLite { get; private set; }
             public MissileInfo? MissileInfo { get; private set; }
+            public bool IsValid { get; private set; }
 
             public EntityInfo(long entityID, Vector3 position, Vector3 velocity, DateTime timeRecorded)
             {
@@ -43,6 +44,7 @@ namespace IngameScript
                 TimeRecorded = timeRecorded;
                 MissileInfoLite = null;
                 MissileInfo = null;
+                IsValid = true;
             }
 
             public EntityInfo(MyDetectedEntityInfo entityInfo, DateTime timeRecorded)
@@ -55,6 +57,7 @@ namespace IngameScript
                 TimeRecorded = timeRecorded;
                 MissileInfoLite = null;
                 MissileInfo = null;
+                IsValid = true;
             }
 
             public EntityInfo(long entityID, Vector3 position, Vector3 velocity, DateTime timeRecorded, MissileInfoLite missileInfoLite)
@@ -67,6 +70,7 @@ namespace IngameScript
                 TimeRecorded = timeRecorded;
                 MissileInfoLite = missileInfoLite;
                 MissileInfo = null;
+                IsValid = true;
             }
 
             public EntityInfo(long entityID, Vector3 position, Vector3 velocity, DateTime timeRecorded, MissileInfo missileInfo)
@@ -79,13 +83,14 @@ namespace IngameScript
                 TimeRecorded = timeRecorded;
                 MissileInfoLite = null;
                 MissileInfo = missileInfo;
+                IsValid = true;
             }
 
-            public void Merge(EntityInfo entityInfo)
+            public EntityInfo Merge(EntityInfo entityInfo)
             {
                 if (EntityID != entityInfo.EntityID)
                 {
-                    return;
+                    return this;
                 }
                 if (TimeRecorded < entityInfo.TimeRecorded)
                 {
@@ -116,6 +121,7 @@ namespace IngameScript
                         MissileInfo = null;
                     }
                 }
+                return this;
             }
 
             public byte[] Serialize()

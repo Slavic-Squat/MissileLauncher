@@ -31,6 +31,7 @@ namespace IngameScript
             public MissilePayload Payload { get; private set; }
             public long TargetID { get; private set; }
             public long Address { get; private set; }
+            public bool IsValid { get; private set; }
 
             public MissileInfo(long launcherID, long targetID, MissileStage stage, MissileType type, MissilePayload payload, long address)
             {
@@ -40,6 +41,7 @@ namespace IngameScript
                 Type = type;
                 Payload = payload;
                 Address = address;
+                IsValid = true;
             }
 
             public byte[] Serialize()

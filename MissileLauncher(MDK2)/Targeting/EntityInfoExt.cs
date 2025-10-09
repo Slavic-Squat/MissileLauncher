@@ -34,14 +34,14 @@ namespace IngameScript
             public EntityInfoSubType SubType => Info.SubType;
             public EntitySource Source { get; private set; }
             public EntityRelation Relation { get; private set; }
-            public bool IsEmpty { get; private set; }
+            public bool IsValid { get; private set; }
 
             public EntityInfoExt(EntityInfo info, EntitySource source, EntityRelation relation)
             {
                 Info = info;
                 Source = source;
                 Relation = relation;
-                IsEmpty = false;
+                IsValid = true;
             }
 
             public EntityInfoExt(MyDetectedEntityInfo entityInfo, DateTime timeRecorded)
@@ -69,22 +69,22 @@ namespace IngameScript
                         Relation = EntityRelation.Neutral;
                         break;
                 }
-                IsEmpty = false;
+                IsValid = true;
             }
 
-            public void Merge(EntityInfoExt other)
+            public EntityInfoExt Merge(EntityInfoExt other)
             {
                 if (EntityID != other.EntityID)
                 {
-                    return;
+                    return this;
                 }
-                Info.Merge(other.Info);
-
                 if (other.TimeRecorded > TimeRecorded)
                 {
                     Relation = other.Relation;
                 }
+                Info = Info.Merge(other.Info);
                 Source |= other.Source;
+                return this;
             }
 
             public string ToString(Vector3 referencePos, DateTime time)

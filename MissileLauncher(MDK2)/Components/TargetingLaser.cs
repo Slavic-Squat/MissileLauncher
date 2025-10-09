@@ -54,7 +54,7 @@ namespace IngameScript
             public bool HasController => Controller != null;
             public bool IsControlPaused { get; private set; }
             public bool IsUnderControl => HasController && !IsControlPaused;
-            public bool HasTarget => !Target.IsEmpty;
+            public bool HasTarget => Target.IsValid;
             public float MaxRaycastDistance
             {
                 get
@@ -199,7 +199,7 @@ namespace IngameScript
                     if (HasTarget && raycastResult.EntityId == Target.EntityID)
                     {
                         var freshTarget = new EntityInfoExt(raycastResult, time);
-                        Target.Merge(freshTarget);
+                        Target = Target.Merge(freshTarget);
                     }
 
                     else if (!HasTarget)

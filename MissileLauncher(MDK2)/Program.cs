@@ -33,6 +33,8 @@ namespace IngameScript
         public static IMyIntergridCommunicationSystem IGCS { get; private set; }
         public static DateTime Time { get; private set; }
 
+        public static int DebugCounter = 0;
+
         public Program()
         {
             DebugEcho = Echo;
@@ -66,6 +68,7 @@ namespace IngameScript
             _commandHandler.RunCustomDataCommands();
             _systemCoordinator.Run(Time);
             Echo(Time.ToString());
+            Echo($"Debug Counter: {DebugCounter}");
         }
     }
 }

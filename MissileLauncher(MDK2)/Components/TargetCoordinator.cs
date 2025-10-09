@@ -186,7 +186,8 @@ namespace IngameScript
                 }
                 else
                 {
-                    _targetsRemote[entityID].Merge(entityInfo);
+                    var original = _targetsRemote[entityID];
+                    _targetsRemote[entityID] = original.Merge(entityInfo);
                 }
             }
 
@@ -208,7 +209,8 @@ namespace IngameScript
                 }
                 else
                 {
-                    _friendlysRemote[entityID].Merge(entityInfo);
+                    var original = _friendlysRemote[entityID];
+                    _friendlysRemote[entityID] = original.Merge(entityInfo);
                 }
             }
 
@@ -239,7 +241,8 @@ namespace IngameScript
                 }
                 else
                 {
-                    _missilesRemote[entityID].Merge(entityInfo);
+                    var original = _missilesRemote[entityID];
+                    _missilesRemote[entityID] = original.Merge(entityInfo);
                 }
             }
 
@@ -260,7 +263,8 @@ namespace IngameScript
                 }
                 else
                 {
-                    _targetsLocal[entityID].Merge(targetInfoExt);
+                    var original = _targetsLocal[entityID];
+                    _targetsLocal[entityID] = original.Merge(targetInfoExt);
                 }
             }
 
@@ -349,7 +353,8 @@ namespace IngameScript
                     
                     if (allTargets.ContainsKey(key))
                     {
-                        allTargets[key].Merge(entityInfoExt);
+                        var original = allTargets[key];
+                        allTargets[key] = original.Merge(entityInfoExt);
                     }
                     else
                     {
@@ -390,7 +395,8 @@ namespace IngameScript
 
                     if (allTargets.ContainsKey(key))
                     {
-                        allTargets[key].Merge(entityInfoExt);
+                        var original = allTargets[key];
+                        allTargets[key] = original.Merge(entityInfoExt);
                     }
                     else
                     {
@@ -410,7 +416,8 @@ namespace IngameScript
 
                     if (allTargets.ContainsKey(key))
                     {
-                        allTargets[key].Merge(entityInfoExt);
+                        var original = allTargets[key];
+                        allTargets[key] = original.Merge(entityInfoExt);
                     }
                     else
                     {
