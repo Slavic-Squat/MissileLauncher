@@ -28,13 +28,13 @@ namespace IngameScript
             public long LauncherID { get; private set; }
             public MissileStage Stage { get; private set; }
             public MissileType Type { get; private set; }
-            public MissileGuidanceType Guidance { get; private set; }
+            public MissileGuidanceType GuidanceType { get; private set; }
             public MissilePayload Payload { get; private set; }
             public long TargetID { get; private set; }
             public long Address { get; private set; }
             public bool IsValid { get; private set; }
 
-            public MissileInfo(long launcherID, long targetID, MissileStage stage, MissileType type, MissileGuidanceType guidance, MissilePayload payload, long address)
+            public MissileInfo(long launcherID, long targetID, MissileStage stage, MissileType type, MissileGuidanceType guidanceType, MissilePayload payload, long address)
             {
                 LauncherID = launcherID;
                 TargetID = targetID;
@@ -42,7 +42,7 @@ namespace IngameScript
                 Type = type;
                 Payload = payload;
                 Address = address;
-                Guidance = guidance;
+                GuidanceType = guidanceType;
                 IsValid = true;
             }
 
@@ -53,7 +53,7 @@ namespace IngameScript
                 bytes.AddRange(BitConverter.GetBytes(LauncherID));
                 bytes.Add((byte)Stage);
                 bytes.Add((byte)Type);
-                bytes.Add((byte)Guidance);
+                bytes.Add((byte)GuidanceType);
                 bytes.Add((byte)Payload);
                 bytes.AddRange(BitConverter.GetBytes(TargetID));
                 bytes.AddRange(BitConverter.GetBytes(Address));
@@ -69,7 +69,7 @@ namespace IngameScript
                 index += 1;
                 MissileType type = (MissileType)data[index];
                 index += 1;
-                MissileGuidanceType guidance = (MissileGuidanceType)data[index];
+                MissileGuidanceType guidanceType = (MissileGuidanceType)data[index];
                 index += 1;
                 MissilePayload payload = (MissilePayload)data[index];
                 index += 1;
@@ -77,7 +77,7 @@ namespace IngameScript
                 index += 8;
                 long address = BitConverter.ToInt64(data, index);
                 index += 8;
-                return new MissileInfo(launcherID, targetID, stage, type, guidance, payload, address);
+                return new MissileInfo(launcherID, targetID, stage, type, guidanceType, payload, address);
             }
         }
     }
