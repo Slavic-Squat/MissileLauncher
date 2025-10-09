@@ -37,6 +37,7 @@ namespace IngameScript
             public int ID {  get; private set; }
             public BayStatus Status { get; private set; } = BayStatus.Empty;
             public MissileType MissileType { get; private set; } = MissileType.Unknown;
+            public MissileGuidanceType MissileGuidanceType { get; private set; } = MissileGuidanceType.Unknown;
             public MissilePayload MissilePayload { get; private set; } = MissilePayload.Unknown;
             public long MissileID { get; private set; } = -1;
             public bool IsSelected
@@ -94,9 +95,11 @@ namespace IngameScript
                 if (_missileConfig.TryParse(missileConnector.CustomData))
                 {
                     byte missileType = _missileConfig.Get("Data", "Type").ToByte();
+                    byte missileGuidanceType = _missileConfig.Get("Data", "Guidance").ToByte();
                     byte missilePayload = _missileConfig.Get("Data", "Payload").ToByte();
 
                     MissileType = (MissileType)missileType;
+                    MissileGuidanceType = (MissileGuidanceType)missileGuidanceType;
                     MissilePayload = (MissilePayload)missilePayload;
                 }
                 if (_missileComputer != null)
@@ -119,17 +122,18 @@ namespace IngameScript
                     MissileID = -1;
                     _missileConfig.Clear();
                     MissileType = MissileType.Unknown;
+                    MissileGuidanceType = MissileGuidanceType.Unknown;
                     MissilePayload = MissilePayload.Unknown;
                     return;
                 }
             }
 
-            public bool InitMissile()
+            public bool InitMissile(DateTime time)
             {
                 if (Status == BayStatus.Loaded)
                 {
                     _missileComputer.Enabled = true;
-                    _missileComputer.CustomData += $"\nInitMissile {_selfAddress} {_selfID}";
+                    _missileComputer.CustomData += $"\nInit {_selfAddress} {_selfID} {time}";
                     if (!_missileComputer.TryRun("Init"))
                     {
                         _missileComputer.CustomData = "";

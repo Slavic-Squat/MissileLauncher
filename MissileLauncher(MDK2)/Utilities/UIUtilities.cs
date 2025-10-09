@@ -24,8 +24,9 @@ namespace IngameScript
     {
         public static class UIUtilities
         {
-            public static T Navigate<T>(IEnumerable<T> source, T current, NavigationDirection direction) where T : IPositional2D
+            public static T Navigate<T>(IEnumerable<T> source, T current, Direction direction) where T : IPositional2D
             {
+                float epsilon = 0.001f;
                 if (EqualityComparer<T>.Default.Equals(current, default(T)))
                 {
                     current = source.OrderBy(element => element.Pos.X + 2 * element.Pos.Y).FirstOrDefault();
@@ -34,32 +35,32 @@ namespace IngameScript
                 T next = default(T);
                 switch (direction)
                 {
-                    case NavigationDirection.Left:
-                        next = source.Where(element => element.Pos.X < current.Pos.X).OrderBy(element =>
+                    case Direction.Left:
+                        next = source.Where(element => element.Pos.X < current.Pos.X - epsilon).OrderBy(element =>
                         {
                             float dx = Math.Abs(element.Pos.X - current.Pos.X);
                             float dy = Math.Abs(element.Pos.Y - current.Pos.Y);
                             return dx + 10 * dy;
                         }).FirstOrDefault();
                         break;
-                    case NavigationDirection.Right:
-                        next = source.Where(element => element.Pos.X > current.Pos.X).OrderBy(element =>
+                    case Direction.Right:
+                        next = source.Where(element => element.Pos.X > current.Pos.X + epsilon).OrderBy(element =>
                         {
                             float dx = Math.Abs(element.Pos.X - current.Pos.X);
                             float dy = Math.Abs(element.Pos.Y - current.Pos.Y);
                             return dx + 10 * dy;
                         }).FirstOrDefault();
                         break;
-                    case NavigationDirection.Up:
-                        next = source.Where(element => element.Pos.Y < current.Pos.Y).OrderBy(element =>
+                    case Direction.Up:
+                        next = source.Where(element => element.Pos.Y < current.Pos.Y - epsilon).OrderBy(element =>
                         {
                             float dx = Math.Abs(element.Pos.X - current.Pos.X);
                             float dy = Math.Abs(element.Pos.Y - current.Pos.Y);
                             return 10 * dx + dy;
                         }).FirstOrDefault();
                         break;
-                    case NavigationDirection.Down:
-                        next = source.Where(element => element.Pos.Y > current.Pos.Y).OrderBy(element =>
+                    case Direction.Down:
+                        next = source.Where(element => element.Pos.Y > current.Pos.Y + epsilon).OrderBy(element =>
                         {
                             float dx = Math.Abs(element.Pos.X - current.Pos.X);
                             float dy = Math.Abs(element.Pos.Y - current.Pos.Y);
@@ -76,8 +77,9 @@ namespace IngameScript
                 return next;
             }
 
-            public static TKey Navigate<TKey, TValue>(Dictionary<TKey, TValue> source, TKey currentKey, NavigationDirection direction) where TValue : IPositional2D
+            public static TKey Navigate<TKey, TValue>(Dictionary<TKey, TValue> source, TKey currentKey, Direction direction) where TValue : IPositional2D
             {
+                float epsilon = 0.001f;
                 if (!source.ContainsKey(currentKey))
                 {
                     currentKey = source.Keys.OrderBy(k => source[k].Pos.X + 2 * source[k].Pos.Y).FirstOrDefault();
@@ -85,32 +87,32 @@ namespace IngameScript
                 TKey nextKey = default(TKey);
                 switch (direction)
                 {
-                    case NavigationDirection.Left:
-                        nextKey = source.Keys.Where(k => source[k].Pos.X < source[currentKey].Pos.X).OrderBy(k =>
+                    case Direction.Left:
+                        nextKey = source.Keys.Where(k => source[k].Pos.X < source[currentKey].Pos.X - epsilon).OrderBy(k =>
                         {
                             float dx = Math.Abs(source[k].Pos.X - source[currentKey].Pos.X);
                             float dy = Math.Abs(source[k].Pos.Y - source[currentKey].Pos.Y);
                             return dx + 10 * dy;
                         }).FirstOrDefault();
                         break;
-                    case NavigationDirection.Right:
-                        nextKey = source.Keys.Where(k => source[k].Pos.X > source[currentKey].Pos.X).OrderBy(k =>
+                    case Direction.Right:
+                        nextKey = source.Keys.Where(k => source[k].Pos.X > source[currentKey].Pos.X + epsilon).OrderBy(k =>
                         {
                             float dx = Math.Abs(source[k].Pos.X - source[currentKey].Pos.X);
                             float dy = Math.Abs(source[k].Pos.Y - source[currentKey].Pos.Y);
                             return dx + 10 * dy;
                         }).FirstOrDefault();
                         break;
-                    case NavigationDirection.Up:
-                        nextKey = source.Keys.Where(k => source[k].Pos.Y < source[currentKey].Pos.Y).OrderBy(k =>
+                    case Direction.Up:
+                        nextKey = source.Keys.Where(k => source[k].Pos.Y < source[currentKey].Pos.Y - epsilon).OrderBy(k =>
                         {
                             float dx = Math.Abs(source[k].Pos.X - source[currentKey].Pos.X);
                             float dy = Math.Abs(source[k].Pos.Y - source[currentKey].Pos.Y);
                             return 10 * dx + dy;
                         }).FirstOrDefault();
                         break;
-                    case NavigationDirection.Down:
-                        nextKey = source.Keys.Where(k => source[k].Pos.Y > source[currentKey].Pos.Y).OrderBy(k =>
+                    case Direction.Down:
+                        nextKey = source.Keys.Where(k => source[k].Pos.Y > source[currentKey].Pos.Y + epsilon).OrderBy(k =>
                         {
                             float dx = Math.Abs(source[k].Pos.X - source[currentKey].Pos.X);
                             float dy = Math.Abs(source[k].Pos.Y - source[currentKey].Pos.Y);

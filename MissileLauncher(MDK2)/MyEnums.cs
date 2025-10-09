@@ -35,6 +35,11 @@ namespace IngameScript
 
         public enum MissileType : byte
         {
+            Unknown, AntiShip, AntiMissile, Cluster
+        }
+
+        public enum MissileGuidanceType : byte
+        {
             Unknown, MCLOS,
         }
 
@@ -106,9 +111,9 @@ namespace IngameScript
 
         public static readonly ScopeScale[] ScopeScaleCycles = new ScopeScale[] { ScopeScale.Close, ScopeScale.Far };
 
-        public enum NavigationDirection
+        public enum Direction
         {
-            Left, Right, Up, Down
+            Left, Right, Up, Down, Forward, Backward
         }
 
         public static string GetName(EntityRelation relation)
@@ -242,7 +247,19 @@ namespace IngameScript
             switch (type)
             {
                 case MissileType.Unknown: return "N/A";
-                case MissileType.MCLOS: return "MCLOS";
+                case MissileType.AntiShip: return "ANTI-SHIP";
+                case MissileType.AntiMissile: return "ANTI-MISL";
+                case MissileType.Cluster: return "CLUSTER";
+                default: return "N/A";
+            }
+        }
+
+        public static string GetName(MissileGuidanceType type)
+        {
+            switch (type)
+            {
+                case MissileGuidanceType.Unknown: return "N/A";
+                case MissileGuidanceType.MCLOS: return "MCLOS";
                 default: return "N/A";
             }
         }

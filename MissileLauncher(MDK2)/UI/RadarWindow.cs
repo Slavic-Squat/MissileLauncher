@@ -388,22 +388,22 @@ namespace IngameScript
 
                 if (input.WRelease)
                 {
-                    IHighlightable nextElement = UIUtilities.Navigate(_highlightables, _highlightedElement, NavigationDirection.Up);
+                    IHighlightable nextElement = UIUtilities.Navigate(_highlightables, _highlightedElement, Direction.Up);
                     HighlightElement(nextElement);
                 }
                 else if (input.SRelease)
                 {
-                    IHighlightable nextElement = UIUtilities.Navigate(_highlightables, _highlightedElement, NavigationDirection.Down);
+                    IHighlightable nextElement = UIUtilities.Navigate(_highlightables, _highlightedElement, Direction.Down);
                     HighlightElement(nextElement);
                 }
                 else if (input.ARelease)
                 {
-                    IHighlightable nextElement = UIUtilities.Navigate(_highlightables, _highlightedElement, NavigationDirection.Left);
+                    IHighlightable nextElement = UIUtilities.Navigate(_highlightables, _highlightedElement, Direction.Left);
                     HighlightElement(nextElement);
                 }
                 else if (input.DRelease)
                 {
-                    IHighlightable nextElement = UIUtilities.Navigate(_highlightables, _highlightedElement, NavigationDirection.Right);
+                    IHighlightable nextElement = UIUtilities.Navigate(_highlightables, _highlightedElement, Direction.Right);
                     HighlightElement(nextElement);
                 }
                 else if (input.SpaceRelease)
@@ -433,22 +433,22 @@ namespace IngameScript
 
                 if (input.WRelease)
                 {
-                    long nextEntityID = UIUtilities.Navigate(filtered, SelectedEntityID, NavigationDirection.Up);
+                    long nextEntityID = UIUtilities.Navigate(filtered, SelectedEntityID, Direction.Up);
                     SelectEntity(nextEntityID);
                 }
                 else if (input.SRelease)
                 {
-                    long nextEntityID = UIUtilities.Navigate(filtered, SelectedEntityID, NavigationDirection.Down);
+                    long nextEntityID = UIUtilities.Navigate(filtered, SelectedEntityID, Direction.Down);
                     SelectEntity(nextEntityID);
                 }
                 else if (input.ARelease)
                 {
-                    long nextEntityID = UIUtilities.Navigate(filtered, SelectedEntityID, NavigationDirection.Left);
+                    long nextEntityID = UIUtilities.Navigate(filtered, SelectedEntityID, Direction.Left);
                     SelectEntity(nextEntityID);
                 }
                 else if (input.DRelease)
                 {
-                    long nextEntityID = UIUtilities.Navigate(filtered, SelectedEntityID, NavigationDirection.Right);
+                    long nextEntityID = UIUtilities.Navigate(filtered, SelectedEntityID, Direction.Right);
                     SelectEntity(nextEntityID);
                 }
                 else if (input.SpaceRelease)

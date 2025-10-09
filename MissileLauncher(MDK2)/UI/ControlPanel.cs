@@ -223,22 +223,22 @@ namespace IngameScript
 
                 if (input.WRelease)
                 {
-                    IButton nextButton = UIUtilities.Navigate(_buttons, _highlightedButton, NavigationDirection.Up);
+                    IButton nextButton = UIUtilities.Navigate(_buttons, _highlightedButton, Direction.Up);
                     HighlightButton(nextButton);
                 }
                 else if (input.SRelease)
                 {
-                    IButton nextButton = UIUtilities.Navigate(_buttons, _highlightedButton, NavigationDirection.Down);
+                    IButton nextButton = UIUtilities.Navigate(_buttons, _highlightedButton, Direction.Down);
                     HighlightButton(nextButton);
                 }
                 else if (input.ARelease)
                 {
-                    IButton nextButton = UIUtilities.Navigate(_buttons, _highlightedButton, NavigationDirection.Left);
+                    IButton nextButton = UIUtilities.Navigate(_buttons, _highlightedButton, Direction.Left);
                     HighlightButton(nextButton);
                 }
                 else if (input.DRelease)
                 {
-                    IButton nextButton = UIUtilities.Navigate(_buttons, _highlightedButton, NavigationDirection.Right);
+                    IButton nextButton = UIUtilities.Navigate(_buttons, _highlightedButton, Direction.Right);
                     HighlightButton(nextButton);
                 }
                 else if (input.SpaceRelease)
