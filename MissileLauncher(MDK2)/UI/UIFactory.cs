@@ -84,8 +84,12 @@ namespace IngameScript
                 return panel;
             }
 
-            public static Menu CreateEntityMenu(Vector2 pos, EntityInfoExt entity, RadarWindow window, UIWireManager wireManager, bool vertCent = false, bool horCent = false)
+            public static Menu CreateEntityMenu(Vector2 pos, long targetID, RadarWindow window, UIWireManager wireManager, bool vertCent = false, bool horCent = false)
             {
+                var entities = wireManager.GetAllEntities();
+                var entity = entities.ContainsKey(targetID) ? entities[targetID] : default(EntityInfoExt);
+                if (entity.IsEmpty) return null;
+
                 IMyTextSurface surface = window.Display;
 
                 Vector2 buttonSize = new Vector2(125f, 35f);
@@ -103,7 +107,12 @@ namespace IngameScript
                     if (horCent) menuPos.X -= menuSize.X / 2f;
                     if (vertCent) menuPos.Y -= menuSize.Y / 2f;
 
-                    Menu menu = new Menu(menuPos, menuSize, 5f);
+                    Func<bool> autoClose = () =>
+                    {
+                        return window.SelectedEntityID != targetID;
+                    };
+
+                    Menu menu = new Menu(menuPos, menuSize, 5f, autoClose);
 
                     Vector2 buttonPos = menu.Pos + padding;
                     Func<string> getText = () => "ABORT";
@@ -126,7 +135,12 @@ namespace IngameScript
                     if (horCent) menuPos.X -= menuSize.X / 2f;
                     if (vertCent) menuPos.Y -= menuSize.Y / 2f;
 
-                    Menu menu = new Menu(menuPos, menuSize, 5f);
+                    Func<bool> autoClose = () =>
+                    {
+                        return window.SelectedEntityID != targetID;
+                    };
+
+                    Menu menu = new Menu(menuPos, menuSize, 5f, autoClose);
                     Vector2 buttonPos = menu.Pos + padding;
                     Func<string> getText = () => "VIEW";
                     Func<bool> action = () =>
@@ -141,7 +155,7 @@ namespace IngameScript
                     action = () =>
                     {
                         Vector2 missileMenuPos = window.Center;
-                        ModalMenu missileMenu = CreateBayMenu(missileMenuPos, window, wireManager, true, true);
+                        ModalMenu missileMenu = CreateBayMenu(missileMenuPos, targetID, window, wireManager, true, true);
                         window.CloseMenu(menu);
                         window.OpenMenu(missileMenu);
                         return true;
@@ -155,7 +169,7 @@ namespace IngameScript
                     action = () =>
                     {
                         Vector2 relationMenuPos = window.Pos + new Vector2(window.Size.X * 0.5f, window.Size.Y - 100f);
-                        Menu relationMenu = CreateRelationMenu(relationMenuPos, window, true, true);
+                        Menu relationMenu = CreateRelationMenu(relationMenuPos, targetID, window, true, true);
                         window.CloseMenu(menu);
                         window.OpenMenu(relationMenu);
                         return true;
@@ -177,7 +191,12 @@ namespace IngameScript
                     if (horCent) menuPos.X -= menuSize.X / 2f;
                     if (vertCent) menuPos.Y -= menuSize.Y / 2f;
 
-                    Menu menu = new Menu(menuPos, menuSize, 5f);
+                    Func<bool> autoClose = () =>
+                    {
+                        return window.SelectedEntityID != targetID;
+                    };
+
+                    Menu menu = new Menu(menuPos, menuSize, 5f, autoClose);
                     Vector2 buttonPos = menu.Pos + padding;
                     Func<string> getText = () => "VIEW";
                     Func<bool> action = () =>
@@ -192,7 +211,7 @@ namespace IngameScript
                     action = () =>
                     {
                         Vector2 missileMenuPos = window.Center;
-                        ModalMenu missileMenu = CreateBayMenu(missileMenuPos, window, wireManager, true, true);
+                        ModalMenu missileMenu = CreateBayMenu(missileMenuPos, targetID, window, wireManager, true, true);
                         window.CloseMenu(menu);
                         window.OpenMenu(missileMenu);
                         return true;
@@ -216,7 +235,7 @@ namespace IngameScript
                 }
             }
 
-            public static ModalMenu CreateBayMenu(Vector2 pos, RadarWindow window, UIWireManager wireManager, bool vertCent = false, bool horCent = false)
+            public static ModalMenu CreateBayMenu(Vector2 pos, long targetID, RadarWindow window, UIWireManager wireManager, bool vertCent = false, bool horCent = false)
             {
                 IMyTextSurface surface = window.Display;
                 var bays = wireManager.MissileBays;
@@ -242,7 +261,15 @@ namespace IngameScript
                 if (horCent) menuPos.X -= menuSize.X / 2f;
                 if (vertCent) menuPos.Y -= menuSize.Y / 2f;
 
-                ModalMenu menu = new ModalMenu(menuPos, menuSize, 5f, () => false, surface);
+                Func<bool> canClose = () =>
+                {
+                    return window.SelectedEntityID != targetID;
+                };
+                Func<bool> autoClose = () =>
+                {
+                    return window.SelectedEntityID != targetID;
+                };
+                ModalMenu menu = new ModalMenu(menuPos, menuSize, 5f, canClose, surface, true, autoClose);
 
                 Vector2 labelPos = menu.Pos + new Vector2(menu.Size.X * 0.5f - labelSize.X * 0.5f, headerHeight * 0.5f - labelSize.Y * 0.5f);
                 RectangleF labelBounds = new RectangleF(labelPos, labelSize);
@@ -312,7 +339,7 @@ namespace IngameScript
                 Func<bool> action = () =>
                 {
                     Vector2 missileFireMenuPos = window.Pos + new Vector2(window.Size.X * 0.5f, window.Size.Y - 100f);
-                    ModalMenu missileFireMenu = CreateMissileFireMenu(missileFireMenuPos, window, wireManager, true, true);
+                    ModalMenu missileFireMenu = CreateMissileFireMenu(missileFireMenuPos, targetID, window, wireManager, true, true);
                     window.CloseMenu(menu);
                     window.OpenMenu(missileFireMenu);
                     return true;
@@ -333,7 +360,7 @@ namespace IngameScript
                 return menu;
             }
 
-            public static ModalMenu CreateMissileFireMenu(Vector2 pos, RadarWindow window, UIWireManager wireManager, bool vertCent = false, bool horCent = false)
+            public static ModalMenu CreateMissileFireMenu(Vector2 pos, long targetID, RadarWindow window, UIWireManager wireManager, bool vertCent = false, bool horCent = false)
             {
                 IMyTextSurface surface = window.Display;
 
@@ -352,7 +379,16 @@ namespace IngameScript
                 if (horCent) menuPos.X -= menuSize.X / 2f;
                 if (vertCent) menuPos.Y -= menuSize.Y / 2f;
 
-                ModalMenu menu = new ModalMenu(menuPos, menuSize, 5f, () => false, surface, false);
+                Func<bool> canClose = () =>
+                {
+                    return window.SelectedEntityID != targetID;
+                };
+                Func<bool> autoClose = () =>
+                {
+                    return window.SelectedEntityID != targetID;
+                };
+
+                ModalMenu menu = new ModalMenu(menuPos, menuSize, 5f, canClose, surface, false, autoClose);
 
                 Vector2 buttonPos = menu.Pos + padding;
                 Func<string> getText = () => "FIRE";
@@ -379,7 +415,7 @@ namespace IngameScript
                 return menu;
             }
 
-            public static Menu CreateRelationMenu(Vector2 pos, RadarWindow window, bool vertCent = false, bool horCent = false)
+            public static Menu CreateRelationMenu(Vector2 pos, long targetID, RadarWindow window, bool vertCent = false, bool horCent = false)
             {
                 IMyTextSurface surface = window.Display;
 
@@ -398,7 +434,12 @@ namespace IngameScript
                 if (horCent) menuPos.X -= menuSize.X / 2f;
                 if (vertCent) menuPos.Y -= menuSize.Y / 2f;
 
-                Menu menu = new Menu(menuPos, menuSize, 5f);
+                Func<bool> autoClose = () =>
+                {
+                    return window.SelectedEntityID != targetID;
+                };
+
+                Menu menu = new Menu(menuPos, menuSize, 5f, autoClose);
 
                 Vector2 buttonPos = menu.Pos + padding;
                 Func<string> getText = () => "FRNDLY";

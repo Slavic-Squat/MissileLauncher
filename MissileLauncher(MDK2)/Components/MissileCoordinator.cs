@@ -50,7 +50,7 @@ namespace IngameScript
             private IMyCubeBlock _referenceBlock;
             private long _selfID;
 
-            private Dictionary<long, MissileInfo> _activeMissiles = new Dictionary<long, MissileInfo>();
+            private Dictionary<long, EntityInfo> _activeMissiles = new Dictionary<long, EntityInfo>();
             private Dictionary<long, EntityInfoExt> _activeMissilesExt = new Dictionary<long, EntityInfoExt>();
             private bool _activeMissilesStale = true;
 
@@ -71,7 +71,7 @@ namespace IngameScript
                 SelectedBays = new HashSet<int>();
                 for (int i = 0; i < numberOfMissileBays; i++)
                 {
-                    MissileBays.Add(new MissileBay(i, _selfID, _communicationHandler.SelfAddress, _activeMissiles));
+                    MissileBays.Add(new MissileBay(i, _selfID, _communicationHandler.SelfAddress));
                 }
             }
 
@@ -91,24 +91,25 @@ namespace IngameScript
                     if (_communicationHandler.TryRetrieveMessage("MyMissiles", out message))
                     {
                         object messageObject = Deserializer.Deserialize(message.Data as string);
-                        if (messageObject is MissileInfo)
+                        if (messageObject is EntityInfo)
                         {
-                            AddMissile((MissileInfo)messageObject);
+                            AddMissile((EntityInfo)messageObject);
                         }
                     }
                 }
 
                 foreach (var missile in _activeMissiles.Values.ToList())
                 {
-                    if (!_communicationHandler.CanReach(missile.Address))
+                    var missileInfo = missile.MissileInfo.Value;
+                    if (!_communicationHandler.CanReach(missileInfo.Address))
                     {
                         RemoveMissile(missile.EntityID);
                     }
 
-                    if (_targetInfo.ContainsKey(missile.TargetID))
+                    if (_targetInfo.ContainsKey(missileInfo.TargetID))
                     {
-                        byte[] targetData = _targetInfo[missile.TargetID].Info.Serialize();
-                        _communicationHandler.SendUnicast(targetData, missile.Address, "TargetInfo");
+                        byte[] targetData = _targetInfo[missileInfo.TargetID].Info.Serialize();
+                        _communicationHandler.SendUnicast(targetData, missileInfo.Address, "TargetInfo");
                     }
                 }
 
@@ -118,16 +119,19 @@ namespace IngameScript
                 }
             }
 
-            private void AddMissile(MissileInfo missileInfo)
+            private void AddMissile(EntityInfo entityInfo)
             {
-                long key = missileInfo.EntityID;
+                if (entityInfo.SubType != EntityInfoSubType.MissileInfo) return;
+
+                var missileInfo = entityInfo.MissileInfo.Value;
+                long key = entityInfo.EntityID;
                 if (!_activeMissiles.ContainsKey(key))
                 {
-                    _activeMissiles.Add(key, missileInfo);
+                    _activeMissiles.Add(key, entityInfo);
                 }
-                else if (_activeMissiles[key].TimeRecorded < missileInfo.TimeRecorded)
+                else
                 {
-                    _activeMissiles[key] = missileInfo;
+                    _activeMissiles[key].Merge(entityInfo);
                 }
             }
 
@@ -140,14 +144,14 @@ namespace IngameScript
             {
                 Dictionary<long, EntityInfoExt> allMyMissiles = new Dictionary<long, EntityInfoExt>();
 
-                foreach (var missileInfo in _activeMissiles.Values)
+                foreach (var missile in _activeMissiles.Values)
                 {
-                    long key = missileInfo.EntityID;
+                    long key = missile.EntityID;
                     EntitySource source = EntitySource.Remote;
                     EntityRelation relation = EntityRelation.Me;
-                    float distance = Vector3.Distance(missileInfo.Position, _referenceBlock.GetPosition());
+                    float distance = Vector3.Distance(missile.Position, _referenceBlock.GetPosition());
 
-                    allMyMissiles[key] = new EntityInfoExt(missileInfo, source, relation);
+                    allMyMissiles[key] = new EntityInfoExt(missile, source, relation);
                 }
 
                 return allMyMissiles;

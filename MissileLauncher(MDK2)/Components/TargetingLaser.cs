@@ -198,7 +198,8 @@ namespace IngameScript
                 {
                     if (HasTarget && raycastResult.EntityId == Target.EntityID)
                     {
-                        Target.UpdateFromRaycast(raycastResult, time);
+                        var freshTarget = new EntityInfoExt(raycastResult, time);
+                        Target.Merge(freshTarget);
                     }
 
                     else if (!HasTarget)

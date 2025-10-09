@@ -32,11 +32,12 @@ namespace IngameScript
             public bool IsOpen { get; private set; }
             public bool IsPaused { get; private set; }
             public bool IsNavigating { get; private set; }
-            public bool CanClose => _closeCondition?.Invoke() ?? true;
+            public bool CanClose => _canClose?.Invoke() ?? true;
             public event Action<IMenu> RequestClose;
             public event Action<INavigable> RequestStopNavigation;
 
-            private Func<bool> _closeCondition;
+            private Func<bool> _canClose;
+            private Func<bool> _autoClose;
             private bool _obscure;
             private RectangleF _bounds;
             private float _borderThickness;
@@ -56,13 +57,14 @@ namespace IngameScript
 
             private List<MySprite> _commonSprites = new List<MySprite>();
 
-            public ModalMenu(Vector2 pos, Vector2 size, float borderThickness, Func<bool> closeCondition, IMyTextSurface surface, bool obscure = true)
+            public ModalMenu(Vector2 pos, Vector2 size, float borderThickness, Func<bool> canClose, IMyTextSurface surface, bool obscure = true, Func<bool> autoClose = null)
             {
                 _bounds = new RectangleF(pos, size);
                 _borderThickness = borderThickness;
-                _closeCondition = closeCondition;
+                _canClose = canClose;
                 _surface = surface;
                 _obscure = obscure;
+                _autoClose = autoClose;
 
                 BuildSprites();
             }
@@ -101,25 +103,26 @@ namespace IngameScript
                 };
             }
 
-            public void Open()
+            public void OnOpen()
             {
                 IsOpen = true;
-                StartNavigation();
             }
 
             private void Close()
             {
+                if (CanClose == false)
+                {
+                    return;
+                }
                 RequestClose?.Invoke(this);
-                OnClose();
             }
 
             public void OnClose()
             {
                 IsOpen = false;
-                StopNavigation();
             }
 
-            public void StartNavigation()
+            public void OnStartNavigation()
             {
                 IsNavigating = true;
                 ResumeNavigation();
@@ -128,7 +131,6 @@ namespace IngameScript
             private void StopNavigation()
             {
                 RequestStopNavigation?.Invoke(this);
-                OnStopNavigation();
             }
 
             public void OnStopNavigation()
@@ -251,6 +253,11 @@ namespace IngameScript
 
             public void Update(DateTime time)
             {
+                if (_autoClose?.Invoke() ?? false)
+                {
+                    Close();
+                }
+
                 foreach (var updateable in _commonUpdateables)
                 {
                     updateable.Update(time);
@@ -259,11 +266,6 @@ namespace IngameScript
                 foreach (var page in _pages)
                 {
                     page.Updateables.ForEach(u => u.Update(time));
-                }
-
-                if (IsOpen && CanClose)
-                {
-                    Close();
                 }
             }
 

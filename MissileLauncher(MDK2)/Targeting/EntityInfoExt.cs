@@ -25,35 +25,28 @@ namespace IngameScript
     {
         public struct EntityInfoExt
         {
-            public IEntityInfo Info { get; set; }
+            public EntityInfo Info { get; private set; }
             public long EntityID => Info.EntityID;
             public Vector3 Position => Info.Position;
             public Vector3 Velocity => Info.Velocity;
             public DateTime TimeRecorded => Info.TimeRecorded;
-            public EntitySource Source { get; set; }
-            public EntityType Type { get; set; }
-            public EntityRelation Relation { get; set; }
-            public bool IsEmpty => Info == null;
+            public EntityType Type => Info.Type;
+            public EntityInfoSubType SubType => Info.SubType;
+            public EntitySource Source { get; private set; }
+            public EntityRelation Relation { get; private set; }
+            public bool IsEmpty { get; private set; }
 
-            public EntityInfoExt(IEntityInfo info, EntitySource source, EntityRelation relation)
+            public EntityInfoExt(EntityInfo info, EntitySource source, EntityRelation relation)
             {
                 Info = info;
-                if (info is MissileInfoLite || info is MissileInfo)
-                {
-                    Type = EntityType.Missile;
-                }
-                else
-                {
-                    Type = EntityType.Target;
-                }
                 Source = source;
                 Relation = relation;
+                IsEmpty = false;
             }
 
             public EntityInfoExt(MyDetectedEntityInfo entityInfo, DateTime timeRecorded)
             {
-                Info = new TargetInfo(entityInfo, timeRecorded);
-                Type = EntityType.Target;
+                Info = new EntityInfo(entityInfo, timeRecorded);
                 Source = EntitySource.Local;
 
                 MyRelationsBetweenPlayerAndBlock raycastRelation = entityInfo.Relationship;
@@ -76,32 +69,7 @@ namespace IngameScript
                         Relation = EntityRelation.Neutral;
                         break;
                 }
-            }
-
-            public void UpdateFromRaycast(MyDetectedEntityInfo entityInfo, DateTime timeRecorded)
-            {
-                Info.UpdateFromRaycast(entityInfo, timeRecorded);
-                Source |= EntitySource.Local;
-
-                MyRelationsBetweenPlayerAndBlock raycastRelation = entityInfo.Relationship;
-
-                switch (raycastRelation)
-                {
-                    case MyRelationsBetweenPlayerAndBlock.Enemies:
-                        Relation = EntityRelation.Hostile;
-                        break;
-                    case MyRelationsBetweenPlayerAndBlock.Neutral:
-                        Relation = EntityRelation.Neutral;
-                        break;
-                    case MyRelationsBetweenPlayerAndBlock.Friends:
-                        Relation = EntityRelation.Friendly;
-                        break;
-                    case MyRelationsBetweenPlayerAndBlock.Owner:
-                        Relation = EntityRelation.Me;
-                        break;
-                    default:
-                        break;
-                }
+                IsEmpty = false;
             }
 
             public void Merge(EntityInfoExt other)
@@ -110,16 +78,7 @@ namespace IngameScript
                 {
                     return;
                 }
-                if (other.Type > Type)
-                {
-                    Type = other.Type;
-                    other.Info.Merge(Info);
-                    Info = other.Info;
-                }
-                else
-                {
-                    Info.Merge(other.Info);
-                }
+                Info.Merge(other.Info);
 
                 if (other.TimeRecorded > TimeRecorded)
                 {
@@ -165,10 +124,10 @@ namespace IngameScript
                     sb.Append($"AGE: {age:0} ms\n");
                 }
 
-                if (Info is MissileInfo)
+                if (Info.SubType == EntityInfoSubType.MissileInfo)
                 {
-                    var missileInfo = (MissileInfo)Info;
-                    sb.Append($"STAGE: {GetName(missileInfo.Stage)}\n");
+                    var missileInfo = Info.MissileInfo.Value;
+                    sb.Append($"MISL TYPE: {GetName(missileInfo.Type)}\nPAYLOAD: {GetName(missileInfo.Payload)}\nSTAGE: {GetName(missileInfo.Stage)}\n");
                 }
 
                 return sb.ToString().TrimEnd('\n');

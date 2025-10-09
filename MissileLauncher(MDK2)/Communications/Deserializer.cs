@@ -28,19 +28,13 @@ namespace IngameScript
             {
                 byte[] data = Convert.FromBase64String(dataString);
 
-                switch ((ObjectTypes)data[0])
+                switch ((SerializedTypes)data[0])
                 {
-                    case ObjectTypes.Command:
+                    case SerializedTypes.Command:
                         return Encoding.ASCII.GetString(data, 1, data.Length - 1);
 
-                    case ObjectTypes.TargetInfo:
-                        return TargetInfo.Deserialize(data);
-
-                    case ObjectTypes.MissileInfoLite:
-                        return MissileInfoLite.Deserialize(data);
-
-                    case ObjectTypes.MissileInfo:
-                        return MissileInfo.Deserialize(data);
+                    case SerializedTypes.EntityInfo:
+                        return EntityInfo.Deserialize(data, 1);
                 }
 
                 return null;

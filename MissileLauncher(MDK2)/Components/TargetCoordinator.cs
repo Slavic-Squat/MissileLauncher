@@ -37,9 +37,9 @@ namespace IngameScript
             public int ID { get; private set; }
 
             private Dictionary<long, EntityInfoExt> _targetsLocal = new Dictionary<long, EntityInfoExt>();
-            private Dictionary<long, TargetInfo> _targetsRemote = new Dictionary<long, TargetInfo>();
-            private Dictionary<long, MissileInfoLite> _missilesRemote = new Dictionary<long, MissileInfoLite>();
-            private Dictionary<long, TargetInfo> _friendlysRemote = new Dictionary<long, TargetInfo>();
+            private Dictionary<long, EntityInfo> _targetsRemote = new Dictionary<long, EntityInfo>();
+            private Dictionary<long, EntityInfo> _missilesRemote = new Dictionary<long, EntityInfo>();
+            private Dictionary<long, EntityInfo> _friendlysRemote = new Dictionary<long, EntityInfo>();
 
             private Dictionary<long, EntityInfoExt> _allTargetsExt = new Dictionary<long, EntityInfoExt>();
             private bool _allTargetsStale = true;
@@ -87,9 +87,9 @@ namespace IngameScript
                     if (_communicationHandler.TryRetrieveMessage("TargetInfo", out message))
                     {
                         object messageObject = Deserializer.Deserialize(message.Data as string);
-                        if (messageObject is TargetInfo)
+                        if (messageObject is EntityInfo)
                         {
-                            AddRemoteTarget((TargetInfo)messageObject);
+                            AddRemoteTarget((EntityInfo)messageObject);
                         }
                     }
                 }
@@ -100,9 +100,9 @@ namespace IngameScript
                     if (_communicationHandler.TryRetrieveMessage("FriendlyInfo", out message))
                     {
                         object messageObject = Deserializer.Deserialize(message.Data as string);
-                        if (messageObject is TargetInfo)
+                        if (messageObject is EntityInfo)
                         {
-                            AddRemoteFriendly((TargetInfo)messageObject);
+                            AddRemoteFriendly((EntityInfo)messageObject);
                         }
                     }
                 }
@@ -113,9 +113,9 @@ namespace IngameScript
                     if (_communicationHandler.TryRetrieveMessage("MissileInfo", out message))
                     {
                         object messageObject = Deserializer.Deserialize(message.Data as string);
-                        if (messageObject is MissileInfoLite)
+                        if (messageObject is EntityInfo)
                         {
-                            AddRemoteMissile((MissileInfoLite)messageObject);
+                            AddRemoteMissile((EntityInfo)messageObject);
                         }
                     }
                 }
@@ -165,9 +165,9 @@ namespace IngameScript
                 }
             }
 
-            public void AddRemoteTarget(TargetInfo targetInfo)
+            public void AddRemoteTarget(EntityInfo entityInfo)
             {
-                var entityID = targetInfo.EntityID;
+                var entityID = entityInfo.EntityID;
                 var relationID = entityID;
 
                 if (entityID == _selfID)
@@ -182,17 +182,17 @@ namespace IngameScript
 
                 if (!_targetsRemote.ContainsKey(entityID))
                 {
-                    _targetsRemote.Add(entityID, targetInfo);
+                    _targetsRemote.Add(entityID, entityInfo);
                 }
-                else if (_targetsRemote[entityID].TimeRecorded < targetInfo.TimeRecorded)
+                else
                 {
-                    _targetsRemote[entityID] = targetInfo;
+                    _targetsRemote[entityID].Merge(entityInfo);
                 }
             }
 
-            public void AddRemoteFriendly(TargetInfo targetInfo)
+            public void AddRemoteFriendly(EntityInfo entityInfo)
             {
-                var entityID = targetInfo.EntityID;
+                var entityID = entityInfo.EntityID;
                 var relationID = entityID;
 
                 if (entityID == _selfID)
@@ -204,17 +204,23 @@ namespace IngameScript
 
                 if (!_friendlysRemote.ContainsKey(entityID))
                 {
-                    _friendlysRemote.Add(entityID, targetInfo);
+                    _friendlysRemote.Add(entityID, entityInfo);
                 }
-                else if (_friendlysRemote[entityID].TimeRecorded < targetInfo.TimeRecorded)
+                else
                 {
-                    _friendlysRemote[entityID] = targetInfo;
+                    _friendlysRemote[entityID].Merge(entityInfo);
                 }
             }
 
-            public void AddRemoteMissile(MissileInfoLite missileInfo)
+            public void AddRemoteMissile(EntityInfo entityInfo)
             {
-                var entityID = missileInfo.EntityID;
+                if (entityInfo.SubType != EntityInfoSubType.MissileInfoLite)
+                {
+                    return;
+                }
+                var missileInfo = entityInfo.MissileInfoLite.Value;
+                var entityID = entityInfo.EntityID;
+
                 var relationID = missileInfo.LauncherID;
 
                 if (relationID == _selfID)
@@ -229,11 +235,11 @@ namespace IngameScript
 
                 if (!_missilesRemote.ContainsKey(entityID))
                 {
-                    _missilesRemote.Add(entityID, missileInfo);
+                    _missilesRemote.Add(entityID, entityInfo);
                 }
-                else if (_missilesRemote[entityID].TimeRecorded < missileInfo.TimeRecorded)
+                else
                 {
-                    _missilesRemote[entityID] = missileInfo;
+                    _missilesRemote[entityID].Merge(entityInfo);
                 }
             }
 
@@ -311,10 +317,10 @@ namespace IngameScript
             {
                 var allTargets = new Dictionary<long, EntityInfoExt>(_targetsLocal);
 
-                foreach(var targetInfo in _targetsRemote.Values)
+                foreach(var target in _targetsRemote.Values)
                 {
-                    long key = targetInfo.EntityID;
-                    long relationKey = targetInfo.EntityID;
+                    long key = target.EntityID;
+                    long relationKey = target.EntityID;
 
                     EntitySource source = EntitySource.Remote;
                     EntityRelation relation;
@@ -339,7 +345,7 @@ namespace IngameScript
                     {
                         relation = EntityRelation.Neutral;
                     }
-                    var entityInfoExt = new EntityInfoExt(targetInfo, source, relation);
+                    var entityInfoExt = new EntityInfoExt(target, source, relation);
                     
                     if (allTargets.ContainsKey(key))
                     {
@@ -351,10 +357,10 @@ namespace IngameScript
                     }
                 }
 
-                foreach(var missileInfo in _missilesRemote.Values)
+                foreach(var missile in _missilesRemote.Values)
                 {
-                    long key = missileInfo.EntityID;
-                    long relationKey = missileInfo.LauncherID;
+                    long key = missile.EntityID;
+                    long relationKey = missile.MissileInfoLite.Value.LauncherID;
 
                     EntitySource source = EntitySource.Remote;
                     EntityRelation relation;
@@ -380,7 +386,7 @@ namespace IngameScript
                         relation = EntityRelation.Neutral;
                     }
 
-                    var entityInfoExt = new EntityInfoExt(missileInfo, source, relation);
+                    var entityInfoExt = new EntityInfoExt(missile, source, relation);
 
                     if (allTargets.ContainsKey(key))
                     {
@@ -392,15 +398,15 @@ namespace IngameScript
                     }
                 }
 
-                foreach (var friendlyInfo in _friendlysRemote.Values)
+                foreach (var friendly in _friendlysRemote.Values)
                 {
-                    long key = friendlyInfo.EntityID;
-                    long relationKey = friendlyInfo.EntityID;
+                    long key = friendly.EntityID;
+                    long relationKey = friendly.EntityID;
 
                     EntitySource source = EntitySource.Remote;
                     EntityRelation relation = EntityRelation.Friendly;
 
-                    var entityInfoExt = new EntityInfoExt(friendlyInfo, source, relation);
+                    var entityInfoExt = new EntityInfoExt(friendly, source, relation);
 
                     if (allTargets.ContainsKey(key))
                     {

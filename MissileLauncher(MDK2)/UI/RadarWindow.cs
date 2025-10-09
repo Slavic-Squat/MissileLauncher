@@ -133,25 +133,22 @@ namespace IngameScript
                 _sprites.Add(fillSprite);
             }
 
-            public void Open()
+            public void OnOpen()
             {
                 IsOpen = true;
-                StartNavigation();
             }
 
             private void Close()
             {
                 RequestClose?.Invoke(this);
-                OnClose();
             }
 
             public void OnClose()
             {
                 IsOpen = false;
-                StopNavigation();
             }
 
-            public void StartNavigation()
+            public void OnStartNavigation()
             {
                 IsNavigating = true;
                 ResumeNavigation();
@@ -160,7 +157,6 @@ namespace IngameScript
             private void StopNavigation()
             {
                 RequestStopNavigation?.Invoke(this);
-                OnStopNavigation();
             }
 
             public void OnStopNavigation()
@@ -230,7 +226,7 @@ namespace IngameScript
                 StopNavigatingElement(_navigatedElement);
                 _navigables.Add(navigable);
                 _navigatedElement = navigable;
-                navigable.StartNavigation();
+                navigable.OnStartNavigation();
                 navigable.RequestStopNavigation += StopNavigatingElement;
             }
 
@@ -258,7 +254,7 @@ namespace IngameScript
 
                 NavigateElement(menu);
 
-                menu.Open();
+                menu.OnOpen();
                 menu.RequestClose += CloseMenu;
             }
 
@@ -276,9 +272,8 @@ namespace IngameScript
             {
                 if (_allEntities.Keys.Contains(entityID))
                 {
-                    EntityInfoExt entity = _allEntities[entityID];
                     Vector2 menuPos = Pos + new Vector2(Size.X * 0.5f, Size.Y - 100f);
-                    Menu menu = UIFactory.CreateEntityMenu(menuPos, entity, this, UI.UIWireManager, false, true);
+                    Menu menu = UIFactory.CreateEntityMenu(menuPos, SelectedEntityID, this, UI.UIWireManager, false, true);
                     OpenMenu(menu);
                 }
             }
@@ -300,7 +295,12 @@ namespace IngameScript
                 _targetingSpriteBuilder.Zoom = GetValue(ScopeScale);
                 _targetingSprites = _targetingSpriteBuilder.BuildSprites(_allEntities, SelectedEntityID, out _entitySprites);
 
-                foreach (var updatable in _updateables)
+                if (!_allEntities.ContainsKey(SelectedEntityID))
+                {
+                    UnselectEntity();
+                }
+
+                foreach (var updatable in _updateables.ToList())
                 {
                     updatable.Update(time);
                 }

@@ -213,7 +213,7 @@ namespace IngameScript
                         continue;
                     }
 
-                    IEntityInfo entityInfo = entityInfoExt.Info;
+                    EntityInfo entityInfo = entityInfoExt.Info;
 
                     Vector3 entityPosWorld = entityInfo.Position;
                     Vector3 entityPosNDC = Vector3.Transform(entityPosWorld, totalMatrix);

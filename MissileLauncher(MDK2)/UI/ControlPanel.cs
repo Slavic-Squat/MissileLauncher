@@ -112,16 +112,15 @@ namespace IngameScript
                 IsHighlighted = false;
             }
 
-            public void StartNavigation()
+            public void OnStartNavigation()
             {
                 IsNavigating = true;
                 ResumeNavigation();
             }
 
-            public void StopNavigation()
+            private void StopNavigation()
             {
                 RequestStopNavigation?.Invoke(this);
-                OnStopNavigation();
             }
 
             public void OnStopNavigation()

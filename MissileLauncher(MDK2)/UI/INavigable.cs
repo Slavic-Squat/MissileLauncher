@@ -27,7 +27,7 @@ namespace IngameScript
             bool IsNavigating { get; }
             bool IsPaused { get; }
             event Action<INavigable> RequestStopNavigation;
-            void StartNavigation();
+            void OnStartNavigation();
             void OnStopNavigation();
             void PauseNavigation();
             void ResumeNavigation();

@@ -134,34 +134,30 @@ namespace IngameScript
                 _sprites.Add(headerTextSprite);
             }
 
-            public void Open()
+            public void OnOpen()
             {
                 IsOpen = true;
-                StartNavigation();
             }
 
-            public void Close()
+            private void Close()
             {
                 RequestClose?.Invoke(this);
-                OnClose();
             }
 
             public void OnClose()
             {
                 IsOpen = false;
-                StopNavigation();
             }
 
-            public void StartNavigation()
+            public void OnStartNavigation()
             {
                 IsNavigating = true;
                 ResumeNavigation();
             }
 
-            public void StopNavigation()
+            private void StopNavigation()
             {
                 RequestStopNavigation?.Invoke(this);
-                OnStopNavigation();
             }
 
             public void OnStopNavigation()

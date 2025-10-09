@@ -101,6 +101,7 @@ namespace IngameScript
             public void SyncTarget(TargetingLaser laser)
             {
                 EntityInfoExt target = laser.Target;
+                DebugEcho("SYNCING");
 
                 if (!target.IsEmpty)
                     AWACS.AddTarget(target);

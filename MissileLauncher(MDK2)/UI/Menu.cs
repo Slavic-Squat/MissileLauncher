@@ -35,7 +35,7 @@ namespace IngameScript
             public event Action<IMenu> RequestClose;
             public event Action<INavigable> RequestStopNavigation;
 
-
+            private Func<bool> _autoClose;
             private RectangleF _bounds;
             private float _borderThickness;
             private List<IButton> _buttons = new List<IButton>();
@@ -50,10 +50,11 @@ namespace IngameScript
 
             private List<MySprite> _sprites = new List<MySprite>();
 
-            public Menu(Vector2 pos, Vector2 size, float borderThickness)
+            public Menu(Vector2 pos, Vector2 size, float borderThickness, Func<bool> autoClose = null)
             {
                 _bounds = new RectangleF(pos, size);
                 _borderThickness = borderThickness;
+                _autoClose = autoClose;
 
                 BuildSprites();
             }
@@ -82,25 +83,22 @@ namespace IngameScript
                 };
             }
 
-            public void Open()
+            public void OnOpen()
             {
                 IsOpen = true;
-                StartNavigation();
             }
 
             private void Close()
             {
                 RequestClose?.Invoke(this);
-                OnClose();
             }
 
             public void OnClose()
             {
                 IsOpen = false;
-                StopNavigation();
             }
 
-            public void StartNavigation()
+            public void OnStartNavigation()
             {
                 IsNavigating = true;
                 ResumeNavigation();
@@ -109,7 +107,6 @@ namespace IngameScript
             private void StopNavigation()
             {
                 RequestStopNavigation?.Invoke(this);
-                OnStopNavigation();
             }
 
             public void OnStopNavigation()
@@ -176,6 +173,11 @@ namespace IngameScript
 
             public void Update(DateTime time)
             {
+                if (_autoClose?.Invoke() ?? false)
+                {
+                    Close();
+                    return;
+                }
                 foreach (var updateable in _updateables)
                 {
                     updateable.Update(time);

@@ -26,7 +26,7 @@ namespace IngameScript
         {
             bool IsOpen { get; }
             event Action<IMenu> RequestClose;
-            void Open();
+            void OnOpen();
             void OnClose();
         }
     }

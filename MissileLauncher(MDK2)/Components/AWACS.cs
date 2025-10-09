@@ -60,7 +60,6 @@ namespace IngameScript
             public float RaycastDistanceGrowthSpeed { get; set; }
             public Dictionary<long, EntityInfoExt> Targets { get; private set; }
             public Dictionary<long, bool> TargetsSyncInfo {  get; private set; }
-            public List<long> TargetIDs { get; private set; }
             #endregion
             public AWACS(int id, float maxRaycastDistance = 5000)
             {
@@ -68,7 +67,6 @@ namespace IngameScript
 
                 Targets = new Dictionary<long, EntityInfoExt>();
                 TargetsSyncInfo = new Dictionary<long, bool>();
-                TargetIDs = new List<long>();
 
                 _cameraArray0 = new CameraArray(1, maxRaycastDistance);
                 _cameraArray1 = new CameraArray(2, maxRaycastDistance);
@@ -112,7 +110,7 @@ namespace IngameScript
                 _cameraArray2.Update(time);
                 _cameraArray3.Update(time);
 
-                if (TargetIDs.Count != 0)
+                if (Targets.Count != 0)
                 {
                     _spinRotorAngle = _spinRotorInverted ? -_spinRotor.Angle : _spinRotor.Angle;
                     _spinRotorAngle = MiscUtilities.LoopInRange(_spinRotorAngle, -(float)Math.PI, (float)Math.PI);
@@ -123,9 +121,8 @@ namespace IngameScript
 
                     _referenceMatrix.Translation = _spinRotor.GetPosition();
 
-                    for (int i = TargetIDs.Count - 1; i >= 0; i--)
+                    foreach (var targetID in Targets.Keys.ToList())
                     {
-                        long targetID = TargetIDs[i];
                         TimeSpan timeSinceLastDetection = time - Targets[targetID].TimeRecorded;
                         Vector3 estimatedTargetPos = Targets[targetID].Position + Targets[targetID].Velocity * (float)timeSinceLastDetection.TotalSeconds;
                         Vector3 estimatedTargetDirLocal = Vector3.Normalize(Vector3.TransformNormal(estimatedTargetPos - _referenceMatrix.Translation, Matrix.Transpose(_referenceMatrix)));
@@ -138,7 +135,7 @@ namespace IngameScript
                         }
                     }
 
-                    var OrderedTargetIDs = TargetIDs.OrderBy(id => Targets[id].TimeRecorded);
+                    var OrderedTargetIDs = Targets.Keys.OrderBy(id => Targets[id].TimeRecorded);
 
                     foreach (long targetID in OrderedTargetIDs)
                     {
@@ -173,7 +170,8 @@ namespace IngameScript
 
                         if (raycastResult.EntityId == targetID)
                         {
-                            Targets[targetID].UpdateFromRaycast(raycastResult, time);
+                            var freshTarget = new EntityInfoExt(raycastResult, time);
+                            Targets[targetID].Merge(freshTarget);
                             TargetsSyncInfo[targetID] = true;
                         }
                     }
@@ -183,11 +181,6 @@ namespace IngameScript
 
             public void AddTarget(EntityInfoExt target)
             {
-                if (!TargetIDs.Contains(target.EntityID))
-                {
-                    TargetIDs.Add(target.EntityID);
-                }
-
                 Targets[target.EntityID] = target;
                 TargetsSyncInfo[target.EntityID] = false;
             }
@@ -196,7 +189,6 @@ namespace IngameScript
             {
                 Targets.Remove(targetID);
                 TargetsSyncInfo.Remove(targetID);
-                TargetIDs.Remove(targetID);
             }
         }
     }

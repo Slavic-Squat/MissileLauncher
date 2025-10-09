@@ -66,7 +66,8 @@ namespace IngameScript
                 }
                 CloseWindow(_activeWindow);
                 _activeWindow = window;
-                window.Open();
+                window.OnOpen();
+                window.OnStartNavigation();
                 window.RequestClose += CloseWindow;
             }
 
@@ -81,6 +82,7 @@ namespace IngameScript
                     _activeWindow = null;
                 }
                 window.OnClose();
+                window.OnStopNavigation();
                 window.RequestClose -= CloseWindow;
             }
 

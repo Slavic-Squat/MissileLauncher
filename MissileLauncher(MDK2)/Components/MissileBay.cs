@@ -25,7 +25,6 @@ namespace IngameScript
         public class MissileBay
         {
             #region Parts
-            private Dictionary<long, MissileInfo> _activeMissiles = new Dictionary<long, MissileInfo>();
             private IMyProgrammableBlock _missileComputer;
             private IMyShipConnector _connector;
             private MyIni _missileConfig = new MyIni();
@@ -54,12 +53,11 @@ namespace IngameScript
             public bool IsSelectable => Status == BayStatus.Loaded || Status == BayStatus.Ready;
             #endregion
 
-            public MissileBay(int id, long selfID, long selfAddress, Dictionary<long, MissileInfo> activeMissiles)
+            public MissileBay(int id, long selfID, long selfAddress)
             {
                 ID = id;
                 _selfID = selfID;
                 _selfAddress = selfAddress;
-                _activeMissiles = activeMissiles;
 
                 TryGetBlocks();
                 RegisterMissile();
