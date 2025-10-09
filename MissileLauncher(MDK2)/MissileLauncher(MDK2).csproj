@@ -9,8 +9,6 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Remove="DebugAPI.cs" />
-    <Compile Remove="Sprites\LauncherInfo.cs" />
-    <Compile Remove="Sprites\TargetInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Mal.Mdk2.PbAnalyzers" Version="2.1.13">
