@@ -50,7 +50,7 @@ namespace IngameScript
 
         public enum MissileStage : byte
         {
-            Unknown, Active, Launching, Flying, Interception
+            Unknown, Idle, Active, Launching, Flying, Interception
         }
 
         public enum EntityType : byte
@@ -155,6 +155,7 @@ namespace IngameScript
             switch (stage)
             {
                 case MissileStage.Unknown: return "N/A";
+                case MissileStage.Idle: return "IDLE";
                 case MissileStage.Launching: return "LAUNCHING";
                 case MissileStage.Flying: return "FLYING";
                 case MissileStage.Interception: return "INTERCEPTION";

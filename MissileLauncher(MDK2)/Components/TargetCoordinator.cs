@@ -28,11 +28,6 @@ namespace IngameScript
             private CommunicationHandler _communicationHandler;
             #endregion
 
-            #region Fields
-            private long _selfID;
-            private IMyCubeBlock _referenceBlock;
-            #endregion
-
             #region Properties
             public int ID { get; private set; }
 
@@ -61,11 +56,9 @@ namespace IngameScript
             public HashSet<long> FriendlyIDs { get; private set; }
             #endregion
 
-            public TargetCoordinator(int id, long selfID, IMyCubeBlock referenceBlock, CommunicationHandler communicationHandler)
+            public TargetCoordinator(int id, CommunicationHandler communicationHandler)
             {
                 ID = id;
-                _selfID = selfID;
-                _referenceBlock = referenceBlock;
                 _communicationHandler = communicationHandler;
                 _communicationHandler.RegisterBroadcastListener("TargetInfo");
                 _communicationHandler.RegisterBroadcastListener("MissileInfo");
@@ -170,7 +163,7 @@ namespace IngameScript
                 var entityID = entityInfo.EntityID;
                 var relationID = entityID;
 
-                if (entityID == _selfID)
+                if (entityID == SystemCoordinator.SelfID)
                 {
                     return;
                 }
@@ -196,7 +189,7 @@ namespace IngameScript
                 var entityID = entityInfo.EntityID;
                 var relationID = entityID;
 
-                if (entityID == _selfID)
+                if (entityID == SystemCoordinator.SelfID)
                 {
                     return;
                 }
@@ -225,7 +218,7 @@ namespace IngameScript
 
                 var relationID = missileInfo.LauncherID;
 
-                if (relationID == _selfID)
+                if (relationID == SystemCoordinator.SelfID)
                 {
                     return;
                 }
@@ -250,7 +243,7 @@ namespace IngameScript
             {
                 var entityID = targetInfoExt.EntityID;
                 var relationID = entityID;
-                if (entityID == _selfID)
+                if (entityID == SystemCoordinator.SelfID)
                 {
                     return;
                 }
@@ -341,7 +334,7 @@ namespace IngameScript
                     {
                         relation = EntityRelation.Hostile;
                     }
-                    else if (relationKey == _selfID)
+                    else if (relationKey == SystemCoordinator.SelfID)
                     {
                         relation = EntityRelation.Me;
                     }
@@ -382,7 +375,7 @@ namespace IngameScript
                     {
                         relation = EntityRelation.Hostile;
                     }
-                    else if (relationKey == _selfID)
+                    else if (relationKey == SystemCoordinator.SelfID)
                     {
                         relation = EntityRelation.Me;
                     }

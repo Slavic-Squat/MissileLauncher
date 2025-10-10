@@ -37,11 +37,6 @@ namespace IngameScript
             public List<MissileBay> MissileBays => _systemCoordinator.MissileCoordinator.MissileBays;
             public HashSet<int> SelectedBays => _systemCoordinator.MissileCoordinator.SelectedBays;
 
-            public IMyCubeBlock ReferenceBlock => _systemCoordinator.ReferenceBlock;
-            public long SelfID => _systemCoordinator.SelfID;
-
-            public DateTime SystemTime => _systemCoordinator.Time;
-
             public UIWireManager(SystemCoordinator systemCoordinator)
             {
                 _systemCoordinator = systemCoordinator;

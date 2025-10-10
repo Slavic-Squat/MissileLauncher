@@ -36,10 +36,6 @@ namespace IngameScript
             }
             #endregion
 
-            #region Parts
-            private IMyCubeBlock _referenceBlock;
-            #endregion
-
             #region Fields
             private float _FOV = 30;
             private float _AR = 1;
@@ -57,10 +53,8 @@ namespace IngameScript
             private Matrix _projectionMatrix = Matrix.Identity;
             #endregion
 
-            public TargetingSpriteBuilder(IMyCubeBlock referenceBlock)
+            public TargetingSpriteBuilder()
             {
-                _referenceBlock = referenceBlock;
-
                 _projectionMatrix = Matrix.CreatePerspectiveFieldOfView(MathHelper.ToRadians(_FOV), _AR, _n, _f);
 
                 BuildStaticSprites();
@@ -68,7 +62,7 @@ namespace IngameScript
 
             private void BuildStaticSprites()
             {
-                Matrix cameraTargetWorld = _referenceBlock.WorldMatrix;
+                Matrix cameraTargetWorld = SystemCoordinator.ReferenceBasis;
                 Vector3 cameraPositionLocal = new Vector3(31334, 30557, 63764);
                 Vector3 cameraPositionWorld = Vector3.Transform(cameraPositionLocal, cameraTargetWorld);
 
@@ -186,7 +180,7 @@ namespace IngameScript
                 _spritesBeforePlane.Clear();
                 _spritesAfterPlane.Clear();
 
-                Matrix cameraTargetWorld = _referenceBlock.WorldMatrix;
+                Matrix cameraTargetWorld = SystemCoordinator.ReferenceBasis;
                 Vector3 cameraPositionLocal = new Vector3(31334, 30557, 63764);
                 Vector3 cameraPositionWorld = Vector3.Transform(cameraPositionLocal, cameraTargetWorld);
 

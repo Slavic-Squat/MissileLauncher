@@ -87,11 +87,11 @@ namespace IngameScript
                 return this;
             }
 
-            public string ToString(Vector3 referencePos, DateTime time)
+            public override string ToString()
             {
                 StringBuilder sb = new StringBuilder($"INFO:\n-----------------------\nTYPE: {GetName(Type)}\nSRC: {GetName(Source)}\nREL: {GetName(Relation)}\n");
 
-                float distance = Vector3.Distance(referencePos, Position);
+                float distance = Vector3.Distance(SystemCoordinator.ReferenceBasis.Translation, Position);
                 if (distance > 1000f)
                 {
                     distance /= 1000f;
@@ -113,7 +113,7 @@ namespace IngameScript
                     sb.Append($"SPD: {speed:0} m/s\n");
                 }
 
-                float age = (float)(time - Info.TimeRecorded).TotalMilliseconds;
+                float age = (float)(SystemCoordinator.SystemTime - Info.TimeRecorded).TotalMilliseconds;
                 if (age > 1000f)
                 {
                     age /= 1000f;

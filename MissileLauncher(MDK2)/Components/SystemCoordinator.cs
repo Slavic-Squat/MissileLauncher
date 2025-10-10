@@ -24,23 +24,26 @@ namespace IngameScript
     {
         public class SystemCoordinator
         {
+            public static Matrix ReferenceBasis => _referenceBlock.WorldMatrix;
+            public static DateTime SystemTime { get; private set; }
+            public static long SelfID => _referenceBlock.CubeGrid.EntityId;
+            public static long SelfAddress => IGCS.Me;
+
+            public CommunicationHandler CommunicationHandler { get; private set; }
+            public CommandHandler CommandHandler { get; private set; }
             public List<ControlStation> ControlStations { get; private set; }
             public List<TargetingLaser> TargetingLasers { get; private set; }
             public AWACS AWACS { get; private set; }
             public TargetCoordinator TargetCoordinator { get; private set; }
             public MissileCoordinator MissileCoordinator { get; private set; }
-            public CommunicationHandler CommunicationHandler { get; private set; }
-            public IMyCubeBlock ReferenceBlock { get; private set; }
-            public DateTime Time { get; private set; }
-            public long SelfID => ReferenceBlock.CubeGrid.EntityId;
             public UIWireManager UIWireManager { get; private set; }
 
-            private List<IEnumerator<bool>> _coroutines = new List<IEnumerator<bool>>(); 
+            private List<IEnumerator<bool>> _coroutines = new List<IEnumerator<bool>>();
+            private static IMyCubeBlock _referenceBlock;
 
-            public SystemCoordinator(IMyCubeBlock referenceBlock, int numOfControlStations, int numOfTargetingLasers)
+            public SystemCoordinator(int numOfControlStations, int numOfTargetingLasers)
             {
-                ReferenceBlock = referenceBlock;
-
+                TryGetBlocks();
                 ControlStations = new List<ControlStation>();
                 TargetingLasers = new List<TargetingLaser>();
 
@@ -61,13 +64,29 @@ namespace IngameScript
 
                 CommunicationHandler = new CommunicationHandler(0);
                 AWACS = new AWACS(0);
-                TargetCoordinator = new TargetCoordinator(0, SelfID, ReferenceBlock, CommunicationHandler);
-                MissileCoordinator = new MissileCoordinator(0, 8, ReferenceBlock, SelfID, CommunicationHandler, TargetCoordinator.AllTargetsExt);
+                TargetCoordinator = new TargetCoordinator(0, CommunicationHandler);
+                MissileCoordinator = new MissileCoordinator(0, 8, CommunicationHandler, TargetCoordinator.AllTargetsExt);
             }
 
-            public void Run(DateTime time)
+            public bool TryGetBlocks()
             {
-                Time = time;
+                try
+                {
+                    List<IMyShipController> tempList = new List<IMyShipController>();
+                    GTS.GetBlocksOfType(tempList, ctrl => ctrl.IsMainCockpit);
+                    _referenceBlock = tempList.Count > 0 ? tempList[0] as IMyCubeBlock : null;
+                    return true;
+                }
+                catch
+                {
+                    return false;
+                }
+            }
+
+            public void Run()
+            {
+                SystemTime += RuntimeInfo.TimeSinceLastRun;
+                DebugEcho($"System Time: {SystemTime}");
                 CommunicationHandler.Recieve();
 
                 for (int i = _coroutines.Count - 1; i >= 0; i--)
@@ -78,19 +97,20 @@ namespace IngameScript
                         _coroutines.RemoveAt(i);
                     }
                 }
+
                 foreach (var controlStation in ControlStations)
                 {
-                    controlStation.Run(time);
+                    controlStation.Run(SystemTime);
                 }
 
                 foreach (var targetingLaser in TargetingLasers)
                 {
-                    targetingLaser.Run(time);
+                    targetingLaser.Run(SystemTime);
                 }
 
-                AWACS.Run(time);
-                TargetCoordinator.Run(time);
-                MissileCoordinator.Run(time);
+                AWACS.Run(SystemTime);
+                TargetCoordinator.Run(SystemTime);
+                MissileCoordinator.Run(SystemTime);
 
                 foreach (var target in AWACS.Targets.Values)
                 {

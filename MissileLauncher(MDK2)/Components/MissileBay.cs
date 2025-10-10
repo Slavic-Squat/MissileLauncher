@@ -28,8 +28,6 @@ namespace IngameScript
             private IMyProgrammableBlock _missileComputer;
             private IMyShipConnector _connector;
             private MyIni _missileConfig = new MyIni();
-            private long _selfID;
-            private long _selfAddress;
             private bool _isSelected = false;
             #endregion
 
@@ -40,6 +38,7 @@ namespace IngameScript
             public MissileGuidanceType MissileGuidanceType { get; private set; } = MissileGuidanceType.Unknown;
             public MissilePayload MissilePayload { get; private set; } = MissilePayload.Unknown;
             public long MissileID { get; private set; } = -1;
+            public long MissileAddress { get; private set; } = -1;
             public bool IsSelected
             {
                 get
@@ -54,11 +53,9 @@ namespace IngameScript
             public bool IsSelectable => Status == BayStatus.Loaded || Status == BayStatus.Ready;
             #endregion
 
-            public MissileBay(int id, long selfID, long selfAddress)
+            public MissileBay(int id)
             {
                 ID = id;
-                _selfID = selfID;
-                _selfAddress = selfAddress;
 
                 TryGetBlocks();
                 RegisterMissile();
@@ -133,7 +130,7 @@ namespace IngameScript
                 if (Status == BayStatus.Loaded)
                 {
                     _missileComputer.Enabled = true;
-                    _missileComputer.CustomData += $"\nInit {_selfAddress} {_selfID} {time}";
+                    _missileComputer.CustomData += $"\nInit {SystemCoordinator.SelfAddress} {SystemCoordinator.SelfID} {time}";
                     if (!_missileComputer.TryRun("Init"))
                     {
                         _missileComputer.CustomData = "";

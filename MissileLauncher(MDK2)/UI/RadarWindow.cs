@@ -42,7 +42,6 @@ namespace IngameScript
             public EntitySourceFilter NavSourceFilter { get; set; } = EntitySourceFilter.Both;
             public ScopeScale ScopeScale { get; set; } = ScopeScale.Close;
             public long SelectedEntityID { get; private set; }
-            private IMyCubeBlock ReferenceBlock => UI.UIWireManager.ReferenceBlock;
 
             private Dictionary<long, EntityInfoExt> _allEntities = new Dictionary<long, EntityInfoExt>();
             private Dictionary<long, MyEntitySprite> _entitySprites = new Dictionary<long, MyEntitySprite>();
@@ -91,7 +90,7 @@ namespace IngameScript
 
                 BuildSprites();
 
-                _targetingSpriteBuilder = new TargetingSpriteBuilder(ReferenceBlock);
+                _targetingSpriteBuilder = new TargetingSpriteBuilder();
 
                 Vector2 targetPanelSize = new Vector2(150, 200);
                 Vector2 targetPanelPos = Pos + new Vector2(Size.X - targetPanelSize.X, Size.Y * 0.5f - targetPanelSize.Y * 0.5f);
@@ -99,7 +98,7 @@ namespace IngameScript
                 {
                     if (_entitySprites.Keys.Contains(SelectedEntityID))
                     {
-                        return _entitySprites[SelectedEntityID].EntityInfo.ToString(ReferenceBlock.GetPosition(), UI.UIWireManager.SystemTime);
+                        return _entitySprites[SelectedEntityID].EntityInfo.ToString();
                     }
                     else
                     {

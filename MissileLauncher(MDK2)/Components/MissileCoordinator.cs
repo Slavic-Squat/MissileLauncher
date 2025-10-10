@@ -47,9 +47,8 @@ namespace IngameScript
             #endregion
 
             private CommunicationHandler _communicationHandler;
-            private IMyCubeBlock _referenceBlock;
-            private long _selfID;
 
+            private HashSet<long> _validMissileAddresses = new HashSet<long>();
             private Dictionary<long, EntityInfo> _activeMissiles = new Dictionary<long, EntityInfo>();
             private Dictionary<long, EntityInfoExt> _activeMissilesExt = new Dictionary<long, EntityInfoExt>();
             private bool _activeMissilesStale = true;
@@ -58,11 +57,9 @@ namespace IngameScript
 
             private IEnumerator<bool> _launchCoroutine;
 
-            public MissileCoordinator(int id, int numberOfMissileBays, IMyCubeBlock referenceBlock, long selfID, CommunicationHandler communicationHandler, Dictionary<long, EntityInfoExt> targetInfo)
+            public MissileCoordinator(int id, int numberOfMissileBays, CommunicationHandler communicationHandler, Dictionary<long, EntityInfoExt> targetInfo)
             {
                 ID = id;
-                _referenceBlock = referenceBlock;
-                _selfID = selfID;
                 _communicationHandler = communicationHandler;
                 _communicationHandler.RegisterTag("MyMissiles");
                 _targetInfo = targetInfo;
@@ -71,7 +68,7 @@ namespace IngameScript
                 SelectedBays = new HashSet<int>();
                 for (int i = 0; i < numberOfMissileBays; i++)
                 {
-                    MissileBays.Add(new MissileBay(i, _selfID, _communicationHandler.SelfAddress));
+                    MissileBays.Add(new MissileBay(i));
                 }
             }
 
@@ -150,7 +147,7 @@ namespace IngameScript
                     long key = missile.EntityID;
                     EntitySource source = EntitySource.Remote;
                     EntityRelation relation = EntityRelation.Me;
-                    float distance = Vector3.Distance(missile.Position, _referenceBlock.GetPosition());
+                    float distance = Vector3.Distance(missile.Position, SystemCoordinator.ReferenceBasis.Translation);
 
                     allMyMissiles[key] = new EntityInfoExt(missile, source, relation);
                 }
@@ -214,7 +211,7 @@ namespace IngameScript
                     {
                         yield return false;
                     }
-                    while (MissileBays[bayID].Status == BayStatus.Loaded && !MissileBays[bayID].InitMissile())
+                    while (MissileBays[bayID].Status == BayStatus.Loaded && !MissileBays[bayID].InitMissile(Time))
                     {
                         DebugEcho("Failed to initialize missile.");
                         yield return false;
