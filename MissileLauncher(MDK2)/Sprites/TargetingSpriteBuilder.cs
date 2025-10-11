@@ -30,7 +30,11 @@ namespace IngameScript
                 get { return _zoom; }
                 set
                 {
+                    if (value == _zoom) return;
                     _zoom = value;
+                    _n = 100 / _zoom;
+                    _f = 100000 / _zoom;
+                    _projectionMatrix = Matrix.CreatePerspectiveFieldOfView(MathHelper.ToRadians(_FOV), _AR, _n, _f);
                     BuildStaticSprites();
                 }
             }
@@ -41,14 +45,15 @@ namespace IngameScript
             private float _AR = 1;
             private float _n = 100;
             private float _f = 100000;
-            private float _minScale = 0.5f;
-            private float _maxScale = 1.5f;
+            private float _minScale = 0.8f;
+            private float _maxScale = 1.2f;
             private float _zoom = 1f;
 
-            private List<MySpriteExt> _spritesBeforePlane = new List<MySpriteExt>();
+            private List<MySpriteExt> _spritesPrePlane = new List<MySpriteExt>();
             private List<MySpriteExt> _planeSprites = new List<MySpriteExt>();
-            private List<MySpriteExt> _spritesAfterPlane = new List<MySpriteExt>();
-            private List<MySpriteExt> _staticSpritesAfterPlane = new List<MySpriteExt>();
+            private List<MySpriteExt> _spritesPostPlane = new List<MySpriteExt>();
+            private List<MySpriteExt> _staticSpritesPostPlane = new List<MySpriteExt>();
+            private List<MySpriteExt> _staticSpritesPrePlane = new List<MySpriteExt>();
 
             private Matrix _projectionMatrix = Matrix.Identity;
             #endregion
@@ -163,13 +168,28 @@ namespace IngameScript
 
                 MySpriteExt gradSpriteExt = new MySpriteExt(tempSprite, cameraTargetNDC.Z);
 
+                tempSprite = new MySprite()
+                {
+                    Type = SpriteType.TEXTURE,
+                    Data = "StarryBackground",
+                    Position = new Vector2(511, 511),
+                    Size = new Vector2(1024, 1024),
+                    Color = Color.White,
+                    Alignment = TextAlignment.CENTER,
+                    RotationOrScale = 0f
+                };
+
+                MySpriteExt bgSpriteExt = new MySpriteExt(tempSprite, 1f);
+
+                _staticSpritesPrePlane.Clear();
                 _planeSprites.Clear();
+                _staticSpritesPostPlane.Clear();
+                _staticSpritesPrePlane.Add(bgSpriteExt);
                 _planeSprites.Add(gridSpriteExt);
-                _planeSprites.Add(gradSpriteExt);
-                _staticSpritesAfterPlane.Clear();
-                _staticSpritesAfterPlane.Add(selfSpriteExt);
-                _staticSpritesAfterPlane.Add(baseSpriteExt);
-                _staticSpritesAfterPlane.Add(stemSpriteExt);
+                _planeSprites.Add(gradSpriteExt);                
+                _staticSpritesPostPlane.Add(selfSpriteExt);
+                _staticSpritesPostPlane.Add(baseSpriteExt);
+                _staticSpritesPostPlane.Add(stemSpriteExt);
             }
 
             public List<MySpriteExt> BuildSprites(Dictionary<long, EntityInfoExt> entityInfoExts, long targetedID, out Dictionary<long, MyEntitySprite> entitySprites)
@@ -177,8 +197,8 @@ namespace IngameScript
                 List<MySpriteExt> finalSprites = new List<MySpriteExt>();
                 entitySprites = new Dictionary<long, MyEntitySprite>();
 
-                _spritesBeforePlane.Clear();
-                _spritesAfterPlane.Clear();
+                _spritesPrePlane.Clear();
+                _spritesPostPlane.Clear();
 
                 Matrix cameraTargetWorld = SystemCoordinator.ReferenceBasis;
                 Vector3 cameraPositionLocal = new Vector3(31334, 30557, 63764);
@@ -344,31 +364,31 @@ namespace IngameScript
 
                     if ((Vector3.Dot(cameraPositionWorld, gridPlaneWorld.Normal) + gridPlaneWorld.D) * (Vector3.Dot(entityPosWorld, gridPlaneWorld.Normal) + gridPlaneWorld.D) > 0)
                     {
-                        _spritesAfterPlane.Add(MySpriteExtEntity);
-                        _spritesAfterPlane.Add(baseSpriteExt);
-                        _spritesAfterPlane.Add(stemSpriteExt);
+                        _spritesPostPlane.Add(MySpriteExtEntity);
+                        _spritesPostPlane.Add(baseSpriteExt);
+                        _spritesPostPlane.Add(stemSpriteExt);
 
                         if (entityInfo.EntityID == targetedID)
                         {
-                            _spritesAfterPlane.Add(selectorSpriteExt);
+                            _spritesPostPlane.Add(selectorSpriteExt);
                         }
                     }
                     else
                     {
-                        _spritesBeforePlane.Add(MySpriteExtEntity);
-                        _spritesBeforePlane.Add(baseSpriteExt);
-                        _spritesBeforePlane.Add(stemSpriteExt);
+                        _spritesPrePlane.Add(MySpriteExtEntity);
+                        _spritesPrePlane.Add(baseSpriteExt);
+                        _spritesPrePlane.Add(stemSpriteExt);
 
                         if (entityInfo.EntityID == targetedID)
                         {
-                            _spritesBeforePlane.Add(selectorSpriteExt);
+                            _spritesPrePlane.Add(selectorSpriteExt);
                         }
                     }
                 }
 
-                finalSprites.AddRange(_spritesBeforePlane.OrderBy(x => -x.Depth));
+                finalSprites.AddRange(_spritesPrePlane.Concat(_staticSpritesPrePlane).OrderBy(x => -x.Depth));
                 finalSprites.AddRange(_planeSprites);
-                finalSprites.AddRange(_spritesAfterPlane.Concat(_staticSpritesAfterPlane).OrderBy(x => -x.Depth));
+                finalSprites.AddRange(_spritesPostPlane.Concat(_staticSpritesPostPlane).OrderBy(x => -x.Depth));
 
                 return finalSprites;
             }

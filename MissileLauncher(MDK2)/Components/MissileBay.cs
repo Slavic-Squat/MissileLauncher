@@ -27,7 +27,6 @@ namespace IngameScript
             #region Parts
             private IMyProgrammableBlock _missileComputer;
             private IMyShipConnector _connector;
-            private MyIni _missileConfig = new MyIni();
             private bool _isSelected = false;
             #endregion
 
@@ -53,15 +52,16 @@ namespace IngameScript
             public bool IsSelectable => Status == BayStatus.Loaded || Status == BayStatus.Ready;
             #endregion
 
+            private DateTime _timeLastRegister = DateTime.MinValue;
+
             public MissileBay(int id)
             {
                 ID = id;
 
                 TryGetBlocks();
-                RegisterMissile();
             }
 
-            public bool TryGetBlocks()
+            private bool TryGetBlocks()
             {
                 try
                 {
@@ -73,80 +73,111 @@ namespace IngameScript
                 }
                 catch
                 {
+                    DebugEcho($"Error: Unable to find Missile Bay Connector [{ID}]");
                     return false;
+                    throw;
                 }
                 return true;
             }
 
-            public void RegisterMissile()
+            private void RegisterMissile()
             {
+                MissileID = -1;
+                MissileAddress = -1;
+                MissileType = MissileType.Unknown;
+                MissileGuidanceType = MissileGuidanceType.Unknown;
+                MissilePayload = MissilePayload.Unknown;
+                Status = BayStatus.Empty;
+                _missileComputer = null;
+
                 IMyShipConnector missileConnector = _connector.OtherConnector;
                 if (missileConnector == null)
                 {
                     return;
                 }
-                List<IMyProgrammableBlock> temp = new List<IMyProgrammableBlock>();
-                GTS.GetBlocksOfType(temp, pb => pb.IsSameConstructAs(missileConnector) && pb.CustomName == "Missile Computer");
-                _missileComputer = temp.FirstOrDefault();
-
-                if (_missileConfig.TryParse(missileConnector.CustomData))
+                List<IMyProgrammableBlock> pbBlocks = new List<IMyProgrammableBlock>();
+                GTS.GetBlocksOfType(pbBlocks, pb => pb.IsSameConstructAs(missileConnector) && pb.CustomName == "Computer");
+                if (pbBlocks.Count == 0)
                 {
-                    byte missileType = _missileConfig.Get("Data", "Type").ToByte();
-                    byte missileGuidanceType = _missileConfig.Get("Data", "Guidance").ToByte();
-                    byte missilePayload = _missileConfig.Get("Data", "Payload").ToByte();
-
-                    MissileType = (MissileType)missileType;
-                    MissileGuidanceType = (MissileGuidanceType)missileGuidanceType;
-                    MissilePayload = (MissilePayload)missilePayload;
+                    return;
                 }
-                if (_missileComputer != null)
+                _missileComputer = pbBlocks[0];
+
+                List<IMyTerminalBlock> tBlocks = new List<IMyTerminalBlock>();
+                GTS.GetBlocksOfType(tBlocks, b => b.IsSameConstructAs(missileConnector) && b.CustomData.Contains("[Data]"));
+                if (tBlocks.Count == 0)
                 {
-                    Status = BayStatus.Loaded;
-                    MissileID = _missileComputer.CubeGrid.EntityId;
+                    return;
+                }
+                IMyTerminalBlock storageBlock = tBlocks[0];
+
+                MyIni missileConfig = new MyIni();
+                if (missileConfig.TryParse(storageBlock.CustomData))
+                {
+                    MissileID = missileConfig.Get("Data", "ID").ToInt64(-1);
+                    MissileAddress = missileConfig.Get("Data", "Address").ToInt64(-1);
+                    MissileType type;
+                    Enum.TryParse(missileConfig.Get("Data", "Type").ToString(), out type);
+                    MissileType = type;
+                    MissileGuidanceType guidanceType;
+                    Enum.TryParse(missileConfig.Get("Data", "GuidanceType").ToString(), out guidanceType);
+                    MissileGuidanceType = guidanceType;
+                    MissilePayload payload;
+                    Enum.TryParse(missileConfig.Get("Data", "Payload").ToString(), out payload);
+                    MissilePayload = payload;
                 }
                 else
                 {
-                    Status = BayStatus.Empty;
-                    MissileID = -1;
+                    return;
+                }
+                
+                if (MissileID != -1 && MissileAddress != -1 && MissileType != MissileType.Unknown && MissileGuidanceType != MissileGuidanceType.Unknown && MissilePayload != MissilePayload.Unknown)
+                {
+                    Status = BayStatus.Loaded;
                 }
             }
 
             public void Run(DateTime time)
             {
-                if (!GTS.CanAccess(_missileComputer))
+                if (Status == BayStatus.Empty && time - _timeLastRegister > TimeSpan.FromSeconds(10))
+                {
+                    RegisterMissile();
+                    _timeLastRegister = time;
+                }
+                if (_missileComputer != null && !GTS.CanAccess(_missileComputer))
                 {
                     Status = BayStatus.Empty;
                     MissileID = -1;
-                    _missileConfig.Clear();
+                    MissileAddress = -1;
                     MissileType = MissileType.Unknown;
                     MissileGuidanceType = MissileGuidanceType.Unknown;
                     MissilePayload = MissilePayload.Unknown;
+                    _missileComputer = null;
                     return;
                 }
             }
 
-            public bool InitMissile(DateTime time)
+            public bool TryInitMissile(DateTime time)
             {
                 if (Status == BayStatus.Loaded)
                 {
                     _missileComputer.Enabled = true;
-                    _missileComputer.CustomData += $"\nInit {SystemCoordinator.SelfAddress} {SystemCoordinator.SelfID} {time}";
-                    if (!_missileComputer.TryRun("Init"))
+                    if (!_missileComputer.TryRun("ON"))
                     {
-                        _missileComputer.CustomData = "";
                         return false;
                     }
+                    _missileComputer.CustomData += $"\nInit {SystemCoordinator.SelfAddress} {time}";                    
                     Status = BayStatus.Ready;
                     return true;
                 }
                 return false;
             }
 
-            public bool Launch(long targetID)
+            public bool Launch()
             {
                 if (Status == BayStatus.Ready)
                 {
-                    _missileComputer.CustomData += $"\nLaunch {targetID}";
+                    _missileComputer.CustomData += $"\nLaunch";
                     Status = BayStatus.Launching;
                     return true;
                 }
@@ -165,7 +196,7 @@ namespace IngameScript
 
             public override string ToString()
             {
-                return $"Bay [{ID}]\n----------------\nSTATUS: {GetName(Status)}\nMISL TYPE: {GetName(MissileType)}\nMISL PAYLOAD: {GetName(MissilePayload)}\n";
+                return $"Bay [{ID}]\n----------------\nSTATUS: {GetName(Status)}\nMISL TYPE: {GetName(MissileType)}\nMISL GUIDANCE: {MissileGuidanceType}\nMISL PAYLOAD: {GetName(MissilePayload)}\n";
             }
         }
     }

@@ -91,7 +91,7 @@ namespace IngameScript
             {
                 StringBuilder sb = new StringBuilder($"INFO:\n-----------------------\nTYPE: {GetName(Type)}\nSRC: {GetName(Source)}\nREL: {GetName(Relation)}\n");
 
-                float distance = Vector3.Distance(SystemCoordinator.ReferenceBasis.Translation, Position);
+                float distance = Vector3.Distance(SystemCoordinator.ReferencePosition, Position);
                 if (distance > 1000f)
                 {
                     distance /= 1000f;

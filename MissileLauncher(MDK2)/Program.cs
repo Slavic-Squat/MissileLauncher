@@ -50,6 +50,10 @@ namespace IngameScript
 
         public void Main(string argument, UpdateType updateSource)
         {
+            if (argument != null)
+            {
+                _systemCoordinator.Command(argument);
+            }
             _systemCoordinator.Run();
         }
     }

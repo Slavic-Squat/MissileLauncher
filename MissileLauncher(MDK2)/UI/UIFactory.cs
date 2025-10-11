@@ -52,7 +52,7 @@ namespace IngameScript
                 Vector2 buttonPos = panel.Pos + new Vector2(panel.Size.X / 2f - buttonSize.X / 2f, padding + labelSize.Y);
 
                 Func<string> getText = () => "SCALE: " + GetName(window.ScopeScale);
-                Func<bool> action = () => { window.ScopeScale = NextScopeScale(window.ScopeScale); return true; };
+                Func<bool> action = () => { window.CycleScopeScale(); return true; };
 
                 Button button = new Button("ScopeScale", buttonPos, buttonSize, 8f, 3f, 1f, getText, action, window.Display);
                 panel.AddButton(button);
@@ -60,7 +60,7 @@ namespace IngameScript
                 buttonPos.Y += buttonSize.Y + spacing;
 
                 getText = () => "TYPE: " + GetName(window.NavTypeFilter);
-                action = () => { window.NavTypeFilter = NextEntityTypeFilter(window.NavTypeFilter); return true; };
+                action = () => { window.CycleTypeFilter(); return true; };
 
                 button = new Button("TypeFilter", buttonPos, buttonSize, 8f, 3f, 1f, getText, action, window.Display);
                 panel.AddButton(button);
@@ -68,7 +68,7 @@ namespace IngameScript
                 buttonPos.Y += buttonSize.Y + spacing;
 
                 getText = () => "REL: " + GetName(window.NavRelationFilter);
-                action = () => { window.NavRelationFilter = NextEntityRelationFilter(window.NavRelationFilter); return true; };
+                action = () => { window.CycleRelationFilter(); return true; };
 
                 button = new Button("RelationFilter", buttonPos, buttonSize, 8f, 3f, 1f, getText, action, window.Display);
                 panel.AddButton(button);
@@ -76,7 +76,7 @@ namespace IngameScript
                 buttonPos.Y += buttonSize.Y + spacing;
 
                 getText = () => "SRC: " + GetName(window.NavSourceFilter);
-                action = () => { window.NavSourceFilter = NextEntitySourceFilter(window.NavSourceFilter); return true; };
+                action = () => { window.CycleSourceFilter(); return true; };
 
                 button = new Button("SourceFilter", buttonPos, buttonSize, 8f, 3f, 1f, getText, action, window.Display);
                 panel.AddButton(button);

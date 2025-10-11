@@ -30,12 +30,11 @@ namespace IngameScript
             public HashSet<long> FriendlyIDs => _systemCoordinator.TargetCoordinator.FriendlyIDs;
             public HashSet<long> HostileIDs => _systemCoordinator.TargetCoordinator.HostileIDs;
             public Dictionary<long, EntityInfoExt> AllTargetsExt => _systemCoordinator.TargetCoordinator.AllTargetsExt;
-            public Dictionary<long, EntityInfoExt> AllMyMissilesExt => _systemCoordinator.MissileCoordinator.ActiveMissilesExt;
+            public Dictionary<long, EntityInfoExt> AllMyMissilesExt => _systemCoordinator.MissileCoordinator.MyMissilesExt;
 
             public List<TargetingLaser> TargetingLasers => _systemCoordinator.TargetingLasers;
             public List<ControlStation> ControlStations => _systemCoordinator.ControlStations;
             public List<MissileBay> MissileBays => _systemCoordinator.MissileCoordinator.MissileBays;
-            public HashSet<int> SelectedBays => _systemCoordinator.MissileCoordinator.SelectedBays;
 
             public UIWireManager(SystemCoordinator systemCoordinator)
             {

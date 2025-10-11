@@ -106,10 +106,10 @@ namespace IngameScript
 
         public enum ScopeScale : byte
         {
-            Close, Far
+            Close, Medium, Far
         }
 
-        public static readonly ScopeScale[] ScopeScaleCycles = new ScopeScale[] { ScopeScale.Close, ScopeScale.Far };
+        public static readonly ScopeScale[] ScopeScaleCycles = new ScopeScale[] { ScopeScale.Close, ScopeScale.Medium, ScopeScale.Far };
 
         public enum Direction
         {
@@ -215,7 +215,8 @@ namespace IngameScript
         {
             switch (scale)
             {
-                case ScopeScale.Close: return "6km";
+                case ScopeScale.Close: return "3km";
+                case ScopeScale.Medium: return "6km";
                 case ScopeScale.Far: return "12km";
                 default: return "N/A";
             }
@@ -225,7 +226,8 @@ namespace IngameScript
         {
             switch(scale)
             {
-                case ScopeScale.Close: return 2;
+                case ScopeScale.Close: return 4;
+                case ScopeScale.Medium: return 2;
                 case ScopeScale.Far: return 1;
                 default: return 0;
             }

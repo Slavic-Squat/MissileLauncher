@@ -36,11 +36,11 @@ namespace IngameScript
             public event Action<INavigable> RequestStopNavigation;
 
             public IMyTextSurface Display => UI.Display;
-            public NavMode NavMode { get; set; } = NavMode.UI;
-            public EntityTypeFilter NavTypeFilter { get; set; } = EntityTypeFilter.All;
-            public EntityRelationFilter NavRelationFilter { get; set; } = EntityRelationFilter.All;
-            public EntitySourceFilter NavSourceFilter { get; set; } = EntitySourceFilter.Both;
-            public ScopeScale ScopeScale { get; set; } = ScopeScale.Close;
+            public NavMode NavMode { get; private set; } = NavMode.UI;
+            public EntityTypeFilter NavTypeFilter { get; private set; } = EntityTypeFilter.All;
+            public EntityRelationFilter NavRelationFilter { get; private set; } = EntityRelationFilter.All;
+            public EntitySourceFilter NavSourceFilter { get; private set; } = EntitySourceFilter.Both;
+            public ScopeScale ScopeScale { get; private set; } = ScopeScale.Close;
             public long SelectedEntityID { get; private set; }
 
             private Dictionary<long, EntityInfoExt> _allEntities = new Dictionary<long, EntityInfoExt>();
@@ -290,8 +290,6 @@ namespace IngameScript
             public void Update(DateTime time)
             {
                 _allEntities = UI.UIWireManager.GetAllEntities();
-
-                _targetingSpriteBuilder.Zoom = GetValue(ScopeScale);
                 _targetingSprites = _targetingSpriteBuilder.BuildSprites(_allEntities, SelectedEntityID, out _entitySprites);
 
                 if (!_allEntities.ContainsKey(SelectedEntityID))
@@ -347,6 +345,27 @@ namespace IngameScript
                 }
 
                 NavMode = NextNavMode(NavMode);
+            }
+
+            public void CycleScopeScale()
+            {
+                ScopeScale = NextScopeScale(ScopeScale);
+                _targetingSpriteBuilder.Zoom = GetValue(ScopeScale);
+            }
+
+            public void CycleTypeFilter()
+            {
+                NavTypeFilter = NextEntityTypeFilter(NavTypeFilter);
+            }
+
+            public void CycleRelationFilter()
+            {
+                NavRelationFilter = NextEntityRelationFilter(NavRelationFilter);
+            }
+
+            public void CycleSourceFilter()
+            {
+                NavSourceFilter = NextEntitySourceFilter(NavSourceFilter);
             }
 
             public void Navigate(UserInput input, DateTime time)
