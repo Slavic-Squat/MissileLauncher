@@ -38,21 +38,16 @@ namespace IngameScript
                 ID = id;
                 MaxRaycastDistance = maxRaycastDistance;
 
-                TryGetBLocks();
+                GetBLocks();
                 Init();
             }
 
-            private bool TryGetBLocks()
+            private void GetBLocks()
             {
-                try
+                GTS.GetBlockGroupWithName($"Camera Array [{ID}]")?.GetBlocksOfType(_cameras);
+                if (_cameras.Count == 0)
                 {
-                    GTS.GetBlockGroupWithName($"Camera Array [{ID}]").GetBlocksOfType(_cameras);
-                    return true;
-                }
-                catch (Exception ex)
-                {
-                    DebugEcho($"Error in Camera Array [{ID}] Construction");
-                    return false;
+                    throw new Exception($"Camera Array [{ID}] has no cameras!");
                 }
             }
 

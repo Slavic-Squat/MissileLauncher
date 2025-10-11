@@ -24,12 +24,12 @@ namespace IngameScript
     {
         private SystemCoordinator _systemCoordinator;
         public static Action<string> DebugEcho { get; private set; }
+        public static IMyProgrammableBlock MePb { get; private set; }
         public static IMyGridTerminalSystem GTS { get; private set; }
         public static IMyIntergridCommunicationSystem IGCS { get; private set; }
         public static IMyGridProgramRuntimeInfo RuntimeInfo { get; private set; }
-        public static IMyProgrammableBlock MePb { get; private set; }
 
-        public static int DebugCounter = 0;
+        public static int DebugCounter { get; set; } = 0;
 
         public Program()
         {

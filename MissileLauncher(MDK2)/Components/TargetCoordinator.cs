@@ -158,7 +158,7 @@ namespace IngameScript
                 }
             }
 
-            public void AddRemoteTarget(EntityInfo entityInfo)
+            private void AddRemoteTarget(EntityInfo entityInfo)
             {
                 var entityID = entityInfo.EntityID;
                 var relationID = entityID;
@@ -184,7 +184,7 @@ namespace IngameScript
                 }
             }
 
-            public void AddRemoteFriendly(EntityInfo entityInfo)
+            private void AddRemoteFriendly(EntityInfo entityInfo)
             {
                 var entityID = entityInfo.EntityID;
                 var relationID = entityID;
@@ -207,7 +207,7 @@ namespace IngameScript
                 }
             }
 
-            public void AddRemoteMissile(EntityInfo entityInfo)
+            private void AddRemoteMissile(EntityInfo entityInfo)
             {
                 if (entityInfo.SubType != EntityInfoSubType.MissileInfoLite)
                 {
@@ -261,22 +261,22 @@ namespace IngameScript
                 }
             }
 
-            public void RemoveRemoteTarget(long entityID)
+            private void RemoveRemoteTarget(long entityID)
             {
                 _targetsRemote.Remove(entityID);
             }
 
-            public void RemoteLocalTarget(long entityID)
+            private void RemoteLocalTarget(long entityID)
             {
                 _targetsLocal.Remove(entityID);
             }
 
-            public void RemoteRemoteMissile(long entityID)
+            private void RemoteRemoteMissile(long entityID)
             {
                 _missilesRemote.Remove(entityID);
             }
 
-            public void RemoteRomoteFriendly(long entityID)
+            private void RemoteRomoteFriendly(long entityID)
             {
                 _friendlysRemote.Remove(entityID);
             }

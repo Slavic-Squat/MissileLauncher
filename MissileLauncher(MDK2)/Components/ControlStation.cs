@@ -39,35 +39,31 @@ namespace IngameScript
                 ID = iD;
                 _uiWireManager = uiWireManager;
 
-                TryGetBlocks();
+                GetBlocks();
 
                 PrimaryDisplay = _displays[0];
                 Input = new UserInput(_controllerReference);
                 _ui = new UI(this, PrimaryDisplay, _uiWireManager);
             }
 
-            public bool TryGetBlocks()
+            private void GetBlocks()
             {
-                try
+                _controllerReference = GTS.GetBlockWithName($"Control Station [{ID}]") as IMyShipController;
+                if (_controllerReference == null)
                 {
-                    _controllerReference = GTS.GetBlockWithName($"Control Station [{ID}]") as IMyShipController;
-                    if (_controllerReference == null)
-                    {
-                        throw new Exception();
-                    }
-                    float internalSurfaceCount = (_controllerReference as IMyTextSurfaceProvider)?.SurfaceCount ?? 0;
-                    for (int i = 0; i < internalSurfaceCount; i++)
-                    {
-                        _displays.Add((_controllerReference as IMyTextSurfaceProvider).GetSurface(i));
-                    }
-                    GTS.GetBlockGroupWithName($"Control Station [{ID}] Displays")?.GetBlocksOfType(_displays);
-                    return true;
+                    throw new Exception($"No Controller Found For Control Station [{ID}]");
                 }
-                catch (Exception ex)
+                float internalSurfaceCount = (_controllerReference as IMyTextSurfaceProvider)?.SurfaceCount ?? 0;
+                for (int i = 0; i < internalSurfaceCount; i++)
                 {
-                    DebugEcho("Error in Control Station Construction");
-                    return false;
-                    throw;
+                    _displays.Add((_controllerReference as IMyTextSurfaceProvider).GetSurface(i));
+                }
+                List<IMyTextSurface> additionalDisplays = new List<IMyTextSurface>();
+                GTS.GetBlockGroupWithName($"Control Station [{ID}] Displays")?.GetBlocksOfType(additionalDisplays);
+                _displays.AddRange(additionalDisplays);
+                if (_displays.Count == 0)
+                {
+                    throw new Exception($"No Displays Found For Control Station [{ID}]");
                 }
             }
 
@@ -76,18 +72,9 @@ namespace IngameScript
                 Input.Run(time);
                 _ui.Run(time);
 
-                CleanUp();
                 if (!IsControlling)
                 {
                     _ui.Navigate(Input, time);
-                }
-            }
-
-            private void CleanUp()
-            {
-                if (!Controllable?.HasController ?? false)
-                {
-                    Controllable = null;
                 }
             }
 
@@ -95,18 +82,23 @@ namespace IngameScript
             {
                 if (IsControlling)
                 {
-                    ReleaseControl();
+                    ReleaseControl(Controllable);
                 }
+                controllable.OnTakeControl();
+                controllable.RequestRelease += ReleaseControl;
                 Controllable = controllable;
-                controllable.AssignControl(this);
 
                 _ui.OpenModal(new InfoModal((_ui.TextureSize - _ui.SurfaceSize) * 0.5f, _ui.SurfaceSize * 0.75f, 10f, () => !IsControlling, $"UI Navigation Disabled\nReason: Controlling Object", PrimaryDisplay));
             }
 
-            public void ReleaseControl()
+            public void ReleaseControl(IControllable controllable)
             {
-                Controllable?.UnAssignControl();
-                Controllable = null;
+                controllable.OnRelease();
+                controllable.RequestRelease -= ReleaseControl;
+                if (Controllable == controllable)
+                {
+                    Controllable = null;
+                }
             }
         }
     }

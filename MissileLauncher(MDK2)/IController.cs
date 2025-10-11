@@ -29,7 +29,7 @@ namespace IngameScript
             bool IsControlling { get; }
 
             void TakeControl(IControllable controllable);
-            void ReleaseControl();
+            void ReleaseControl(IControllable controllable);
         }
     }
 }

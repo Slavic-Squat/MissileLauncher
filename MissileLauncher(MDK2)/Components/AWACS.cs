@@ -73,29 +73,20 @@ namespace IngameScript
                 _cameraArray2 = new CameraArray(3, maxRaycastDistance);
                 _cameraArray3 = new CameraArray(4, maxRaycastDistance);
 
-                TryGetBlocks();
+                GetBlocks();
                 Init();
             }
 
-            public bool TryGetBlocks()
+            private void GetBlocks()
             {
-                try
+                _spinRotor = GTS.GetBlockWithName($"Spin Rotor [{ID}]") as IMyMotorStator;
+                if (_spinRotor == null)
                 {
-                    _spinRotor = GTS.GetBlockWithName($"Spin Rotor [{ID}]") as IMyMotorStator;
-                    if (_spinRotor == null)
-                    {
-                        throw new Exception();
-                    }
-                    return true;
-                }
-                catch (Exception ex)
-                {
-                    DebugEcho("Error in AWACS construction");
-                    return false;
+                    throw new Exception("No Spin Rotor Found For AWACS");
                 }
             }
 
-            public void Init()
+            private void Init()
             {
                 _spinRotorInverted = _spinRotor.CustomData.Contains("Inverted");
             }

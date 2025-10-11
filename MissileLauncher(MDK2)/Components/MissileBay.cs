@@ -58,26 +58,16 @@ namespace IngameScript
             {
                 ID = id;
 
-                TryGetBlocks();
+                GetBlocks();
             }
 
-            private bool TryGetBlocks()
+            private void GetBlocks()
             {
-                try
+                _connector = GTS.GetBlockWithName($"Missile Bay Connector [{ID}]") as IMyShipConnector;
+                if (_connector == null)
                 {
-                    _connector = GTS.GetBlockWithName($"Missile Bay Connector [{ID}]") as IMyShipConnector;
-                    if (_connector == null)
-                    {
-                        throw new Exception();
-                    }
+                    throw new Exception($"No Connector Found For Missile Bay Connector [{ID}]");
                 }
-                catch
-                {
-                    DebugEcho($"Error: Unable to find Missile Bay Connector [{ID}]");
-                    return false;
-                    throw;
-                }
-                return true;
             }
 
             private void RegisterMissile()
@@ -166,7 +156,7 @@ namespace IngameScript
                     {
                         return false;
                     }
-                    _missileComputer.CustomData += $"\nInit {SystemCoordinator.SelfAddress} {time}";                    
+                    _missileComputer.CustomData += $"\nInit {IGCS.Me} {time}";                    
                     Status = BayStatus.Ready;
                     return true;
                 }

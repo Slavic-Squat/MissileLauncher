@@ -50,10 +50,8 @@ namespace IngameScript
 
             #region Properties
             public int ID { get; private set; }
-            public IController Controller { get; private set; }
-            public bool HasController => Controller != null;
             public bool IsControlPaused { get; private set; }
-            public bool IsUnderControl => HasController && !IsControlPaused;
+            public bool IsUnderControl { get; private set; }
             public bool HasTarget => Target.IsValid;
             public float MaxRaycastDistance
             {
@@ -70,6 +68,7 @@ namespace IngameScript
             public bool ManualOverride { get; set; }
             public EntityInfoExt Target {  get; private set; }
             public event Action<TargetingLaser> SyncRequested;
+            public event Action<IControllable> RequestRelease;
             #endregion
 
             public TargetingLaser(int id, float sensitivity = 0.05f, float maxRaycastDistance = 5000, bool manualOverride = false)
@@ -77,7 +76,7 @@ namespace IngameScript
                 ID = id;
                 Sensitivity = sensitivity;
 
-                TryGetBlocks();
+                GetBlocks();
                 Init();
 
                 _cameraArray = new CameraArray(0, maxRaycastDistance);
@@ -85,26 +84,17 @@ namespace IngameScript
                 _elevationPID = new PIDControl(25, 2, 0.1f);
             }
 
-            private bool TryGetBlocks()
+            private void GetBlocks()
             {
-                try
+                _azimuthRotor = GTS.GetBlockWithName($"Azimuth Rotor [{ID}]") as IMyMotorStator;
+                if (_azimuthRotor == null)
                 {
-                    _azimuthRotor = GTS.GetBlockWithName($"Azimuth Rotor [{ID}]") as IMyMotorStator;
-                    if (_azimuthRotor == null)
-                    {
-                        throw new Exception();
-                    }
-                    _elevationRotor = GTS.GetBlockWithName($"Elevation Rotor [{ID}]") as IMyMotorStator;
-                    if (_elevationRotor == null)
-                    {
-                        throw new Exception();
-                    }
-                    return true;
+                    throw new Exception($"No Azimuth Rotor Found For Targeting Laser [{ID}]");
                 }
-                catch (Exception ex)
+                _elevationRotor = GTS.GetBlockWithName($"Elevation Rotor [{ID}]") as IMyMotorStator;
+                if (_elevationRotor == null)
                 {
-                    DebugEcho("Error in TargetingLaser construction");
-                    return false;
+                    throw new Exception($"No Elevation Rotor Found For Targeting Laser [{ID}]");
                 }
             }
 
@@ -130,15 +120,6 @@ namespace IngameScript
                 _referenceMatrix = H2 * H1 * H0;
 
                 _cameraArray.Update(time);
-
-                if (IsUnderControl)
-                {
-                    ControlLaser(time);
-                }
-                else
-                {
-                    MoveLaser(0, 0);
-                }
 
                 if (HasTarget && !ManualOverride)
                 {
@@ -225,46 +206,51 @@ namespace IngameScript
                 }
             }
 
-            private void ControlLaser(DateTime time)
+            public void Control(UserInput input, DateTime time)
             {
                 if (!IsUnderControl)
                     return;
 
-                if (Controller.Input.QRelease)
+                if (input.QRelease)
                 {
                     SyncRequested?.Invoke(this);
                 }
 
                 if (!HasTarget || ManualOverride)
                 {
-                    MoveLaser(-Controller.Input.MouseInput.Y, -Controller.Input.MouseInput.X);
+                    MoveLaser(-input.MouseInput.Y, -input.MouseInput.X);
 
-                    if (Controller.Input.SpacePress)
+                    if (input.SpacePress)
                     {
                         Vector3 raycastTarget = _referenceMatrix.Forward * MaxRaycastDistance * 0.9f + _referenceMatrix.Translation;
                         FireLaser(time, raycastTarget, 0f);
                     }
                 }
-                if (Controller.Input.CHeldAndReleased)
+                if (input.CHeldAndReleased)
                 {
-                    UnAssignControl();
+                    ReleaseControl();
                     return;
                 }
-                else if (Controller.Input.CRelease)
+                else if (input.CRelease)
                 {
                     ForgetTarget();
                 }
             }
 
-            public void AssignControl(IController controller)
+            public void OnTakeControl()
             {
-                Controller = controller;
+                IsUnderControl = true;
             }
 
-            public void UnAssignControl()
+            public void OnRelease()
             {
-                Controller = null;
+                IsUnderControl = false;
                 MoveLaser(0, 0);
+            }
+
+            private void ReleaseControl()
+            {
+                RequestRelease?.Invoke(this);
             }
 
             public void PauseControl()

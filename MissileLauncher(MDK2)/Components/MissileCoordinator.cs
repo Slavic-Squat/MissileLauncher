@@ -156,13 +156,13 @@ namespace IngameScript
                 MyMissilesExt.Remove(entityID);
             }
 
-            public void RegisterMissileAddress(long address, long missileID, long targetID)
+            private void RegisterMissileAddress(long address, long missileID, long targetID)
             {
                 _addressMissileIDMap[address] = missileID;
                 _addressTargetIDMap[address] = targetID;
             }
 
-            public void UnregisterMissileAddress(long address)
+            private void UnregisterMissileAddress(long address)
             {
                 _addressMissileIDMap.Remove(address);
                 _addressTargetIDMap.Remove(address);

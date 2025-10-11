@@ -24,14 +24,14 @@ namespace IngameScript
     {
         public class SystemCoordinator
         {
-            public static Matrix ReferenceBasis => _referenceController.WorldMatrix;
-            public static Vector3 ReferencePosition => _referenceController.GetPosition();
-            public static Vector3 ReferenceVelocity => _referenceController.GetShipVelocities().LinearVelocity;
             public static DateTime SystemTime { get; private set; }
-            public static long SelfID => _referenceController.CubeGrid.EntityId;
-            public static long SelfAddress => IGCS.Me;
+            public static IMyShipController ReferenceController { get; private set; }
+            public static Matrix ReferenceBasis => ReferenceController.WorldMatrix;
+            public static Vector3 ReferencePosition => ReferenceController.GetPosition();
+            public static Vector3 ReferenceVelocity => ReferenceController.GetShipVelocities().LinearVelocity;
+            public static long SelfID => ReferenceController.CubeGrid.EntityId;
 
-            public MyIni Conifg = new MyIni();
+            public MyIni Config { get; private set; }
             public CommunicationHandler CommunicationHandler { get; private set; }
             public CommandHandler CommandHandler { get; private set; }
             public List<ControlStation> ControlStations { get; private set; }
@@ -43,12 +43,12 @@ namespace IngameScript
 
             private List<IEnumerator<bool>> _coroutines = new List<IEnumerator<bool>>();
             private Dictionary<string, Action<string[]>> _commands = new Dictionary<string, Action<string[]>>();
-            private static IMyShipController _referenceController;
             private IMyTerminalBlock _storageBlock;
 
             public SystemCoordinator(int numOfControlStations, int numOfTargetingLasers)
             {
-                TryGetBlocks();
+                GetBlocks();
+                Config = new MyIni();
                 ControlStations = new List<ControlStation>();
                 TargetingLasers = new List<TargetingLaser>();
 
@@ -74,18 +74,13 @@ namespace IngameScript
                 CommandHandler = new CommandHandler(MePb, _commands);
             }
 
-            public bool TryGetBlocks()
+            private void GetBlocks()
             {
-                try
+                List<IMyShipController> ctrlBlocks = new List<IMyShipController>();
+                GTS.GetBlocksOfType(ctrlBlocks, ctrl => ctrl.IsMainCockpit);
+                if (ctrlBlocks.Count == 0)
                 {
-                    List<IMyShipController> ctrlBlocks = new List<IMyShipController>();
-                    GTS.GetBlocksOfType(ctrlBlocks, ctrl => ctrl.IsMainCockpit);
-                    _referenceController = ctrlBlocks.Count > 0 ? ctrlBlocks[0] : null;
-                    return true;
-                }
-                catch
-                {
-                    return false;
+                    throw new Exception("No Main Cockpit Found");
                 }
             }
 
@@ -136,7 +131,7 @@ namespace IngameScript
 
             public void Command(string command)
             {
-                CommandHandler.TryRunCommands(command);
+                CommandHandler.RunCommands(command);
             }
         }
     }
