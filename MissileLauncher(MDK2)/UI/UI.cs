@@ -30,6 +30,7 @@ namespace IngameScript
             public Vector2 SurfaceSize => Display.SurfaceSize;
             public Vector2 TextureSize => Display.TextureSize;
             public UIWireManager UIWireManager { get; private set; }
+            public RectangleF Bounds { get; private set; }
 
             private IWindow _activeWindow = null;
             private IModal _activeModal = null;
@@ -43,6 +44,8 @@ namespace IngameScript
                 display.ContentType = ContentType.SCRIPT;
                 display.Script = "";
                 display.ScriptBackgroundColor = Color.Black;
+
+                Bounds = new RectangleF(new Vector2(0, (TextureSize.Y - SurfaceSize.Y) * 0.5f), SurfaceSize);
 
                 MainWindow mainWindow = new MainWindow(this, 10f);
                 OpenWindow(mainWindow);

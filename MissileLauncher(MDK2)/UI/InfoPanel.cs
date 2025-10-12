@@ -57,7 +57,7 @@ namespace IngameScript
                     Position = Center,
                     Size = Size - 2 * _borderThickness,
                     RotationOrScale = 0f,
-                    Color = UIConfig.PanelFillColor,
+                    Color = new Color(13, 13, 13, 255),
                     Alignment = TextAlignment.CENTER,
                 };
                 _borderSprite = new MySprite()
@@ -67,7 +67,7 @@ namespace IngameScript
                     Position = Center,
                     Size = Size,
                     RotationOrScale = 0f,
-                    Color = UIConfig.PanelBorderColor,
+                    Color = new Color(89, 89, 89, 255),
                     Alignment = TextAlignment.CENTER,
                 };
                 _textSprite = SpriteHelper.CreateText(Bounds, TextGetter(), Color.White, _surface, TextAlignment.LEFT, false, 10f);

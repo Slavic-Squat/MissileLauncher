@@ -128,7 +128,7 @@ namespace IngameScript
                     Data = "SquareSimple",
                     Position = bounds.Center,
                     Size = bounds.Size,
-                    Color = fillColor,
+                    Color = borderColor,
                     Alignment = TextAlignment.CENTER
                 };
 
@@ -142,7 +142,7 @@ namespace IngameScript
                     Alignment = TextAlignment.CENTER
                 };
 
-                _textSprite = SpriteHelper.CreateText(Bounds, _textGetter(), textColor, _surface, TextAlignment.CENTER, true, _padding);
+                _textSprite = SpriteHelper.CreateText(bounds, _textGetter(), textColor, _surface, TextAlignment.CENTER, true, _padding);
             }
 
             public void Press(DateTime time)

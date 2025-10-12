@@ -179,12 +179,26 @@ namespace IngameScript
                     RotationOrScale = 0f
                 };
 
-                MySpriteExt bgSpriteExt = new MySpriteExt(tempSprite, 1f);
+                MySpriteExt bgSpriteExt = new MySpriteExt(tempSprite, 0.99999f);
+
+                tempSprite = new MySprite()
+                {
+                    Type = SpriteType.TEXTURE,
+                    Data = "SquareSimple",
+                    Position = new Vector2(511, 511),
+                    Size = new Vector2(1024, 1024),
+                    Color = new Color(1, 0, 5, 255),
+                    Alignment = TextAlignment.CENTER,
+                    RotationOrScale = 0f
+                };
+
+                MySpriteExt bgFillSpriteExt = new MySpriteExt(tempSprite, 1f);
 
                 _staticSpritesPrePlane.Clear();
                 _planeSprites.Clear();
                 _staticSpritesPostPlane.Clear();
                 _staticSpritesPrePlane.Add(bgSpriteExt);
+                _staticSpritesPrePlane.Add(bgFillSpriteExt);
                 _planeSprites.Add(gridSpriteExt);
                 _planeSprites.Add(gradSpriteExt);                
                 _staticSpritesPostPlane.Add(selfSpriteExt);

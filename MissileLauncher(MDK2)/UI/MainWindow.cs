@@ -58,10 +58,8 @@ namespace IngameScript
             public MainWindow(UI ui, float borderThickness)
             {
                 UI = ui;
-                Vector2 pos = (ui.TextureSize - ui.SurfaceSize) * 0.5f;
-                Vector2 size = new Vector2(ui.SurfaceSize.X, ui.SurfaceSize.Y);
 
-                _bounds = new RectangleF(pos, size);
+                _bounds = ui.Bounds;
                 _borderThickness = borderThickness;
 
                 Init();

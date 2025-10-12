@@ -37,6 +37,7 @@ namespace IngameScript
             private MySprite _fillSprite;
             private MySprite _borderSprite;
             private MySprite _textSprite;
+            private MySprite _obscureSprite;
 
             private IMyTextSurface _surface;
 
@@ -57,7 +58,7 @@ namespace IngameScript
                     Data = "SquareSimple",
                     Position = Center,
                     Size = Size - 2 * _borderThickness,
-                    Color = new Color(0, 0, 0, 200),
+                    Color = new Color(38, 19, 26, 255),
                     Alignment = TextAlignment.CENTER
                 };
 
@@ -67,11 +68,21 @@ namespace IngameScript
                     Data = "SquareSimple",
                     Position = Center,
                     Size = Size,
-                    Color = Color.White,
+                    Color = new Color(252, 3, 94, 255),
                     Alignment = TextAlignment.CENTER
                 };
 
-                _textSprite = SpriteHelper.CreateText(Bounds, _text, Color.White, _surface, TextAlignment.CENTER, true, 10f);
+                _obscureSprite = new MySprite()
+                {
+                    Type = SpriteType.TEXTURE,
+                    Data = "SquareSimple",
+                    Position = Center,
+                    Size = _surface.SurfaceSize,
+                    Color = new Color(0, 0, 0, 200),
+                    Alignment = TextAlignment.CENTER
+                };
+
+                _textSprite = SpriteHelper.CreateText(Bounds, _text, new Color(252, 3, 94, 255), _surface, TextAlignment.CENTER, true, 10f);
             }
 
             public void Draw(MySpriteDrawFrame frame)
