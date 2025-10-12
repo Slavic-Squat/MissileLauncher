@@ -39,8 +39,6 @@ namespace IngameScript
             }
 
             private RectangleF _bounds;
-            private readonly Vector2 _originalPos;
-            private readonly Vector2 _originalSize;
 
             private float _padding;
             private float _borderThickness;
@@ -51,10 +49,6 @@ namespace IngameScript
             private DateTime _timePressed = DateTime.MinValue;
             private Func<bool> _canPress;
             private Func<string> _textGetter;
-
-            private Color _fillColor = UIConfig.ButtonFillColor;
-            private Color _borderColor = UIConfig.ButtonBorderColor;
-            private Color _textColor = UIConfig.ButtonTextColor;
 
             private MySprite _fillSprite;
             private MySprite _borderSprite;
@@ -68,8 +62,6 @@ namespace IngameScript
                 Name = name;
 
                 _bounds = new RectangleF(pos, size);
-                _originalPos = pos;
-                _originalSize = size;
                 _padding = padding;
                 _borderThickness = borderThickness;
                 _highlightThickness = highlightThickness;
@@ -78,19 +70,55 @@ namespace IngameScript
                 _action = action;
                 _surface = surface;
                 _canPress = canPress;
-
-                BuildSprites();
             }
 
             private void BuildSprites()
             {
+                Color fillColor, borderColor, textColor;
+                RectangleF bounds = Bounds;
+                if (_state.HasFlag(ButtonState.Disabled))
+                {
+                    fillColor = UIConfig.ButtonFillColorDisabled;
+                    borderColor = UIConfig.ButtonBorderColorDisabled;
+                    textColor = UIConfig.ButtonTextColorDisabled;
+                }
+                else if (_state.HasFlag(ButtonState.Errored))
+                {
+                    fillColor = UIConfig.ButtonFillErrored;
+                    borderColor = UIConfig.ButtonBorderColorErrored;
+                    textColor = UIConfig.ButtonTextColorErrored;
+                }
+                else if (_state.HasFlag(ButtonState.Pressed))
+                {
+                    fillColor = UIConfig.ButtonFillColorPressed;
+                    borderColor = UIConfig.ButtonBorderColorPressed;
+                    textColor = UIConfig.ButtonTextColorPressed;
+                }
+                else
+                {
+                    fillColor = UIConfig.ButtonFillColor;
+                    borderColor = UIConfig.ButtonBorderColor;
+                    textColor = UIConfig.ButtonTextColor;
+                }
+
+                if (_state.HasFlag(ButtonState.Pressed))
+                {
+                    bounds.Size = Size * 0.95f;
+                    bounds.Position = Pos + (Size - bounds.Size) / 2;
+                }
+                else if (_state.HasFlag(ButtonState.Highlighted))
+                {
+                    bounds.Size = Size * 1.1f;
+                    bounds.Position = Pos + (Size - bounds.Size) / 2;
+                }
+
                 _fillSprite = new MySprite()
                 {
                     Type = SpriteType.TEXTURE,
                     Data = "SquareSimple",
-                    Position = Center,
-                    Size = Size - 2 * _borderThickness,
-                    Color = _fillColor,
+                    Position = bounds.Center,
+                    Size = bounds.Size - 2 * _borderThickness,
+                    Color = fillColor,
                     Alignment = TextAlignment.CENTER
                 };
 
@@ -98,9 +126,9 @@ namespace IngameScript
                 {
                     Type = SpriteType.TEXTURE,
                     Data = "SquareSimple",
-                    Position = Center,
-                    Size = Size,
-                    Color = _borderColor,
+                    Position = bounds.Center,
+                    Size = bounds.Size,
+                    Color = fillColor,
                     Alignment = TextAlignment.CENTER
                 };
 
@@ -108,13 +136,13 @@ namespace IngameScript
                 {
                     Type = SpriteType.TEXTURE,
                     Data = "SquareSimple",
-                    Position = Center,
-                    Size = Size + 2 * _highlightThickness,
+                    Position = bounds.Center,
+                    Size = bounds.Size + 2 * _highlightThickness,
                     Color = UIConfig.ButtonHighlightColor,
                     Alignment = TextAlignment.CENTER
                 };
 
-                _textSprite = SpriteHelper.CreateText(Bounds, _textGetter(), _textColor, _surface, TextAlignment.CENTER, true, _padding);
+                _textSprite = SpriteHelper.CreateText(Bounds, _textGetter(), textColor, _surface, TextAlignment.CENTER, true, _padding);
             }
 
             public void Press(DateTime time)
@@ -136,22 +164,12 @@ namespace IngameScript
 
             public void Highlight()
             {
-                if (IsHighlighted)
-                    return;
-
                 _state |= ButtonState.Highlighted;
-                _bounds.Position -= _originalSize * 0.05f;
-                _bounds.Size = _originalSize * 1.1f;
             }
 
             public void Unhighlight()
             {
-                if (!IsHighlighted)
-                    return;
-
                 _state &= ~ButtonState.Highlighted;
-                _bounds.Position = _originalPos;
-                _bounds.Size = _originalSize;
             }
 
             public void Update(DateTime time)
@@ -173,37 +191,11 @@ namespace IngameScript
                 {
                     _state |= ButtonState.Disabled;
                 }
-
-                if (_state.HasFlag(ButtonState.Disabled))
-                {
-                    _fillColor = UIConfig.ButtonFillColorDisabled;
-                    _borderColor = UIConfig.ButtonBorderColorDisabled;
-                    _textColor = UIConfig.ButtonTextColorDisabled;
-                }
-                else if (_state.HasFlag(ButtonState.Errored))
-                {
-                    _fillColor = UIConfig.ButtonFillErrored;
-                    _borderColor = UIConfig.ButtonBorderColorErrored;
-                    _textColor = UIConfig.ButtonTextColorErrored;
-                }
-                else if (_state.HasFlag(ButtonState.Pressed))
-                {
-                    _fillColor = UIConfig.ButtonFillColorPressed;
-                    _borderColor = UIConfig.ButtonBorderColorPressed;
-                    _textColor = UIConfig.ButtonTextColorPressed;
-                }
-                else
-                {
-                    _fillColor = UIConfig.ButtonFillColor;
-                    _borderColor = UIConfig.ButtonBorderColor;
-                    _textColor = UIConfig.ButtonTextColor;
-                }
-
-                BuildSprites();
             }
 
             public void Draw(MySpriteDrawFrame frame)
             {
+                BuildSprites();
                 if (IsHighlighted)
                 {
                     frame.Add(_highlightSprite);

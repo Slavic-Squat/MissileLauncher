@@ -44,9 +44,7 @@ namespace IngameScript
             private IButton _highlightedButton;
 
             private MySprite _fillSprite;
-            private Color _fillColor = UIConfig.PanelFillColor;
             private MySprite _borderSprite;
-            private Color _borderColor = UIConfig.PanelBorderColor;
 
             private List<MySprite> _sprites = new List<MySprite>();
 
@@ -55,12 +53,21 @@ namespace IngameScript
                 _bounds = new RectangleF(pos, size);
                 _borderThickness = borderThickness;
                 _autoClose = autoClose;
-
-                BuildSprites();
             }
 
             public void BuildSprites()
             {
+                Color fillColor, borderColor;
+                if (IsPaused)
+                {
+                    fillColor = UIConfig.MenuFillColor;
+                    borderColor = UIConfig.MenuBorderColor;
+                }
+                else
+                {
+                    fillColor = UIConfig.MenuFillColorActive;
+                    borderColor = UIConfig.MenuBorderColorActive;
+                }
                 _fillSprite = new MySprite()
                 {
                     Type = SpriteType.TEXTURE,
@@ -68,7 +75,7 @@ namespace IngameScript
                     Position = Center,
                     Size = Size - 2 * _borderThickness,
                     RotationOrScale = 0f,
-                    Color = _fillColor,
+                    Color = fillColor,
                     Alignment = TextAlignment.CENTER,
                 };
                 _borderSprite = new MySprite()
@@ -78,7 +85,7 @@ namespace IngameScript
                     Position = Center,
                     Size = Size,
                     RotationOrScale = 0f,
-                    Color = _borderColor,
+                    Color = borderColor,
                     Alignment = TextAlignment.CENTER,
                 };
             }
@@ -119,17 +126,11 @@ namespace IngameScript
             {
                 IsPaused = true;
                 UnhighlightButton(_highlightedButton);
-                _fillColor = UIConfig.MenuFillColor;
-                _borderColor = UIConfig.MenuBorderColor;
-                BuildSprites();
             }
 
             public void ResumeNavigation()
             {
                 IsPaused = false;
-                _fillColor = UIConfig.MenuFillColorActive;
-                _borderColor = UIConfig.MenuBorderColorActive;
-                BuildSprites();
             }
 
             public void AddButton(IButton button)
@@ -146,7 +147,6 @@ namespace IngameScript
 
             public void AddInfoPanel(InfoPanel panel)
             {
-                _updateables.Add(panel);
                 _uiElements.Add(panel);
             }
 
@@ -193,6 +193,7 @@ namespace IngameScript
 
             public void Draw(MySpriteDrawFrame frame)
             {
+                BuildSprites();
                 frame.Add(_borderSprite);
                 frame.Add(_fillSprite);
 

@@ -50,7 +50,6 @@ namespace IngameScript
             public void AddInfoPanel(InfoPanel panel)
             {
                 UIElements.Add(panel);
-                Updateables.Add(panel);
             }
 
             public void AddSprite(MySprite sprite)

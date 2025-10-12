@@ -51,9 +51,7 @@ namespace IngameScript
             private IMyTextSurface _surface;
             private MySprite _obscureSprite;
             private MySprite _fillSprite;
-            private Color _fillColor = UIConfig.PanelFillColor;
             private MySprite _borderSprite;
-            private Color _borderColor = UIConfig.PanelBorderColor;
 
             private List<MySprite> _commonSprites = new List<MySprite>();
 
@@ -65,12 +63,21 @@ namespace IngameScript
                 _surface = surface;
                 _obscure = obscure;
                 _autoClose = autoClose;
-
-                BuildSprites();
             }
 
             private void BuildSprites()
             {
+                Color fillColor, borderColor;
+                if (IsPaused)
+                {
+                    fillColor = UIConfig.MenuFillColor;
+                    borderColor = UIConfig.MenuBorderColor;
+                }
+                else
+                {
+                    fillColor = UIConfig.MenuFillColorActive;
+                    borderColor = UIConfig.MenuBorderColorActive;
+                }
                 _obscureSprite = new MySprite()
                 {
                     Type = SpriteType.TEXTURE,
@@ -88,7 +95,7 @@ namespace IngameScript
                     Position = Center,
                     Size = Size - 2 * _borderThickness,
                     RotationOrScale = 0f,
-                    Color = _fillColor,
+                    Color = fillColor,
                     Alignment = TextAlignment.CENTER,
                 };
                 _borderSprite = new MySprite()
@@ -98,7 +105,7 @@ namespace IngameScript
                     Position = Center,
                     Size = Size,
                     RotationOrScale = 0f,
-                    Color = _borderColor,
+                    Color = borderColor,
                     Alignment = TextAlignment.CENTER,
                 };
             }
@@ -142,18 +149,12 @@ namespace IngameScript
             public void PauseNavigation()
             {
                 IsPaused = true;
-                _fillColor = UIConfig.MenuFillColor;
-                _borderColor = UIConfig.MenuBorderColor;
                 UnhighlightButton(_highlightedButton);
-                BuildSprites();
             }
 
             public void ResumeNavigation()
             {
                 IsPaused = false;
-                _fillColor = UIConfig.MenuFillColorActive;
-                _borderColor = UIConfig.MenuBorderColorActive;
-                BuildSprites();
             }
 
             public void AddButton(IButton button, int pageIndex)
@@ -208,7 +209,6 @@ namespace IngameScript
                 if (panel == null) return;
                 if (pageIndex < 0)
                 {
-                    _commonUpdateables.Add(panel);
                     _commonUiElements.Add(panel);
                     return;
                 }
@@ -275,6 +275,7 @@ namespace IngameScript
 
             public void Draw(MySpriteDrawFrame frame)
             {
+                BuildSprites();
                 if (_obscure)
                 {
                     frame.Add(_obscureSprite);

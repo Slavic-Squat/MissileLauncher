@@ -41,7 +41,12 @@ namespace IngameScript
 
             private RectangleF _bounds;
             private float _borderThickness;
-            private List<MySprite> _sprites = new List<MySprite>();
+
+            private MySprite _fillSprite;
+            private MySprite _headerFillSprite;
+            private MySprite _headerBorderSprite;
+            private MySprite _headerTextSprite;
+
             private List<IButton> _buttons = new List<IButton>();
             private IButton _highlightedButton;
 
@@ -71,8 +76,6 @@ namespace IngameScript
 
             public void Init()
             {
-                BuildSprites();
-
                 for (int i = 0; i < Lasers.Count; i++)
                 {
                     TargetingLaser laser = Lasers[i];
@@ -92,8 +95,7 @@ namespace IngameScript
 
             private void BuildSprites()
             {
-                _sprites.Clear();
-                MySprite fillSprite = new MySprite()
+                _fillSprite = new MySprite()
                 {
                     Type = SpriteType.TEXTURE,
                     Data = "SquareSimple",
@@ -102,13 +104,12 @@ namespace IngameScript
                     Color = Color.Black,
                     Alignment = TextAlignment.CENTER
                 };
-                _sprites.Add(fillSprite);
 
                 Vector2 headerSize = new Vector2(440, 60);
                 Vector2 headerPos = Pos + new Vector2(Center.X - headerSize.X * 0.5f, 0);
                 RectangleF headerBounds = new RectangleF(headerPos, headerSize);
 
-                MySprite headerBorderSprite = new MySprite()
+                _headerBorderSprite = new MySprite()
                 {
                     Type = SpriteType.TEXTURE,
                     Data = "SquareSimple",
@@ -117,9 +118,8 @@ namespace IngameScript
                     Color = Color.White,
                     Alignment = TextAlignment.CENTER
                 };
-                _sprites.Add(headerBorderSprite);
 
-                MySprite headerFillSprite = new MySprite()
+                _headerFillSprite = new MySprite()
                 {
                     Type = SpriteType.TEXTURE,
                     Data = "SquareSimple",
@@ -128,10 +128,8 @@ namespace IngameScript
                     Color = new Color(32, 32, 32, 255),
                     Alignment = TextAlignment.CENTER
                 };
-                _sprites.Add(headerFillSprite);
 
-                MySprite headerTextSprite = SpriteHelper.CreateText(headerBounds, "Select Laser To Control:", Color.White, Display, TextAlignment.CENTER, true, 10f);
-                _sprites.Add(headerTextSprite);
+                _headerTextSprite = SpriteHelper.CreateText(headerBounds, "Select Laser To Control:", Color.White, Display, TextAlignment.CENTER, true, 10f);
             }
 
             public void OnOpen()
@@ -218,7 +216,11 @@ namespace IngameScript
 
             public void Draw(MySpriteDrawFrame frame)
             {
-                frame.AddRange(_sprites);
+                BuildSprites();
+                frame.Add(_fillSprite);
+                frame.Add(_headerBorderSprite);
+                frame.Add(_headerFillSprite);
+                frame.Add(_headerTextSprite);
 
                 foreach (var button in _buttons)
                 {

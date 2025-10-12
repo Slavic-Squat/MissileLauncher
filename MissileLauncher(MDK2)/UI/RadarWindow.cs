@@ -52,7 +52,7 @@ namespace IngameScript
             private RectangleF _bounds;
             private float _borderThickness;
 
-            private List<MySprite> _sprites = new List<MySprite>();
+            private MySprite _fillSprite;
 
             private List<IHighlightable> _highlightables = new List<IHighlightable>();
             private IHighlightable _highlightedElement;
@@ -88,8 +88,6 @@ namespace IngameScript
             {
                 _allEntities = UI.UIWireManager.GetAllEntities();
 
-                BuildSprites();
-
                 _targetingSpriteBuilder = new TargetingSpriteBuilder();
                 _targetingSpriteBuilder.Zoom = GetValue(ScopeScale);
 
@@ -108,7 +106,6 @@ namespace IngameScript
                 };
                 InfoPanel targetPanel = new InfoPanel(targetPanelPos, targetPanelSize, 5f, targetInfoGetter, Display);
                 _uiElements.Add(targetPanel);
-                _updateables.Add(targetPanel);
 
                 Vector2 optionsPanelPos = Pos + new Vector2(0, Size.Y * 0.5f);
 
@@ -120,17 +117,15 @@ namespace IngameScript
 
             private void BuildSprites()
             {
-                _sprites.Clear();
-                MySprite fillSprite = new MySprite()
+                _fillSprite = new MySprite()
                 {
                     Type = SpriteType.TEXTURE,
                     Data = "SquareSimple",
                     Position = Center,
                     Size = Size,
-                    Color = Color.Black,
+                    Color = UIConfig.WindowFillColor,
                     Alignment = TextAlignment.CENTER
                 };
-                _sprites.Add(fillSprite);
             }
 
             public void OnOpen()
@@ -294,7 +289,6 @@ namespace IngameScript
             public void Update(DateTime time)
             {
                 _allEntities = UI.UIWireManager.GetAllEntities();
-                _targetingSprites = _targetingSpriteBuilder.BuildSprites(_allEntities, SelectedEntityID, out _entitySprites);
 
                 if (!_allEntities.ContainsKey(SelectedEntityID))
                 {
@@ -309,8 +303,10 @@ namespace IngameScript
 
             public void Draw(MySpriteDrawFrame frame)
             {
-                frame.AddRange(_sprites);
+                BuildSprites();
+                frame.Add(_fillSprite);
 
+                _targetingSprites = _targetingSpriteBuilder.BuildSprites(_allEntities, SelectedEntityID, out _entitySprites);
                 foreach (var sprite in _targetingSprites)
                 {
                     sprite.Draw(frame);

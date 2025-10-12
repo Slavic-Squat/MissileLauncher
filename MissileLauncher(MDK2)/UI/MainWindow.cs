@@ -39,7 +39,8 @@ namespace IngameScript
 
             private RectangleF _bounds;
             private float _borderThickness;
-            private List<MySprite> _sprites = new List<MySprite>();
+
+            private MySprite _fillSprite;
             private List<IButton> _buttons = new List<IButton>();
             private IButton _highlightedButton;
 
@@ -68,8 +69,6 @@ namespace IngameScript
 
             private void Init()
             {
-                BuildSprites();
-
                 Vector2 laserButtonSize = new Vector2(400, 100);
                 Vector2 laserButtonPos = Pos + new Vector2(50, Size.Y * 0.5f - laserButtonSize.Y * 0.5f);
                 
@@ -96,8 +95,7 @@ namespace IngameScript
 
             private void BuildSprites()
             {
-                _sprites.Clear();
-                MySprite fillSprite = new MySprite()
+                _fillSprite = new MySprite()
                 {
                     Type = SpriteType.TEXTURE,
                     Data = "SquareSimple",
@@ -106,7 +104,6 @@ namespace IngameScript
                     Color = UIConfig.WindowFillColor,
                     Alignment = TextAlignment.CENTER
                 };
-                _sprites.Add(fillSprite);
             }
 
             public void OnOpen()
@@ -193,8 +190,8 @@ namespace IngameScript
 
             public void Draw(MySpriteDrawFrame frame)
             {
-                frame.AddRange(_sprites);
-
+                BuildSprites();
+                frame.Add(_fillSprite);
                 foreach (var button in _buttons)
                 {
                     if (button == _highlightedButton)

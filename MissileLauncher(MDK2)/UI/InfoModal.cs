@@ -47,11 +47,9 @@ namespace IngameScript
                 _text = text;
                 _condition = condition;
                 _surface = surface;
-
-                BuildSprites();
             }
 
-            public void BuildSprites()
+            private void BuildSprites()
             {
                 _fillSprite = new MySprite()
                 {
@@ -78,6 +76,7 @@ namespace IngameScript
 
             public void Draw(MySpriteDrawFrame frame)
             {
+                BuildSprites();
                 frame.Add(_borderSprite);
                 frame.Add(_fillSprite);
                 frame.Add(_textSprite);

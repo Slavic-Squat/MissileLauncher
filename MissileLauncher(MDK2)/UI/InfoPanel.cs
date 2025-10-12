@@ -22,7 +22,7 @@ namespace IngameScript
 {
     partial class Program
     {
-        public class InfoPanel : IPanel, IUpdatable
+        public class InfoPanel : IPanel
         {
             public RectangleF Bounds => _bounds;
             public Vector2 Pos => _bounds.Position;
@@ -46,11 +46,9 @@ namespace IngameScript
                 _borderThickness = borderThickness;
                 TextGetter = textGetter;
                 _surface = surface;
-
-                BuildSprites();
             }
 
-            public void BuildSprites()
+            private void BuildSprites()
             {
                 _fillSprite = new MySprite()
                 {
@@ -75,13 +73,9 @@ namespace IngameScript
                 _textSprite = SpriteHelper.CreateText(Bounds, TextGetter(), Color.White, _surface, TextAlignment.LEFT, false, 10f);
             }
 
-            public void Update(DateTime time)
-            {
-                _textSprite = SpriteHelper.CreateText(Bounds, TextGetter(), Color.White, _surface, TextAlignment.LEFT, false, 10f);
-            }
-
             public void Draw(MySpriteDrawFrame frame)
             {
+                BuildSprites();
                 frame.Add(_borderSprite);
                 frame.Add(_fillSprite);
                 frame.Add(_textSprite);

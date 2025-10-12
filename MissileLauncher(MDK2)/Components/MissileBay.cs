@@ -94,7 +94,7 @@ namespace IngameScript
                 _missileComputer = pbBlocks[0];
 
                 List<IMyTerminalBlock> tBlocks = new List<IMyTerminalBlock>();
-                GTS.GetBlocksOfType(tBlocks, b => b.IsSameConstructAs(missileConnector) && b.CustomData.Contains("[Data]"));
+                GTS.GetBlocksOfType(tBlocks, b => b.IsSameConstructAs(missileConnector) && b.CustomData.Contains("[Config]"));
                 if (tBlocks.Count == 0)
                 {
                     return;
@@ -104,16 +104,16 @@ namespace IngameScript
                 MyIni missileConfig = new MyIni();
                 if (missileConfig.TryParse(storageBlock.CustomData))
                 {
-                    MissileID = missileConfig.Get("Data", "ID").ToInt64(-1);
-                    MissileAddress = missileConfig.Get("Data", "Address").ToInt64(-1);
+                    MissileID = missileConfig.Get("Config", "ID").ToInt64(-1);
+                    MissileAddress = missileConfig.Get("Config", "Address").ToInt64(-1);
                     MissileType type;
-                    Enum.TryParse(missileConfig.Get("Data", "Type").ToString(), out type);
+                    Enum.TryParse(missileConfig.Get("Config", "Type").ToString(), out type);
                     MissileType = type;
                     MissileGuidanceType guidanceType;
-                    Enum.TryParse(missileConfig.Get("Data", "GuidanceType").ToString(), out guidanceType);
+                    Enum.TryParse(missileConfig.Get("Config", "GuidanceType").ToString(), out guidanceType);
                     MissileGuidanceType = guidanceType;
                     MissilePayload payload;
-                    Enum.TryParse(missileConfig.Get("Data", "Payload").ToString(), out payload);
+                    Enum.TryParse(missileConfig.Get("Config", "Payload").ToString(), out payload);
                     MissilePayload = payload;
                 }
                 else
@@ -186,7 +186,7 @@ namespace IngameScript
 
             public override string ToString()
             {
-                return $"Bay [{ID}]\n----------------\nSTATUS: {GetName(Status)}\nMISL TYPE: {GetName(MissileType)}\nMISL GUIDANCE: {MissileGuidanceType}\nMISL PAYLOAD: {GetName(MissilePayload)}\n";
+                return $"Bay [{ID}]\n----------------\nSTATUS: {GetName(Status)}\nMISL TYPE: {GetName(MissileType)}\nMISL GUIDANCE: {GetName(MissileGuidanceType)}\nMISL PAYLOAD: {GetName(MissilePayload)}\n";
             }
         }
     }
