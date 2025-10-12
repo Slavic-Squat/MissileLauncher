@@ -29,10 +29,11 @@ namespace IngameScript
             public Vector2 Size => _bounds.Size;
             public Vector2 Center => _bounds.Center;
 
-            public Func<string> TextGetter { get; set; }
+            private Func<string> _textGetter;
 
             private RectangleF _bounds;
-            float _borderThickness;
+            private float _borderThickness;
+            private float _padding;
 
             private IMyTextSurface _surface;
 
@@ -40,12 +41,13 @@ namespace IngameScript
             private MySprite _borderSprite;
             private MySprite _textSprite;
 
-            public InfoPanel(Vector2 pos, Vector2 size, float borderThickness, Func<string> textGetter, IMyTextSurface surface)
+            public InfoPanel(Vector2 pos, Vector2 size, float borderThickness, float padding, Func<string> textGetter, IMyTextSurface surface)
             {
                 _bounds = new RectangleF(pos, size);
                 _borderThickness = borderThickness;
-                TextGetter = textGetter;
+                _textGetter = textGetter;
                 _surface = surface;
+                _padding = padding;
             }
 
             private void BuildSprites()
@@ -57,7 +59,7 @@ namespace IngameScript
                     Position = Center,
                     Size = Size - 2 * _borderThickness,
                     RotationOrScale = 0f,
-                    Color = new Color(13, 13, 13, 255),
+                    Color = UIConfig.PanelFillColor,
                     Alignment = TextAlignment.CENTER,
                 };
                 _borderSprite = new MySprite()
@@ -67,10 +69,10 @@ namespace IngameScript
                     Position = Center,
                     Size = Size,
                     RotationOrScale = 0f,
-                    Color = new Color(89, 89, 89, 255),
+                    Color = UIConfig.PanelBorderColor,
                     Alignment = TextAlignment.CENTER,
                 };
-                _textSprite = SpriteHelper.CreateText(Bounds, TextGetter(), Color.White, _surface, TextAlignment.LEFT, false, 10f);
+                _textSprite = SpriteHelper.CreateText(Bounds, _textGetter(), Color.White, _surface, TextAlignment.LEFT, false, _padding);
             }
 
             public void Draw(MySpriteDrawFrame frame)

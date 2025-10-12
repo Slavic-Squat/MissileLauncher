@@ -31,6 +31,9 @@ namespace IngameScript
             public Vector2 TextureSize => Display.TextureSize;
             public UIWireManager UIWireManager { get; private set; }
             public RectangleF Bounds { get; private set; }
+            public Vector2 Center => Bounds.Center;
+            public Vector2 Size => Bounds.Size;
+            public Vector2 Pos => Bounds.Position;
 
             private IWindow _activeWindow = null;
             private IModal _activeModal = null;
@@ -47,7 +50,7 @@ namespace IngameScript
 
                 Bounds = new RectangleF(new Vector2(0, (TextureSize.Y - SurfaceSize.Y) * 0.5f), SurfaceSize);
 
-                MainWindow mainWindow = new MainWindow(this, 10f);
+                Window mainWindow = UIFactory.CreateMainWindow(this, 10f);
                 OpenWindow(mainWindow);
             }
 
@@ -107,7 +110,7 @@ namespace IngameScript
 
                 if (!HasActiveWindow)
                 {
-                    MainWindow mainWindow = new MainWindow(this, 10f);
+                    Window mainWindow = UIFactory.CreateMainWindow(this, 10f);
                     OpenWindow(mainWindow);
                 }
 

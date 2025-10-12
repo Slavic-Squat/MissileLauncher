@@ -29,24 +29,26 @@ namespace IngameScript
             public Vector2 Pos => _bounds.Position;
             public Vector2 Size => _bounds.Size;
             public Vector2 Center => _bounds.Center;
-            public bool IsOpen { get; private set; }
-            public bool IsPaused { get; private set; }
-            public bool IsNavigating { get; private set; }
+            public bool IsOpen { get; private set; } = false;
+            public bool IsPaused { get; private set; } = true;
+            public bool IsNavigating { get; private set; } = false;
             public event Action<IMenu> RequestClose;
             public event Action<INavigable> RequestStopNavigation;
 
             private Func<bool> _autoClose;
             private RectangleF _bounds;
             private float _borderThickness;
-            private List<IButton> _buttons = new List<IButton>();
-            private List<IUpdatable> _updateables = new List<IUpdatable>();
-            private List<IUIElement> _uiElements = new List<IUIElement>();
+            private List<IButton> _commonButtons = new List<IButton>();
+            private List<IUpdatable> _commonUpdatables = new List<IUpdatable>();
+            private List<IUIElement> _commonUIElements = new List<IUIElement>();
+            private List<MenuPage> _pages = new List<MenuPage>();
+            private int _currentPageIndex = 0;
             private IButton _highlightedButton;
 
             private MySprite _fillSprite;
             private MySprite _borderSprite;
 
-            private List<MySprite> _sprites = new List<MySprite>();
+            private List<MySprite> _commonSprites = new List<MySprite>();
 
             public Menu(Vector2 pos, Vector2 size, float borderThickness, Func<bool> autoClose = null)
             {
@@ -133,21 +135,74 @@ namespace IngameScript
                 IsPaused = false;
             }
 
-            public void AddButton(IButton button)
+            public void AddButton(IButton button, int pageIndex)
             {
-                _buttons.Add(button);
-                _updateables.Add(button);
-                _uiElements.Add(button);
+                if (button == null) return;
+                if (pageIndex < 0)
+                {
+                    _commonButtons.Add(button);
+                    _commonUpdatables.Add(button);
+                    _commonUIElements.Add(button);
+                    return;
+                }
+                else
+                {
+                    if (pageIndex >= _pages.Count)
+                    {
+                        for (int i = _pages.Count; i <= pageIndex; i++)
+                        {
+                            MenuPage newPage = new MenuPage(i);
+                            _pages.Add(newPage);
+                        }
+                    }
+                    var page = _pages[pageIndex];
+                    page.AddButton(button);
+                }
             }
 
-            public void AddSprite(MySprite sprite)
+            public void AddSprite(MySprite sprite, int pageIndex)
             {
-                _sprites.Add(sprite);
+                if (pageIndex < 0)
+                {
+                    _commonSprites.Add(sprite);
+                    return;
+                }
+                else
+                {
+                    if (pageIndex >= _pages.Count)
+                    {
+                        for (int i = _pages.Count; i <= pageIndex; i++)
+                        {
+                            MenuPage newPage = new MenuPage(i);
+                            _pages.Add(newPage);
+                        }
+                    }
+                    var page = _pages[pageIndex];
+                    page.Sprites.Add(sprite);
+                }
             }
 
-            public void AddInfoPanel(InfoPanel panel)
+            public void AddInfoPanel(InfoPanel panel, int pageIndex)
             {
-                _uiElements.Add(panel);
+                if (panel == null) return;
+                if (pageIndex < 0)
+                {
+                    _commonUIElements.Add(panel);
+                    return;
+                }
+                else
+                {
+                    if (pageIndex >= _pages.Count)
+                    {
+                        for (int i = _pages.Count; i <= pageIndex; i++)
+                        {
+                            MenuPage newPage = new MenuPage(i);
+                            _pages.Add(newPage);
+                        }
+                    }
+                    var page = _pages[pageIndex];
+                    page.AddInfoPanel(panel);
+                }
             }
 
             private void HighlightButton(IButton button)
@@ -179,9 +234,14 @@ namespace IngameScript
                     Close();
                     return;
                 }
-                foreach (var updateable in _updateables)
+                foreach (var updatable in _commonUpdatables)
                 {
-                    updateable.Update(time);
+                    updatable.Update(time);
+                }
+
+                foreach (var page in _pages)
+                {
+                    page.Updateables.ForEach(u => u.Update(time));
                 }
             }
 
@@ -197,20 +257,22 @@ namespace IngameScript
                 frame.Add(_borderSprite);
                 frame.Add(_fillSprite);
 
-                foreach (var sprite in _sprites)
+                foreach (var sprite in _commonSprites)
                 {
                     frame.Add(sprite);
                 }
 
-                foreach (var element in _uiElements)
+                foreach (var uiElement in _commonUIElements)
                 {
-                    if (ReferenceEquals(element, _highlightedButton))
-                    {
-                        continue;
-                    }
-                    element.Draw(frame);
+                    uiElement.Draw(frame);
                 }
-                _highlightedButton?.Draw(frame);
+
+                if (_pages.Count > 0 && _pages.Count > _currentPageIndex)
+                {
+                    var currentPage = _pages[_currentPageIndex];
+                    currentPage.Sprites.ForEach(s => frame.Add(s));
+                    currentPage.UIElements.ForEach(e => e.Draw(frame));
+                }
             }
 
             public void Navigate(UserInput input, DateTime time)
@@ -223,34 +285,54 @@ namespace IngameScript
                 {
                     Close();
                 }
-                if (_buttons.Count == 0)
+
+                List<IButton> allButtons = new List<IButton>(_commonButtons);
+
+                if (_pages.Count > 0)
+                {
+                    if (input.QRelease)
+                    {
+                        _currentPageIndex--;
+                        _currentPageIndex = MiscUtilities.LoopInRange(_currentPageIndex, 0, _pages.Count);
+                    }
+                    else if (input.ERelease)
+                    {
+                        _currentPageIndex++;
+                        _currentPageIndex = MiscUtilities.LoopInRange(_currentPageIndex, 0, _pages.Count);
+                    }
+                    var currentPage = _pages[_currentPageIndex];
+                    allButtons.AddRange(currentPage.Buttons);
+                }
+
+                if (allButtons.Count == 0)
                 {
                     return;
                 }
 
-                if (_highlightedButton == null)
+                if (!allButtons.Contains(_highlightedButton))
                 {
-                    HighlightButton(_buttons.FirstOrDefault());
+                    UnhighlightButton(_highlightedButton);
+                    HighlightButton(allButtons[0]);
                 }
 
                 if (input.WRelease)
                 {
-                    IButton nextButton = UIUtilities.Navigate(_buttons, _highlightedButton, Direction.Up);
+                    IButton nextButton = UIUtilities.Navigate(allButtons, _highlightedButton, Direction.Up);
                     HighlightButton(nextButton);
                 }
                 else if (input.SRelease)
                 {
-                    IButton nextButton = UIUtilities.Navigate(_buttons, _highlightedButton, Direction.Down);
+                    IButton nextButton = UIUtilities.Navigate(allButtons, _highlightedButton, Direction.Down);
                     HighlightButton(nextButton);
                 }
                 else if (input.ARelease)
                 {
-                    IButton nextButton = UIUtilities.Navigate(_buttons, _highlightedButton, Direction.Left);
+                    IButton nextButton = UIUtilities.Navigate(allButtons, _highlightedButton, Direction.Left);
                     HighlightButton(nextButton);
                 }
                 else if (input.DRelease)
                 {
-                    IButton nextButton = UIUtilities.Navigate(_buttons, _highlightedButton, Direction.Right);
+                    IButton nextButton = UIUtilities.Navigate(allButtons, _highlightedButton, Direction.Right);
                     HighlightButton(nextButton);
                 }
                 else if (input.SpaceRelease)

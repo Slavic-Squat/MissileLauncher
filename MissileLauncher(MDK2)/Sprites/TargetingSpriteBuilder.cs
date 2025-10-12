@@ -82,7 +82,7 @@ namespace IngameScript
 
                 Plane gridPlaneWorld = new Plane(cameraTargetWorld.Translation, cameraTargetWorld.Up);
 
-                Vector3 selfPosLocal = new Vector3(0, 767, 0);
+                Vector3 selfPosLocal = new Vector3(0, 100, 0);
                 Vector3 selfPosWorld = Vector3.Transform(selfPosLocal, cameraTargetWorld);
                 Vector3 selfPosNDC = Vector3.Transform(selfPosWorld, totalMatrix);
                 Vector2 selfPosPixel = new Vector2((1 + selfPosNDC.X) * 511, (1 - selfPosNDC.Y) * 511);
@@ -187,7 +187,7 @@ namespace IngameScript
                     Data = "SquareSimple",
                     Position = new Vector2(511, 511),
                     Size = new Vector2(1024, 1024),
-                    Color = new Color(1, 0, 5, 255),
+                    Color = new Color(1, 0, 2, 255),
                     Alignment = TextAlignment.CENTER,
                     RotationOrScale = 0f
                 };

@@ -32,6 +32,7 @@ namespace IngameScript
 
             private RectangleF _bounds;
             private float _borderThickness;
+            private float _padding;
             private string _text;
             private Func<bool> _condition;
             private MySprite _fillSprite;
@@ -41,13 +42,14 @@ namespace IngameScript
 
             private IMyTextSurface _surface;
 
-            public InfoModal(Vector2 pos, Vector2 size, float borderThickness, Func<bool> condition, string text, IMyTextSurface surface)
+            public InfoModal(Vector2 pos, Vector2 size, float borderThickness, float padding, Func<bool> condition, string text, IMyTextSurface surface)
             {
                 _bounds = new RectangleF(pos, size);
                 _borderThickness = borderThickness;
                 _text = text;
                 _condition = condition;
                 _surface = surface;
+                _padding = padding;
             }
 
             private void BuildSprites()
@@ -76,18 +78,19 @@ namespace IngameScript
                 {
                     Type = SpriteType.TEXTURE,
                     Data = "SquareSimple",
-                    Position = Center,
+                    Position = _surface.TextureSize * 0.5f,
                     Size = _surface.SurfaceSize,
                     Color = new Color(0, 0, 0, 200),
                     Alignment = TextAlignment.CENTER
                 };
 
-                _textSprite = SpriteHelper.CreateText(Bounds, _text, new Color(252, 3, 94, 255), _surface, TextAlignment.CENTER, true, 10f);
+                _textSprite = SpriteHelper.CreateText(Bounds, _text, new Color(252, 3, 94, 255), _surface, TextAlignment.CENTER, true, _padding);
             }
 
             public void Draw(MySpriteDrawFrame frame)
             {
                 BuildSprites();
+                frame.Add(_obscureSprite);
                 frame.Add(_borderSprite);
                 frame.Add(_fillSprite);
                 frame.Add(_textSprite);

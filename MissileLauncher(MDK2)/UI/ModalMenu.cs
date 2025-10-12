@@ -29,9 +29,9 @@ namespace IngameScript
             public Vector2 Pos => _bounds.Position;
             public Vector2 Size => _bounds.Size;
             public Vector2 Center => _bounds.Center;
-            public bool IsOpen { get; private set; }
-            public bool IsPaused { get; private set; }
-            public bool IsNavigating { get; private set; }
+            public bool IsOpen { get; private set; } = false;
+            public bool IsPaused { get; private set; } = true;
+            public bool IsNavigating { get; private set; } = false;
             public bool CanClose => _canClose?.Invoke() ?? true;
             public event Action<IMenu> RequestClose;
             public event Action<INavigable> RequestStopNavigation;
@@ -42,8 +42,8 @@ namespace IngameScript
             private RectangleF _bounds;
             private float _borderThickness;
             private List<IButton> _commonButtons = new List<IButton>();
-            private List<IUpdatable> _commonUpdateables = new List<IUpdatable>();
-            private List<IUIElement> _commonUiElements = new List<IUIElement>();
+            private List<IUpdatable> _commonUpdatables = new List<IUpdatable>();
+            private List<IUIElement> _commonUIElements = new List<IUIElement>();
             private List<MenuPage> _pages = new List<MenuPage>();
             private int _currentPageIndex = 0;
             private IButton _highlightedButton;
@@ -163,8 +163,8 @@ namespace IngameScript
                 if (pageIndex < 0)
                 {
                     _commonButtons.Add(button);
-                    _commonUpdateables.Add(button);
-                    _commonUiElements.Add(button);
+                    _commonUpdatables.Add(button);
+                    _commonUIElements.Add(button);
                     return;
                 }
                 else
@@ -209,7 +209,7 @@ namespace IngameScript
                 if (panel == null) return;
                 if (pageIndex < 0)
                 {
-                    _commonUiElements.Add(panel);
+                    _commonUIElements.Add(panel);
                     return;
                 }
                 else
@@ -262,7 +262,7 @@ namespace IngameScript
                     Close();
                 }
 
-                foreach (var updateable in _commonUpdateables)
+                foreach (var updateable in _commonUpdatables)
                 {
                     updateable.Update(time);
                 }
@@ -288,7 +288,7 @@ namespace IngameScript
                     frame.Add(sprite);
                 }
 
-                foreach (var uiElement in _commonUiElements)
+                foreach (var uiElement in _commonUIElements)
                 {
                     uiElement.Draw(frame);
                 }
@@ -326,10 +326,15 @@ namespace IngameScript
                     allButtons.AddRange(currentPage.Buttons);
                 }
 
+                if (allButtons.Count == 0)
+                {
+                    return;
+                }
+
                 if (!allButtons.Contains(_highlightedButton))
                 {
                     UnhighlightButton(_highlightedButton);
-                    HighlightButton(allButtons.FirstOrDefault());
+                    HighlightButton(allButtons[0]);
                 }
 
                 if (input.WRelease)

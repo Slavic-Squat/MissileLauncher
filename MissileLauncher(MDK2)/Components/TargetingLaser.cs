@@ -50,8 +50,8 @@ namespace IngameScript
 
             #region Properties
             public int ID { get; private set; }
-            public bool IsControlPaused { get; private set; }
-            public bool IsUnderControl { get; private set; }
+            public bool IsControlPaused { get; private set; } = true;
+            public bool IsUnderControl { get; private set; } = false;
             public bool HasTarget => Target.IsValid;
             public float MaxRaycastDistance
             {
@@ -208,7 +208,7 @@ namespace IngameScript
 
             public void Control(UserInput input, DateTime time)
             {
-                if (!IsUnderControl)
+                if (!IsUnderControl || IsControlPaused)
                     return;
 
                 if (input.QRelease)
@@ -240,11 +240,13 @@ namespace IngameScript
             public void OnTakeControl()
             {
                 IsUnderControl = true;
+                ResumeControl();
             }
 
             public void OnRelease()
             {
                 IsUnderControl = false;
+                PauseControl();
                 MoveLaser(0, 0);
             }
 

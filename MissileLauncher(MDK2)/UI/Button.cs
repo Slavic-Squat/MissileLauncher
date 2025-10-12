@@ -24,7 +24,6 @@ namespace IngameScript
     {
         public class Button : IButton
         {
-            public string Name { get; private set; }
             public RectangleF Bounds => _bounds;
             public Vector2 Pos => Bounds.Position;
             public Vector2 Size => Bounds.Size;
@@ -57,10 +56,8 @@ namespace IngameScript
 
             private IMyTextSurface _surface;
 
-            public Button(string name, Vector2 pos, Vector2 size, float padding, float borderThickness, float highlightThickness, Func<string> textGetter, Func<bool> action, IMyTextSurface surface, Func<bool> canPress = null)
+            public Button(Vector2 pos, Vector2 size, float padding, float borderThickness, float highlightThickness, Func<string> textGetter, Func<bool> action, IMyTextSurface surface, Func<bool> canPress = null)
             {
-                Name = name;
-
                 _bounds = new RectangleF(pos, size);
                 _padding = padding;
                 _borderThickness = borderThickness;
@@ -101,23 +98,25 @@ namespace IngameScript
                     textColor = UIConfig.ButtonTextColor;
                 }
 
+                float scale = 1f;
                 if (_state.HasFlag(ButtonState.Pressed))
                 {
-                    bounds.Size = Size * 0.95f;
-                    bounds.Position = Pos + (Size - bounds.Size) / 2;
+                    scale = 0.95f;
                 }
                 else if (_state.HasFlag(ButtonState.Highlighted))
                 {
-                    bounds.Size = Size * 1.1f;
-                    bounds.Position = Pos + (Size - bounds.Size) / 2;
+                    scale = 1.05f;
                 }
+
+                bounds.Size = Size * scale;
+                bounds.Position = Pos + (Size - bounds.Size) / 2;
 
                 _fillSprite = new MySprite()
                 {
                     Type = SpriteType.TEXTURE,
                     Data = "SquareSimple",
                     Position = bounds.Center,
-                    Size = bounds.Size - 2 * _borderThickness,
+                    Size = bounds.Size - 2 * _borderThickness * scale,
                     Color = fillColor,
                     Alignment = TextAlignment.CENTER
                 };
@@ -137,7 +136,7 @@ namespace IngameScript
                     Type = SpriteType.TEXTURE,
                     Data = "SquareSimple",
                     Position = bounds.Center,
-                    Size = bounds.Size + 2 * _highlightThickness,
+                    Size = bounds.Size + 2 * _highlightThickness * scale,
                     Color = UIConfig.ButtonHighlightColor,
                     Alignment = TextAlignment.CENTER
                 };
