@@ -163,7 +163,8 @@ namespace IngameScript
 
             private void UnhighlightButton(IButton button)
             {
-                button?.Unhighlight();
+                if (button == null) return;
+                button.Unhighlight();
 
                 if (ReferenceEquals(button, _highlightedButton))
                 {
@@ -186,7 +187,8 @@ namespace IngameScript
 
             private void ActivateButton(IButton button, DateTime time)
             {
-                button?.Press(time);
+                if (button == null) return;
+                button.Press(time);
             }
 
             public void Draw(MySpriteDrawFrame frame)

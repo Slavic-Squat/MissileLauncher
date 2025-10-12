@@ -158,6 +158,7 @@ namespace IngameScript
 
             public void AddButton(IButton button, int pageIndex)
             {
+                if (button == null) return;
                 if (pageIndex < 0)
                 {
                     _commonButtons.Add(button);
@@ -204,6 +205,7 @@ namespace IngameScript
 
             public void AddInfoPanel(InfoPanel panel, int pageIndex)
             {
+                if (panel == null) return;
                 if (pageIndex < 0)
                 {
                     _commonUpdateables.Add(panel);
@@ -238,7 +240,8 @@ namespace IngameScript
 
             private void UnhighlightButton(IButton button)
             {
-                button?.Unhighlight();
+                if (button == null) return;
+                button.Unhighlight();
 
                 if (ReferenceEquals(button, _highlightedButton))
                 {
@@ -248,7 +251,8 @@ namespace IngameScript
 
             private void ActivateButton(IButton button, DateTime time)
             {
-                button?.Press(time);
+                if (button == null) return;
+                button.Press(time);
             }
 
             public void Update(DateTime time)

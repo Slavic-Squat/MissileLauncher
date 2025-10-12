@@ -88,7 +88,7 @@ namespace IngameScript
             {
                 var entities = wireManager.GetAllEntities();
                 var entity = entities.ContainsKey(targetID) ? entities[targetID] : default(EntityInfoExt);
-                if (entity.IsValid) return null;
+                if (!entity.IsValid) return null;
 
                 IMyTextSurface surface = window.Display;
 

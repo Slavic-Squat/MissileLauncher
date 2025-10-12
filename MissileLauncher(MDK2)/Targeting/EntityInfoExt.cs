@@ -34,13 +34,15 @@ namespace IngameScript
             public EntityInfoSubType SubType => Info.SubType;
             public EntitySource Source { get; private set; }
             public EntityRelation Relation { get; private set; }
+            public long RelationID { get; private set; }
             public bool IsValid { get; private set; }
 
-            public EntityInfoExt(EntityInfo info, EntitySource source, EntityRelation relation)
+            public EntityInfoExt(EntityInfo info, EntitySource source, EntityRelation relation, long relationID)
             {
                 Info = info;
                 Source = source;
                 Relation = relation;
+                RelationID = relationID;
                 IsValid = true;
             }
 
@@ -69,6 +71,7 @@ namespace IngameScript
                         Relation = EntityRelation.Neutral;
                         break;
                 }
+                RelationID = entityInfo.EntityId;
                 IsValid = true;
             }
 
@@ -78,11 +81,12 @@ namespace IngameScript
                 {
                     return this;
                 }
-                if (other.TimeRecorded > TimeRecorded)
+                if (Type == EntityType.Target && other.Type == EntityType.Missile)
                 {
-                    Relation = other.Relation;
+                    RelationID = other.RelationID;
                 }
                 Info = Info.Merge(other.Info);
+                Relation = other.Relation;
                 Source |= other.Source;
                 return this;
             }

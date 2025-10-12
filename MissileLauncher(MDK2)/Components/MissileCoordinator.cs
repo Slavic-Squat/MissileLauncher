@@ -54,6 +54,7 @@ namespace IngameScript
                 _targetInfo = targetInfo;
 
                 MissileBays = new List<MissileBay>();
+                MyMissilesExt = new Dictionary<long, EntityInfoExt>();
                 for (int i = 0; i < numberOfMissileBays; i++)
                 {
                     MissileBays.Add(new MissileBay(i));
@@ -137,9 +138,10 @@ namespace IngameScript
                 if (entityInfo.SubType != EntityInfoSubType.MissileInfo) return;
 
                 long key = entityInfo.EntityID;
+                long relationID = entityInfo.MissileInfo.Value.LauncherID;
                 EntitySource source = EntitySource.Remote;
                 EntityRelation relation = EntityRelation.Me;
-                EntityInfoExt entityInfoExt = new EntityInfoExt(entityInfo, source, relation);
+                EntityInfoExt entityInfoExt = new EntityInfoExt(entityInfo, source, relation, relationID);
                 if (!MyMissilesExt.ContainsKey(key))
                 {
                     MyMissilesExt.Add(key, entityInfoExt);

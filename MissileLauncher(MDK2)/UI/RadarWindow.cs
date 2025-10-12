@@ -91,6 +91,7 @@ namespace IngameScript
                 BuildSprites();
 
                 _targetingSpriteBuilder = new TargetingSpriteBuilder();
+                _targetingSpriteBuilder.Zoom = GetValue(ScopeScale);
 
                 Vector2 targetPanelSize = new Vector2(150, 200);
                 Vector2 targetPanelPos = Pos + new Vector2(Size.X - targetPanelSize.X, Size.Y * 0.5f - targetPanelSize.Y * 0.5f);
@@ -196,7 +197,7 @@ namespace IngameScript
                 {
                     return;
                 }
-                hightlightable?.Unhighlight();
+                hightlightable.Unhighlight();
                 
                 if (_highlightedElement == hightlightable)
                 {
@@ -206,6 +207,7 @@ namespace IngameScript
 
             private void ActivateHighlightable(IHighlightable highlightable, DateTime time)
             {
+                if (highlightable == null) return;
                 if (highlightable is IButton)
                 {
                     ((IButton)highlightable).Press(time);
@@ -248,6 +250,7 @@ namespace IngameScript
 
             public void OpenMenu(IMenu menu)
             {
+                if (menu == null) return;
                 _updateables.Add(menu);
                 _uiElements.Add(menu);
 
@@ -259,6 +262,7 @@ namespace IngameScript
 
             public void CloseMenu(IMenu menu)
             {
+                if (menu == null) return;
                 _updateables.Remove(menu);
                 _uiElements.Remove(menu);
 
@@ -272,7 +276,7 @@ namespace IngameScript
                 if (_allEntities.Keys.Contains(entityID))
                 {
                     Vector2 menuPos = Pos + new Vector2(Size.X * 0.5f, Size.Y - 100f);
-                    Menu menu = UIFactory.CreateEntityMenu(menuPos, SelectedEntityID, this, UI.UIWireManager, false, true);
+                    Menu menu = UIFactory.CreateEntityMenu(menuPos, entityID, this, UI.UIWireManager, false, true);
                     OpenMenu(menu);
                 }
             }

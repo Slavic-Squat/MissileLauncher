@@ -76,6 +76,10 @@ namespace IngameScript
                 {
                     _ui.Navigate(Input, time);
                 }
+                else
+                {
+                    Controllable.Control(Input, time);
+                }
             }
 
             public void TakeControl(IControllable controllable)

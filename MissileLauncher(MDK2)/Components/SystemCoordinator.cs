@@ -41,7 +41,6 @@ namespace IngameScript
             public MissileCoordinator MissileCoordinator { get; private set; }
             public UIWireManager UIWireManager { get; private set; }
 
-            private List<IEnumerator<bool>> _coroutines = new List<IEnumerator<bool>>();
             private Dictionary<string, Action<string[]>> _commands = new Dictionary<string, Action<string[]>>();
             private IMyTerminalBlock _storageBlock;
 
@@ -82,6 +81,7 @@ namespace IngameScript
                 {
                     throw new Exception("No Main Cockpit Found");
                 }
+                ReferenceController = ctrlBlocks[0];
             }
 
             public void Run()
@@ -90,15 +90,6 @@ namespace IngameScript
                 DebugEcho($"System Time: {SystemTime}");
                 CommunicationHandler.Recieve();
                 CommandHandler.RunCustomDataCommands();
-
-                for (int i = _coroutines.Count - 1; i >= 0; i--)
-                {
-                    var coroutine = _coroutines[i];
-                    if (coroutine.MoveNext())
-                    {
-                        _coroutines.RemoveAt(i);
-                    }
-                }
 
                 foreach (var controlStation in ControlStations)
                 {

@@ -183,6 +183,10 @@ namespace IngameScript
 
             private void HighlightButton(IButton button)
             {
+                if (button == null || ReferenceEquals(button, _highlightedButton))
+                {
+                    return;
+                }
                 UnhighlightButton(_highlightedButton);
                 button.Highlight();
                 _highlightedButton = button;
@@ -190,7 +194,8 @@ namespace IngameScript
 
             private void UnhighlightButton(IButton button)
             {
-                button?.Unhighlight();
+                if (button == null) return;
+                button.Unhighlight();
                 if (_highlightedButton == button)
                 {
                     _highlightedButton = null;
@@ -199,6 +204,7 @@ namespace IngameScript
 
             private void ActivateButton(IButton button, DateTime time)
             {
+                if (button == null) return;
                 button?.Press(time);
             }
 
