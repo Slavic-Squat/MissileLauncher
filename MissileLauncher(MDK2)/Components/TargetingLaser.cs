@@ -145,7 +145,8 @@ namespace IngameScript
 
                 if (HasTarget)
                 {
-                    Vector3 estimatedTargetDirLocal = Vector3.Normalize(Vector3.TransformNormal(estimatedTargetPosition - _referenceMatrix.Translation, Matrix.Transpose(_referenceMatrix)));
+                    Vector3 estimatedTargetPosLocal = Vector3.TransformNormal(estimatedTargetPosition - _referenceMatrix.Translation, Matrix.Transpose(_referenceMatrix));
+                    Vector3 estimatedTargetDirLocal = estimatedTargetPosLocal == Vector3.Zero ? Vector3.Zero : Vector3.Normalize(estimatedTargetPosLocal);
                     float azimuthError = (float)Math.Atan2(-estimatedTargetDirLocal.X, -estimatedTargetDirLocal.Z);
                     float elevationError = (float)Math.Asin(estimatedTargetDirLocal.Y);
                     var azimuthInput = _azimuthPID.Run(azimuthError, timeDeltaSeconds) / Sensitivity;

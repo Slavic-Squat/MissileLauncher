@@ -116,7 +116,8 @@ namespace IngameScript
                     {
                         TimeSpan timeSinceLastDetection = time - Targets[targetID].TimeRecorded;
                         Vector3 estimatedTargetPos = Targets[targetID].Position + Targets[targetID].Velocity * (float)timeSinceLastDetection.TotalSeconds;
-                        Vector3 estimatedTargetDirLocal = Vector3.Normalize(Vector3.TransformNormal(estimatedTargetPos - _referenceMatrix.Translation, Matrix.Transpose(_referenceMatrix)));
+                        Vector3 estimatedTargetPosLocal = Vector3.TransformNormal(estimatedTargetPos - _referenceMatrix.Translation, Matrix.Transpose(_referenceMatrix));
+                        Vector3 estimatedTargetDirLocal = estimatedTargetPosLocal == Vector3.Zero ? Vector3.Zero : Vector3.Normalize(estimatedTargetPosLocal);
                         float estimatedTargetDistance = (estimatedTargetPos - _referenceMatrix.Translation).Length();
                         float targetElevation = MathHelper.ToDegrees((float)Math.Asin(estimatedTargetDirLocal.Y));
 
@@ -139,7 +140,8 @@ namespace IngameScript
                         MyDetectedEntityInfo raycastResult = default(MyDetectedEntityInfo);
                         TimeSpan timeSinceLastDetection = time - Targets[targetID].TimeRecorded;
                         Vector3 estimatedTargetPos = Targets[targetID].Position + Targets[targetID].Velocity * (float)timeSinceLastDetection.TotalSeconds;
-                        Vector3 estimatedTargetDirLocal = Vector3.Normalize(Vector3.TransformNormal(estimatedTargetPos - _referenceMatrix.Translation, Matrix.Transpose(_referenceMatrix)));
+                        Vector3 estimatedTargetPosLocal = Vector3.TransformNormal(estimatedTargetPos - _referenceMatrix.Translation, Matrix.Transpose(_referenceMatrix));
+                        Vector3 estimatedTargetDirLocal = estimatedTargetPosLocal == Vector3.Zero ? Vector3.Zero : Vector3.Normalize(estimatedTargetPosLocal);
                         float targetAzimuth = MathHelper.ToDegrees((float)Math.Atan2(-estimatedTargetDirLocal.X, -estimatedTargetDirLocal.Z));
 
                         if (targetAzimuth > -45 && targetAzimuth < 45)
