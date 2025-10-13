@@ -39,6 +39,7 @@ namespace IngameScript
             private HashSet<int> _selectedBays = new HashSet<int>();
             private Dictionary<long, long> _addressMissileIDMap = new Dictionary<long, long>();
             private Dictionary<long, long> _addressTargetIDMap = new Dictionary<long, long>();
+            private Dictionary<long, long> _missileIDAddressMap = new Dictionary<long, long>();
 
             private Dictionary<long, EntityInfoExt> _targetInfo = new Dictionary<long, EntityInfoExt>();
 
@@ -107,24 +108,17 @@ namespace IngameScript
                     byte[] selfData = self.Serialize();
                     _communicationHandler.SendUnicast(selfData, missileAddress, "LauncherInfo");
 
-                    if (time - _lastClockSync > TimeSpan.FromSeconds(10))
-                    {
-                        string command = $"SYNC_CLOCK {Time.Ticks}";
-                        List<byte> commandData = new List<byte>()
-                        {
-                            (byte)SerializedTypes.Command
-                        };
-                        commandData.AddRange(Encoding.ASCII.GetBytes(command));
-                        byte[] commandBytes = commandData.ToArray();
-                        _communicationHandler.SendUnicast(commandBytes, missileAddress, "Commands");
-                    }
-
                     long targetID = _addressTargetIDMap[missileAddress];
                     if (_targetInfo.ContainsKey(targetID))
                     {
                         byte[] targetData = _targetInfo[targetID].Info.Serialize();
                         _communicationHandler.SendUnicast(targetData, missileAddress, "TargetInfo");
                     }
+                }
+
+                if (time - _lastClockSync > TimeSpan.FromSeconds(10))
+                {
+                    SyncClocks(time);
                 }
 
                 if (_launchCoroutine != null && !_launchCoroutine.MoveNext())
@@ -162,10 +156,16 @@ namespace IngameScript
             {
                 _addressMissileIDMap[address] = missileID;
                 _addressTargetIDMap[address] = targetID;
+                _missileIDAddressMap[missileID] = address;
             }
 
             private void UnregisterMissileAddress(long address)
             {
+                long missileID;
+                if (_addressMissileIDMap.TryGetValue(address, out missileID))
+                {
+                    _missileIDAddressMap.Remove(missileID);
+                }
                 _addressMissileIDMap.Remove(address);
                 _addressTargetIDMap.Remove(address);
             }
@@ -244,6 +244,40 @@ namespace IngameScript
                     DeselectBay(bayID);
                 }
                 yield return true;
+            }
+
+            public void SyncClocks(DateTime time)
+            {
+                _lastClockSync = time;
+
+                foreach (long address in _addressMissileIDMap.Keys.ToList())
+                {
+                    string command = $"SYNC_CLOCK {time.Ticks}";
+                    List<byte> commandData = new List<byte>()
+                        {
+                            (byte)SerializedTypes.Command
+                        };
+                    commandData.AddRange(Encoding.ASCII.GetBytes(command));
+                    byte[] commandBytes = commandData.ToArray();
+                    _communicationHandler.SendUnicast(commandBytes, address, "Commands");
+                }
+            }
+
+            public void AbortMissile(long missileID)
+            {
+                if (!_missileIDAddressMap.ContainsKey(missileID)) return;
+                long address = _missileIDAddressMap[missileID];
+                if (_communicationHandler.CanReach(address))
+                {
+                    string command = "ABORT";
+                    List<byte> commandData = new List<byte>()
+                    {
+                        (byte)SerializedTypes.Command
+                    };
+                    commandData.AddRange(Encoding.ASCII.GetBytes(command));
+                    byte[] commandBytes = commandData.ToArray();
+                    _communicationHandler.SendUnicast(commandBytes, address, "Commands");
+                }
             }
         }
     }

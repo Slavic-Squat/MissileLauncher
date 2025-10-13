@@ -122,7 +122,7 @@ namespace IngameScript
                     {
                         return true;
                     };
-                    Button button = new Button(buttonPos, buttonSize, 8f, 3f, 1f, getText, action, surface);
+                    Button button = new Button(buttonPos, buttonSize, 5f, 3f, 1f, getText, action, surface);
                     menu.AddButton(button, -1);
 
                     return menu;
@@ -149,7 +149,7 @@ namespace IngameScript
                     {
                         return true;
                     };
-                    Button button = new Button(buttonPos, buttonSize, 8f, 3f, 1f, getText, action, surface);
+                    Button button = new Button(buttonPos, buttonSize, 5f, 3f, 1f, getText, action, surface);
                     menu.AddButton(button, -1);
 
                     buttonPos.X += buttonSize.X + spacing;
@@ -162,7 +162,7 @@ namespace IngameScript
                         window.OpenMenu(missileMenu);
                         return true;
                     };
-                    button = new Button(buttonPos, buttonSize, 8f, 3f, 1f, getText, action, surface);
+                    button = new Button(buttonPos, buttonSize, 5f, 3f, 1f, getText, action, surface);
                     menu.AddButton(button, -1);
 
                     buttonPos.X += buttonSize.X + spacing;
@@ -177,7 +177,7 @@ namespace IngameScript
                         return true;
                     };
 
-                    button = new Button(buttonPos, buttonSize, 8f, 3f, 1f, getText, action, surface);
+                    button = new Button(buttonPos, buttonSize, 5f, 3f, 1f, getText, action, surface);
                     menu.AddButton(button, -1);
 
                     return menu;
@@ -205,7 +205,7 @@ namespace IngameScript
                     {
                         return true;
                     };
-                    Button button = new Button(buttonPos, buttonSize, 8f, 3f, 1f, getText, action, surface);
+                    Button button = new Button(buttonPos, buttonSize, 5f, 3f, 1f, getText, action, surface);
                     menu.AddButton(button, -1);
 
                     buttonPos.X += buttonSize.X + spacing;
@@ -218,7 +218,7 @@ namespace IngameScript
                         window.OpenMenu(missileMenu);
                         return true;
                     };
-                    button = new Button(buttonPos, buttonSize, 8f, 3f, 1f, getText, action, surface);
+                    button = new Button(buttonPos, buttonSize, 5f, 3f, 1f, getText, action, surface);
                     menu.AddButton(button, -1);
 
                     buttonPos.X += buttonSize.X + spacing;
@@ -230,7 +230,7 @@ namespace IngameScript
                         return true;
                     };
 
-                    button = new Button(buttonPos, buttonSize, 8f, 3f, 1f, getText, action, surface);
+                    button = new Button(buttonPos, buttonSize, 5f, 3f, 1f, getText, action, surface);
                     menu.AddButton(button, -1);
 
                     return menu;
