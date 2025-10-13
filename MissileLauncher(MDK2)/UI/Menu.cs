@@ -35,20 +35,20 @@ namespace IngameScript
             public event Action<IMenu> RequestClose;
             public event Action<INavigable> RequestStopNavigation;
 
-            private Func<bool> _autoClose;
-            private RectangleF _bounds;
-            private float _borderThickness;
-            private List<IButton> _commonButtons = new List<IButton>();
-            private List<IUpdatable> _commonUpdatables = new List<IUpdatable>();
-            private List<IUIElement> _commonUIElements = new List<IUIElement>();
-            private List<MenuPage> _pages = new List<MenuPage>();
-            private int _currentPageIndex = 0;
-            private IButton _highlightedButton;
+            protected Func<bool> _autoClose;
+            protected RectangleF _bounds;
+            protected float _borderThickness;
+            protected List<IButton> _commonButtons = new List<IButton>();
+            protected List<IUpdatable> _commonUpdatables = new List<IUpdatable>();
+            protected List<IUIElement> _commonUIElements = new List<IUIElement>();
+            protected List<MenuPage> _pages = new List<MenuPage>();
+            protected int _currentPageIndex = 0;
+            protected IButton _highlightedButton;
 
-            private MySprite _fillSprite;
-            private MySprite _borderSprite;
+            protected MySprite _fillSprite;
+            protected MySprite _borderSprite;
 
-            private List<MySprite> _commonSprites = new List<MySprite>();
+            protected List<MySprite> _commonSprites = new List<MySprite>();
 
             public Menu(Vector2 pos, Vector2 size, float borderThickness, Func<bool> autoClose = null)
             {
@@ -57,7 +57,7 @@ namespace IngameScript
                 _autoClose = autoClose;
             }
 
-            public void BuildSprites()
+            protected virtual void BuildSprites()
             {
                 Color fillColor, borderColor;
                 if (IsPaused)
@@ -92,50 +92,50 @@ namespace IngameScript
                 };
             }
 
-            public void OnOpen()
+            public virtual void OnOpen()
             {
                 IsOpen = true;
             }
 
-            private void Close()
+            protected virtual void Close()
             {
                 RequestClose?.Invoke(this);
             }
 
-            public void OnClose()
+            public virtual void OnClose()
             {
                 IsOpen = false;
             }
 
-            public void OnStartNavigation()
+            public virtual void OnStartNavigation()
             {
                 IsNavigating = true;
                 ResumeNavigation();
             }
 
-            private void StopNavigation()
+            protected virtual void StopNavigation()
             {
                 RequestStopNavigation?.Invoke(this);
             }
 
-            public void OnStopNavigation()
+            public virtual void OnStopNavigation()
             {
                 IsNavigating = false;
                 PauseNavigation();
             }
             
-            public void PauseNavigation()
+            public virtual void PauseNavigation()
             {
                 IsPaused = true;
                 UnhighlightButton(_highlightedButton);
             }
 
-            public void ResumeNavigation()
+            public virtual void ResumeNavigation()
             {
                 IsPaused = false;
             }
 
-            public void AddButton(IButton button, int pageIndex)
+            public virtual void AddButton(IButton button, int pageIndex)
             {
                 if (button == null) return;
                 if (pageIndex < 0)
@@ -160,7 +160,7 @@ namespace IngameScript
                 }
             }
 
-            public void AddSprite(MySprite sprite, int pageIndex)
+            public virtual void AddSprite(MySprite sprite, int pageIndex)
             {
                 if (pageIndex < 0)
                 {
@@ -182,7 +182,7 @@ namespace IngameScript
                 }
             }
 
-            public void AddInfoPanel(InfoPanel panel, int pageIndex)
+            public virtual void AddInfoPanel(InfoPanel panel, int pageIndex)
             {
                 if (panel == null) return;
                 if (pageIndex < 0)
@@ -205,7 +205,7 @@ namespace IngameScript
                 }
             }
 
-            private void HighlightButton(IButton button)
+            protected virtual void HighlightButton(IButton button)
             {
                 if (button == null || ReferenceEquals(button, _highlightedButton))
                 {
@@ -216,7 +216,7 @@ namespace IngameScript
                 _highlightedButton = button;
             }
 
-            private void UnhighlightButton(IButton button)
+            protected virtual void UnhighlightButton(IButton button)
             {
                 if (button == null) return;
                 button.Unhighlight();
@@ -227,7 +227,7 @@ namespace IngameScript
                 }
             }
 
-            public void Update(DateTime time)
+            public virtual void Update(DateTime time)
             {
                 if (_autoClose?.Invoke() ?? false)
                 {
@@ -245,13 +245,13 @@ namespace IngameScript
                 }
             }
 
-            private void ActivateButton(IButton button, DateTime time)
+            protected virtual void ActivateButton(IButton button, DateTime time)
             {
                 if (button == null) return;
                 button.Press(time);
             }
 
-            public void Draw(MySpriteDrawFrame frame)
+            public virtual void Draw(MySpriteDrawFrame frame)
             {
                 BuildSprites();
                 frame.Add(_borderSprite);
@@ -275,7 +275,7 @@ namespace IngameScript
                 }
             }
 
-            public void Navigate(UserInput input, DateTime time)
+            public virtual void Navigate(UserInput input, DateTime time)
             {
                 if (!IsNavigating || IsPaused)
                 {
