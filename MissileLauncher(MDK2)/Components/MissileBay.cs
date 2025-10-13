@@ -104,8 +104,8 @@ namespace IngameScript
                 MyIni missileConfig = new MyIni();
                 if (missileConfig.TryParse(storageBlock.CustomData))
                 {
-                    MissileID = missileConfig.Get("Config", "ID").ToInt64(-1);
-                    MissileAddress = missileConfig.Get("Config", "Address").ToInt64(-1);
+                    MissileID = missileConfig.Get("Config", "MissileID").ToInt64(-1);
+                    MissileAddress = missileConfig.Get("Config", "MissileAddress").ToInt64(-1);
                     MissileType type;
                     Enum.TryParse(missileConfig.Get("Config", "Type").ToString(), out type);
                     MissileType = type;
@@ -147,7 +147,7 @@ namespace IngameScript
                 }
             }
 
-            public bool TryInitMissile(DateTime time)
+            public bool ActivateMissile(DateTime time)
             {
                 if (Status == BayStatus.Loaded)
                 {
@@ -156,7 +156,7 @@ namespace IngameScript
                     {
                         return false;
                     }
-                    _missileComputer.CustomData += $"\nInit {IGCS.Me} {time}";                    
+                    _missileComputer.CustomData += $"\nACTIVATE {IGCS.Me} {time.Ticks}";                    
                     Status = BayStatus.Ready;
                     return true;
                 }
@@ -167,7 +167,7 @@ namespace IngameScript
             {
                 if (Status == BayStatus.Ready)
                 {
-                    _missileComputer.CustomData += $"\nLaunch";
+                    _missileComputer.CustomData += $"\nLAUNCH";
                     Status = BayStatus.Launching;
                     return true;
                 }
@@ -178,7 +178,7 @@ namespace IngameScript
             {
                 if (Status == BayStatus.Ready)
                 {
-                    _missileComputer.CustomData += $"\nReset";
+                    _missileComputer.CustomData += $"\nRESET";
                     Status = BayStatus.Loaded;
                     _missileComputer.Enabled = false;
                 }

@@ -45,7 +45,7 @@ namespace IngameScript
                 ID = id;
                 _communicationHandler = communicationHandler;
                 _communicationHandler.RegisterBroadcastListener("TargetInfo");
-                _communicationHandler.RegisterBroadcastListener("MissileInfo");
+                _communicationHandler.RegisterBroadcastListener("AllMissiles");
                 _communicationHandler.RegisterBroadcastListener("FriendlyInfo");
 
                 AllTargetsExt = new Dictionary<long, EntityInfoExt>();
@@ -82,10 +82,10 @@ namespace IngameScript
                     }
                 }
 
-                while (_communicationHandler.HasMessage("MissileInfo"))
+                while (_communicationHandler.HasMessage("AllMissiles"))
                 {
                     MyIGCMessage message;
-                    if (_communicationHandler.TryRetrieveMessage("MissileInfo", out message))
+                    if (_communicationHandler.TryRetrieveMessage("AllMissiles", out message))
                     {
                         object messageObject = Deserializer.Deserialize(message.Data as string);
                         if (messageObject is EntityInfo)

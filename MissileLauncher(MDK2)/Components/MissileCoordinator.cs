@@ -109,7 +109,7 @@ namespace IngameScript
 
                     if (time - _lastClockSync > TimeSpan.FromSeconds(10))
                     {
-                        string command = $"SYNC_CLOCK {Time}";
+                        string command = $"SYNC_CLOCK {Time.Ticks}";
                         List<byte> commandData = new List<byte>()
                         {
                             (byte)SerializedTypes.Command
@@ -226,7 +226,7 @@ namespace IngameScript
                     {
                         yield return false;
                     }
-                    while (MissileBays[bayID].Status == BayStatus.Loaded && !MissileBays[bayID].TryInitMissile(Time))
+                    while (MissileBays[bayID].Status == BayStatus.Loaded && !MissileBays[bayID].ActivateMissile(Time))
                     {
                         DebugEcho("Failed to initialize missile.");
                         yield return false;
