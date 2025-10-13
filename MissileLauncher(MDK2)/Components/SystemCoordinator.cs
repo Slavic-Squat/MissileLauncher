@@ -44,33 +44,16 @@ namespace IngameScript
             private Dictionary<string, Action<string[]>> _commands = new Dictionary<string, Action<string[]>>();
             private IMyTerminalBlock _storageBlock;
 
+            int _numOfControlStations;
+            int _numOfTargetingLasers;
+
             public SystemCoordinator(int numOfControlStations, int numOfTargetingLasers)
             {
+                SystemTime = DateTime.Now;
+                _numOfControlStations = numOfControlStations;
+                _numOfTargetingLasers = numOfTargetingLasers;
                 GetBlocks();
-                Config = new MyIni();
-                ControlStations = new List<ControlStation>();
-                TargetingLasers = new List<TargetingLaser>();
-
-                UIWireManager = new UIWireManager(this);
-
-                for (int i = 0; i < numOfControlStations; i++)
-                {
-                    ControlStation controlStation = new ControlStation(i, UIWireManager);
-                    ControlStations.Add(controlStation);
-                }
-
-                for (int i = 0; i < numOfTargetingLasers;  i++)
-                {
-                    TargetingLaser laser = new TargetingLaser(i);
-                    laser.SyncRequested += SyncTarget;
-                    TargetingLasers.Add(laser);
-                }
-
-                CommunicationHandler = new CommunicationHandler(0);
-                AWACS = new AWACS(0);
-                TargetCoordinator = new TargetCoordinator(0, CommunicationHandler);
-                MissileCoordinator = new MissileCoordinator(0, 8, CommunicationHandler, TargetCoordinator.AllTargetsExt);
-                CommandHandler = new CommandHandler(MePb, _commands);
+                Init();
             }
 
             private void GetBlocks()
@@ -82,6 +65,52 @@ namespace IngameScript
                     throw new Exception("No Main Cockpit Found");
                 }
                 ReferenceController = ctrlBlocks[0];
+
+                List<IMyTerminalBlock> storageBlocks = new List<IMyTerminalBlock>();
+                GTS.GetBlocksOfType(storageBlocks, sb => sb.IsSameConstructAs(MePb) && sb.CustomData.Contains("[Config]"));
+                if (storageBlocks.Count == 0)
+                {
+                    throw new Exception("No Storage Block Found With [Config] In Custom Data");
+                }
+                _storageBlock = storageBlocks[0];
+            }
+
+            private void Init()
+            {
+                Config = new MyIni();
+                if (!Config.TryParse(_storageBlock.CustomData))
+                {
+                    Config.Clear();
+                    Config.Set("Config", "SecureBroadcastPIN", "123456");
+                }
+
+                long secureBroadcastPIN = Config.Get("Config", "SecureBroadcastPIN").ToInt64(123456);
+                Config.Set("Config", "SecureBroadcastPIN", secureBroadcastPIN.ToString());
+
+                CommandHandler = new CommandHandler(MePb, _commands);
+                CommunicationHandler = new CommunicationHandler(0, secureBroadcastPIN);
+
+                ControlStations = new List<ControlStation>();
+                TargetingLasers = new List<TargetingLaser>();
+
+                UIWireManager = new UIWireManager(this);
+
+                for (int i = 0; i < _numOfControlStations; i++)
+                {
+                    ControlStation controlStation = new ControlStation(i, UIWireManager);
+                    ControlStations.Add(controlStation);
+                }
+
+                for (int i = 0; i < _numOfTargetingLasers; i++)
+                {
+                    TargetingLaser laser = new TargetingLaser(i);
+                    laser.SyncRequested += SyncTarget;
+                    TargetingLasers.Add(laser);
+                }
+
+                AWACS = new AWACS(0);
+                TargetCoordinator = new TargetCoordinator(0, CommunicationHandler);
+                MissileCoordinator = new MissileCoordinator(0, 8, CommunicationHandler, TargetCoordinator.AllTargetsExt);
             }
 
             public void Run()

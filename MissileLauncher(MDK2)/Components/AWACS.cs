@@ -47,31 +47,26 @@ namespace IngameScript
             {
                 get
                 {
-                    return _cameraArray0.MaxRaycastDistance;
+                    return _maxRaycastDistance;
                 }
                 set
                 {
+                    _maxRaycastDistance = value;
                     _cameraArray0.MaxRaycastDistance = value;
                     _cameraArray1.MaxRaycastDistance = value;
                     _cameraArray2.MaxRaycastDistance = value;
                     _cameraArray3.MaxRaycastDistance = value;
                 }
             }
-            public float RaycastDistanceGrowthSpeed { get; set; }
             public Dictionary<long, EntityInfoExt> Targets { get; private set; }
             public Dictionary<long, bool> TargetsSyncInfo {  get; private set; }
             #endregion
+
+            private float _maxRaycastDistance;
             public AWACS(int id, float maxRaycastDistance = 5000)
             {
                 ID = id;
-
-                Targets = new Dictionary<long, EntityInfoExt>();
-                TargetsSyncInfo = new Dictionary<long, bool>();
-
-                _cameraArray0 = new CameraArray(1, maxRaycastDistance);
-                _cameraArray1 = new CameraArray(2, maxRaycastDistance);
-                _cameraArray2 = new CameraArray(3, maxRaycastDistance);
-                _cameraArray3 = new CameraArray(4, maxRaycastDistance);
+                MaxRaycastDistance = maxRaycastDistance;
 
                 GetBlocks();
                 Init();
@@ -89,6 +84,14 @@ namespace IngameScript
             private void Init()
             {
                 _spinRotorInverted = _spinRotor.CustomData.Contains("Inverted");
+
+                Targets = new Dictionary<long, EntityInfoExt>();
+                TargetsSyncInfo = new Dictionary<long, bool>();
+
+                _cameraArray0 = new CameraArray(1, _maxRaycastDistance);
+                _cameraArray1 = new CameraArray(2, _maxRaycastDistance);
+                _cameraArray2 = new CameraArray(3, _maxRaycastDistance);
+                _cameraArray3 = new CameraArray(4, _maxRaycastDistance);
             }
 
             public void Run(DateTime time)

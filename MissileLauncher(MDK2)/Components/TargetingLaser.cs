@@ -32,6 +32,7 @@ namespace IngameScript
             #endregion
 
             #region State Info
+            private float _maxRaycastDistance;
             private DateTime _lastRunTime;
             private Matrix _referenceMatrix;
             private bool _azimuthRotorInverted;
@@ -57,10 +58,11 @@ namespace IngameScript
             {
                 get
                 {
-                    return _cameraArray.MaxRaycastDistance;
+                    return _maxRaycastDistance;
                 }
                 set
                 {
+                    _maxRaycastDistance = value;
                     _cameraArray.MaxRaycastDistance = value;
                 }
             }
@@ -75,13 +77,11 @@ namespace IngameScript
             {
                 ID = id;
                 Sensitivity = sensitivity;
+                _maxRaycastDistance = maxRaycastDistance;
+                ManualOverride = manualOverride;
 
                 GetBlocks();
                 Init();
-
-                _cameraArray = new CameraArray(0, maxRaycastDistance);
-                _azimuthPID = new PIDControl(25, 2, 0.1f);
-                _elevationPID = new PIDControl(25, 2, 0.1f);
             }
 
             private void GetBlocks()
@@ -102,6 +102,10 @@ namespace IngameScript
             {
                 _azimuthRotorInverted = _azimuthRotor.CustomData.Contains("Inverted");
                 _elevationRotorInverted = _elevationRotor.CustomData.Contains("Inverted");
+
+                _cameraArray = new CameraArray(0, _maxRaycastDistance);
+                _azimuthPID = new PIDControl(25, 2, 0.1f);
+                _elevationPID = new PIDControl(25, 2, 0.1f);
             }
 
             public void Run(DateTime time)

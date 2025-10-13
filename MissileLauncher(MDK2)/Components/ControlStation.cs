@@ -40,10 +40,7 @@ namespace IngameScript
                 _uiWireManager = uiWireManager;
 
                 GetBlocks();
-
-                PrimaryDisplay = _displays[0];
-                Input = new UserInput(_controllerReference);
-                _ui = new UI(this, PrimaryDisplay, _uiWireManager);
+                Init();
             }
 
             private void GetBlocks()
@@ -65,6 +62,13 @@ namespace IngameScript
                 {
                     throw new Exception($"No Displays Found For Control Station [{ID}]");
                 }
+            }
+
+            private void Init()
+            {
+                PrimaryDisplay = _displays[0];
+                Input = new UserInput(_controllerReference);
+                _ui = new UI(this, PrimaryDisplay, _uiWireManager);
             }
 
             public void Run(DateTime time)

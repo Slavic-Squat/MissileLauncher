@@ -35,6 +35,7 @@ namespace IngameScript
             #endregion
 
             private CommunicationHandler _communicationHandler;
+            private int _numberOfMissileBays;
 
             private HashSet<int> _selectedBays = new HashSet<int>();
             private Dictionary<long, long> _addressMissileIDMap = new Dictionary<long, long>();
@@ -50,16 +51,22 @@ namespace IngameScript
             public MissileCoordinator(int id, int numberOfMissileBays, CommunicationHandler communicationHandler, Dictionary<long, EntityInfoExt> targetInfo)
             {
                 ID = id;
+                _numberOfMissileBays = numberOfMissileBays;
                 _communicationHandler = communicationHandler;
-                _communicationHandler.RegisterTag("MyMissiles");
                 _targetInfo = targetInfo;
+                Init();
+            }
 
+            private void Init()
+            {
                 MissileBays = new List<MissileBay>();
                 MyMissilesExt = new Dictionary<long, EntityInfoExt>();
-                for (int i = 0; i < numberOfMissileBays; i++)
+                for (int i = 0; i < _numberOfMissileBays; i++)
                 {
                     MissileBays.Add(new MissileBay(i));
                 }
+
+                _communicationHandler.RegisterTag("MyMissiles", true);
             }
 
             public void Run(DateTime time)
@@ -78,10 +85,10 @@ namespace IngameScript
 
                 EntityInfo self = new EntityInfo(selfID, selfPos, selfVel, timeRecorded);
 
-                while (_communicationHandler.HasMessage("MyMissiles"))
+                while (_communicationHandler.HasMessage("MyMissiles", true))
                 {
                     MyIGCMessage message;
-                    if (_communicationHandler.TryRetrieveMessage("MyMissiles", out message))
+                    if (_communicationHandler.TryRetrieveMessage("MyMissiles", true, out message))
                     {
                         if (!_addressMissileIDMap.ContainsKey(message.Source))
                         {
@@ -106,13 +113,13 @@ namespace IngameScript
                     }
 
                     byte[] selfData = self.Serialize();
-                    _communicationHandler.SendUnicast(selfData, missileAddress, "LauncherInfo");
+                    _communicationHandler.SendUnicast(selfData, missileAddress, "MyLauncherInfo", true);
 
                     long targetID = _addressTargetIDMap[missileAddress];
                     if (_targetInfo.ContainsKey(targetID))
                     {
                         byte[] targetData = _targetInfo[targetID].Info.Serialize();
-                        _communicationHandler.SendUnicast(targetData, missileAddress, "TargetInfo");
+                        _communicationHandler.SendUnicast(targetData, missileAddress, "MyTargetInfo", true);
                     }
                 }
 
@@ -259,7 +266,7 @@ namespace IngameScript
                         };
                     commandData.AddRange(Encoding.ASCII.GetBytes(command));
                     byte[] commandBytes = commandData.ToArray();
-                    _communicationHandler.SendUnicast(commandBytes, address, "Commands");
+                    _communicationHandler.SendUnicast(commandBytes, address, "MyCommands", true);
                 }
             }
 
@@ -276,7 +283,7 @@ namespace IngameScript
                     };
                     commandData.AddRange(Encoding.ASCII.GetBytes(command));
                     byte[] commandBytes = commandData.ToArray();
-                    _communicationHandler.SendUnicast(commandBytes, address, "Commands");
+                    _communicationHandler.SendUnicast(commandBytes, address, "MyCommands", true);
                 }
             }
         }
