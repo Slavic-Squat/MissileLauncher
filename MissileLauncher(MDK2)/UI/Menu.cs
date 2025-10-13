@@ -81,16 +81,19 @@ namespace IngameScript
                     borderColor = UIConfig.MenuBorderColorActive;
                 }
 
-                _obscureSprite = new MySprite()
+                if (_obscure)
                 {
-                    Type = SpriteType.TEXTURE,
-                    Data = "SquareSimple",
-                    Position = _surface.TextureSize * 0.5f,
-                    Size = _surface.SurfaceSize,
-                    RotationOrScale = 0f,
-                    Color = new Color(0, 0, 0, 229),
-                    Alignment = TextAlignment.CENTER,
-                };
+                    _obscureSprite = new MySprite()
+                    {
+                        Type = SpriteType.TEXTURE,
+                        Data = "SquareSimple",
+                        Position = _surface.TextureSize * 0.5f,
+                        Size = _surface.SurfaceSize,
+                        RotationOrScale = 0f,
+                        Color = new Color(0, 0, 0, 229),
+                        Alignment = TextAlignment.CENTER,
+                    };
+                }
                 _fillSprite = new MySprite()
                 {
                     Type = SpriteType.TEXTURE,
