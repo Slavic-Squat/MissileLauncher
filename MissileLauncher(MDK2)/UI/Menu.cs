@@ -45,16 +45,26 @@ namespace IngameScript
             protected int _currentPageIndex = 0;
             protected IButton _highlightedButton;
 
+            protected IMyTextSurface _surface;
+            protected bool _obscure;
+
             protected MySprite _fillSprite;
             protected MySprite _borderSprite;
+            protected MySprite _obscureSprite;
 
             protected List<MySprite> _commonSprites = new List<MySprite>();
 
-            public Menu(Vector2 pos, Vector2 size, float borderThickness, Func<bool> autoClose = null)
+            public Menu(Vector2 pos, Vector2 size, float borderThickness, bool obscure = false, IMyTextSurface surface = null, Func<bool> autoClose = null)
             {
                 _bounds = new RectangleF(pos, size);
                 _borderThickness = borderThickness;
+                _obscure = obscure;
+                _surface = surface;
                 _autoClose = autoClose;
+                if (_surface == null && obscure)
+                {
+                    throw new ArgumentException("----------------------\nSurface must be provided if obscure is true.\n-------------------------");
+                }
             }
 
             protected virtual void BuildSprites()
@@ -70,6 +80,17 @@ namespace IngameScript
                     fillColor = UIConfig.MenuFillColorActive;
                     borderColor = UIConfig.MenuBorderColorActive;
                 }
+
+                _obscureSprite = new MySprite()
+                {
+                    Type = SpriteType.TEXTURE,
+                    Data = "SquareSimple",
+                    Position = _surface.TextureSize * 0.5f,
+                    Size = _surface.SurfaceSize,
+                    RotationOrScale = 0f,
+                    Color = new Color(0, 0, 0, 229),
+                    Alignment = TextAlignment.CENTER,
+                };
                 _fillSprite = new MySprite()
                 {
                     Type = SpriteType.TEXTURE,
@@ -254,6 +275,10 @@ namespace IngameScript
             public virtual void Draw(MySpriteDrawFrame frame)
             {
                 BuildSprites();
+                if (_obscure)
+                {
+                    frame.Add(_obscureSprite);
+                }
                 frame.Add(_borderSprite);
                 frame.Add(_fillSprite);
 

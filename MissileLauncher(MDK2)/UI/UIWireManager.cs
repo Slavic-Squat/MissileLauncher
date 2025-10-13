@@ -67,6 +67,8 @@ namespace IngameScript
             public void ClearSelectedBays() => _systemCoordinator.MissileCoordinator.ClearSelectedBays();
             public void LaunchMissiles(long targetID) => _systemCoordinator.MissileCoordinator.LaunchMissiles(targetID);
             public void ForgetTarget(long targetID) => _systemCoordinator.AWACS.RemoveTarget(targetID);
+            public void AbortMissile(long missileID) => _systemCoordinator.MissileCoordinator.AbortMissile(missileID);
+            public void SetRelation(long entityID, EntityRelation relation) => _systemCoordinator.TargetCoordinator.SetTargetRelation(entityID, relation);
         }
     }
 }

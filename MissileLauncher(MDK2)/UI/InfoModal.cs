@@ -80,7 +80,7 @@ namespace IngameScript
                     Data = "SquareSimple",
                     Position = _surface.TextureSize * 0.5f,
                     Size = _surface.SurfaceSize,
-                    Color = new Color(0, 0, 0, 200),
+                    Color = new Color(0, 0, 0, 229),
                     Alignment = TextAlignment.CENTER
                 };
 

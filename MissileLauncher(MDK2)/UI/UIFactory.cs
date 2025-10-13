@@ -91,8 +91,11 @@ namespace IngameScript
                 UIWireManager wireManager = window.UI.UIWireManager;
 
                 var entities = wireManager.GetAllEntities();
-                var entity = entities.ContainsKey(targetID) ? entities[targetID] : default(EntityInfoExt);
-                if (!entity.IsValid) return null;                
+                EntityInfoExt entity;
+                if (!entities.TryGetValue(targetID, out entity))
+                {
+                    return null;
+                }             
 
                 Vector2 buttonSize = new Vector2(125f, 35f);
                 float padding = 15f;
@@ -114,12 +117,13 @@ namespace IngameScript
                         return window.SelectedEntityID != targetID;
                     };
 
-                    Menu menu = new Menu(menuPos, menuSize, 5f, autoClose);
+                    Menu menu = new Menu(menuPos, menuSize, 5f, autoClose: autoClose);
 
                     Vector2 buttonPos = menu.Pos + padding;
                     Func<string> getText = () => "ABORT";
                     Func<bool> action = () =>
                     {
+                        wireManager.AbortMissile(targetID);
                         return true;
                     };
                     Button button = new Button(buttonPos, buttonSize, 5f, 3f, 1f, getText, action, surface);
@@ -142,7 +146,7 @@ namespace IngameScript
                         return window.SelectedEntityID != targetID;
                     };
 
-                    Menu menu = new Menu(menuPos, menuSize, 5f, autoClose);
+                    Menu menu = new Menu(menuPos, menuSize, 5f, autoClose: autoClose);
                     Vector2 buttonPos = menu.Pos + padding;
                     Func<string> getText = () => "VIEW";
                     Func<bool> action = () =>
@@ -198,7 +202,7 @@ namespace IngameScript
                         return window.SelectedEntityID != targetID;
                     };
 
-                    Menu menu = new Menu(menuPos, menuSize, 5f, autoClose);
+                    Menu menu = new Menu(menuPos, menuSize, 5f, autoClose: autoClose);
                     Vector2 buttonPos = menu.Pos + padding;
                     Func<string> getText = () => "VIEW";
                     Func<bool> action = () =>
@@ -273,7 +277,7 @@ namespace IngameScript
                 {
                     return window.SelectedEntityID != targetID;
                 };
-                ModalMenu menu = new ModalMenu(menuPos, menuSize, 5f, canClose, surface, true, autoClose);
+                ModalMenu menu = new ModalMenu(menuPos, menuSize, 5f, canClose, obscure: true, surface: surface, autoClose: autoClose);
 
                 Vector2 labelPos = menu.Pos + new Vector2(menu.Size.X * 0.5f - labelSize.X * 0.5f, headerHeight * 0.5f - labelSize.Y * 0.5f);
                 RectangleF labelBounds = new RectangleF(labelPos, labelSize);
@@ -393,7 +397,7 @@ namespace IngameScript
                     return window.SelectedEntityID != targetID;
                 };
 
-                ModalMenu menu = new ModalMenu(menuPos, menuSize, 5f, canClose, surface, false, autoClose);
+                ModalMenu menu = new ModalMenu(menuPos, menuSize, 5f, canClose, autoClose: autoClose);
 
                 Vector2 buttonPos = menu.Pos + padding;
                 Func<string> getText = () => "FIRE";
@@ -423,6 +427,7 @@ namespace IngameScript
             public static Menu CreateRelationMenu(Vector2 pos, long targetID, TargetingWindow window, bool vertCent = false, bool horCent = false)
             {
                 IMyTextSurface surface = window.Display;
+                UIWireManager wireManager = window.UI.UIWireManager;
 
                 int numButtons = 3;
 
@@ -444,12 +449,13 @@ namespace IngameScript
                     return window.SelectedEntityID != targetID;
                 };
 
-                Menu menu = new Menu(menuPos, menuSize, 5f, autoClose);
+                Menu menu = new Menu(menuPos, menuSize, 5f, autoClose: autoClose);
 
                 Vector2 buttonPos = menu.Pos + padding;
                 Func<string> getText = () => "FRNDLY";
                 Func<bool> action = () =>
                 {
+                    wireManager.SetRelation(targetID, EntityRelation.Friendly);
                     return true;
                 };
                 Button button = new Button(buttonPos, buttonSize, 5f, 3f, 1f, getText, action, surface);
@@ -459,6 +465,7 @@ namespace IngameScript
                 getText = () => "NTRL";
                 action = () =>
                 {
+                    wireManager.SetRelation(targetID, EntityRelation.Neutral);
                     return true;
                 };
                 button = new Button(buttonPos, buttonSize, 5f, 3f, 1f, getText, action, surface);
@@ -468,6 +475,7 @@ namespace IngameScript
                 getText = () => "HSTL";
                 action = () =>
                 {
+                    wireManager.SetRelation(targetID, EntityRelation.Hostile);
                     return true;
                 };
                 button = new Button(buttonPos, buttonSize, 5f, 3f, 1f, getText, action, surface);
@@ -505,7 +513,7 @@ namespace IngameScript
                 if (horCent) menuPos.X -= menuSize.X / 2f;
                 if (vertCent) menuPos.Y -= menuSize.Y / 2f;
 
-                Menu menu = new Menu(menuPos, menuSize, 5f);
+                Menu menu = new Menu(menuPos, menuSize, 5f, obscure: true, surface: surface);
 
                 Vector2 labelPos = menu.Pos + new Vector2(menu.Size.X * 0.5f - labelSize.X * 0.5f, headerHeight * 0.5f - labelSize.Y * 0.5f);
                 RectangleF labelBounds = new RectangleF(labelPos, labelSize);
