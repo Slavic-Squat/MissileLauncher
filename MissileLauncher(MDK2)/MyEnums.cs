@@ -116,6 +116,37 @@ namespace IngameScript
             Left, Right, Up, Down, Forward, Backward
         }
 
+        public static MissileType GetMissileType(string typeStr)
+        {
+            switch (typeStr.ToUpper())
+            {
+                case "ANTI-SHIP": return MissileType.AntiShip;
+                case "ANTI-MISL": return MissileType.AntiMissile;
+                case "CLUSTER": return MissileType.Cluster;
+                default: return MissileType.Unknown;
+            }
+        }
+
+        public static MissileGuidanceType GetMissileGuidanceType(string typeStr)
+        {
+            switch (typeStr.ToUpper())
+            {
+                case "MCLOS": return MissileGuidanceType.MCLOS;
+                default: return MissileGuidanceType.Unknown;
+            }
+        }
+
+        public static MissilePayload GetMissilePayload(string payloadStr)
+        {
+            switch (payloadStr.ToUpper())
+            {
+                case "HE": return MissilePayload.HE;
+                case "NUKE": return MissilePayload.Nuclear;
+                case "KINECTIC": return MissilePayload.Kinectic;
+                default: return MissilePayload.Unknown;
+            }
+        }
+
         public static string GetName(EntityRelation relation)
         {
             switch (relation)

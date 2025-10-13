@@ -347,7 +347,7 @@ namespace IngameScript
                         Type = SpriteType.TEXTURE,
                         Data = "Base_0",
                         Position = basePosPixel,
-                        Size = new Vector2(32, 32) * baseDepthScale,
+                        Size = spriteSize * baseDepthScale,
                         Color = Color.White,
                         Alignment = TextAlignment.CENTER,
                         RotationOrScale = 0f,

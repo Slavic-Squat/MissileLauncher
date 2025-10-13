@@ -106,15 +106,10 @@ namespace IngameScript
                 {
                     MissileID = missileConfig.Get("Config", "MissileID").ToInt64(-1);
                     MissileAddress = missileConfig.Get("Config", "MissileAddress").ToInt64(-1);
-                    MissileType type;
-                    Enum.TryParse(missileConfig.Get("Config", "Type").ToString(), out type);
-                    MissileType = type;
-                    MissileGuidanceType guidanceType;
-                    Enum.TryParse(missileConfig.Get("Config", "GuidanceType").ToString(), out guidanceType);
-                    MissileGuidanceType = guidanceType;
-                    MissilePayload payload;
-                    Enum.TryParse(missileConfig.Get("Config", "Payload").ToString(), out payload);
-                    MissilePayload = payload;
+                    MissileType = GetMissileType(missileConfig.Get("Config", "Type").ToString());
+                    MissileGuidanceType = GetMissileGuidanceType(missileConfig.Get("Config", "GuidanceType").ToString());
+                    MissilePayload = GetMissilePayload(missileConfig.Get("Config", "Payload").ToString());
+                    DebugCounter++;
                 }
                 else
                 {
