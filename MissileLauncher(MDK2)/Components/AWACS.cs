@@ -66,7 +66,7 @@ namespace IngameScript
             public AWACS(int id, float maxRaycastDistance = 5000)
             {
                 ID = id;
-                MaxRaycastDistance = maxRaycastDistance;
+                _maxRaycastDistance = maxRaycastDistance;
 
                 GetBlocks();
                 Init();
