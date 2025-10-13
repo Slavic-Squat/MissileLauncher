@@ -72,7 +72,7 @@ namespace IngameScript
                     Color = UIConfig.PanelBorderColor,
                     Alignment = TextAlignment.CENTER,
                 };
-                _textSprite = SpriteHelper.CreateText(Bounds, _textGetter(), Color.White, _surface, TextAlignment.LEFT, false, _padding);
+                _textSprite = SpriteHelper.CreateText(Bounds, _textGetter(), Color.White, _surface, TextAlignment.LEFT, false, _borderThickness + _padding);
             }
 
             public void Draw(MySpriteDrawFrame frame)

@@ -216,6 +216,7 @@ namespace IngameScript
                 if (input.CRelease)
                 {
                     Close();
+                    return;
                 }
 
                 Dictionary<long, MyEntitySprite> filtered = _entitySprites.Where(kvp => Matches(kvp.Value.EntityInfo, NavTypeFilter, NavRelationFilter, NavSourceFilter)).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);

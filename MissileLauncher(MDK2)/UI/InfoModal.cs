@@ -84,7 +84,7 @@ namespace IngameScript
                     Alignment = TextAlignment.CENTER
                 };
 
-                _textSprite = SpriteHelper.CreateText(Bounds, _text, new Color(252, 3, 94, 255), _surface, TextAlignment.CENTER, true, _padding);
+                _textSprite = SpriteHelper.CreateText(Bounds, _text, new Color(252, 3, 94, 255), _surface, TextAlignment.CENTER, true, _borderThickness + _padding);
             }
 
             public void Draw(MySpriteDrawFrame frame)

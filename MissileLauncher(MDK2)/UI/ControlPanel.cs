@@ -63,7 +63,7 @@ namespace IngameScript
                 Color fillColor, borderColor;
                 if (IsPaused)
                 {
-                    fillColor = UIConfig.PanelFillColor;
+                    fillColor = IsHighlighted ? UIConfig.PanelFillColorHighlighted : UIConfig.PanelFillColor;
                     borderColor = UIConfig.PanelBorderColor;
                 }
                 else
@@ -289,6 +289,7 @@ namespace IngameScript
                 if (input.CRelease)
                 {
                     StopNavigation();
+                    return;
                 }
 
                 List<IButton> allButtons = new List<IButton>(_commonButtons);

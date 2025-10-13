@@ -106,13 +106,13 @@ namespace IngameScript
                 }
                 else if (_state.HasFlag(ButtonState.Pressed))
                 {
-                    fillColor = UIConfig.ToggleButtonFillColorPressed;
+                    fillColor = IsHighlighted ? UIConfig.ToggleButtonFillColorPH : UIConfig.ToggleButtonFillColorPressed;
                     borderColor = UIConfig.ToggleButtonBorderColorPressed;
                     textColor = UIConfig.ToggleButtonTextColorPressed;
                 }
                 else
                 {
-                    fillColor = UIConfig.ToggleButtonFillColorReleased;
+                    fillColor = IsHighlighted ? UIConfig.ToggleButtonFillColorRH : UIConfig.ToggleButtonFillColorReleased;
                     borderColor = UIConfig.ToggleButtonBorderColorReleased;
                     textColor = UIConfig.ToggleButtonTextColorReleased;
                 }
@@ -160,7 +160,7 @@ namespace IngameScript
                     Alignment = TextAlignment.CENTER
                 };
 
-                _textSprite = SpriteHelper.CreateText(bounds, _textGetter(), textColor, _surface, TextAlignment.CENTER, true, _padding);
+                _textSprite = SpriteHelper.CreateText(bounds, _textGetter(), textColor, _surface, TextAlignment.CENTER, true, _borderThickness + _padding);
             }
 
             public void Press(DateTime time)

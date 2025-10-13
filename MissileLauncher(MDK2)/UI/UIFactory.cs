@@ -47,7 +47,7 @@ namespace IngameScript
 
                 Vector2 labelPos = panel.Pos + new Vector2(panel.Size.X / 2f - labelSize.X / 2f, padding);
                 RectangleF labelBounds = new RectangleF(labelPos, labelSize);
-                MySprite labelSprite = SpriteHelper.CreateText(labelBounds, "OPTIONS\n------------------", Color.White, surface, TextAlignment.CENTER, true, 0);
+                MySprite labelSprite = SpriteHelper.CreateText(labelBounds, "-OPTIONS-\n------------------", Color.White, surface, TextAlignment.CENTER, true, 0);
                 panel.AddSprite(labelSprite, -1);
 
                 Vector2 buttonPos = panel.Pos + new Vector2(panel.Size.X / 2f - buttonSize.X / 2f, padding + labelSize.Y);
@@ -55,7 +55,7 @@ namespace IngameScript
                 Func<string> getText = () => "SCALE: " + GetName(window.ScopeScale);
                 Func<bool> action = () => { window.CycleScopeScale(); return true; };
 
-                Button button = new Button(buttonPos, buttonSize, 8f, 3f, 1f, getText, action, window.Display);
+                Button button = new Button(buttonPos, buttonSize, 5f, 3f, 2f, getText, action, window.Display);
                 panel.AddButton(button, -1);
 
                 buttonPos.Y += buttonSize.Y + spacing;
@@ -63,7 +63,7 @@ namespace IngameScript
                 getText = () => "TYPE: " + GetName(window.NavTypeFilter);
                 action = () => { window.CycleTypeFilter(); return true; };
 
-                button = new Button(buttonPos, buttonSize, 8f, 3f, 1f, getText, action, window.Display);
+                button = new Button(buttonPos, buttonSize, 5f, 3f, 2f, getText, action, window.Display);
                 panel.AddButton(button, -1);
 
                 buttonPos.Y += buttonSize.Y + spacing;
@@ -71,7 +71,7 @@ namespace IngameScript
                 getText = () => "REL: " + GetName(window.NavRelationFilter);
                 action = () => { window.CycleRelationFilter(); return true; };
 
-                button = new Button(buttonPos, buttonSize, 8f, 3f, 1f, getText, action, window.Display);
+                button = new Button(buttonPos, buttonSize, 5f, 3f, 2f, getText, action, window.Display);
                 panel.AddButton(button, -1);
 
                 buttonPos.Y += buttonSize.Y + spacing;
@@ -79,7 +79,7 @@ namespace IngameScript
                 getText = () => "SRC: " + GetName(window.NavSourceFilter);
                 action = () => { window.CycleSourceFilter(); return true; };
 
-                button = new Button(buttonPos, buttonSize, 8f, 3f, 1f, getText, action, window.Display);
+                button = new Button(buttonPos, buttonSize, 5f, 3f, 2f, getText, action, window.Display);
                 panel.AddButton(button, -1);
 
                 return panel;
@@ -277,7 +277,7 @@ namespace IngameScript
 
                 Vector2 labelPos = menu.Pos + new Vector2(menu.Size.X * 0.5f - labelSize.X * 0.5f, headerHeight * 0.5f - labelSize.Y * 0.5f);
                 RectangleF labelBounds = new RectangleF(labelPos, labelSize);
-                MySprite labelSprite = SpriteHelper.CreateText(labelBounds, "MISSILE BAYS\n------------------", Color.White, window.Display, TextAlignment.CENTER, true, 0);
+                MySprite labelSprite = SpriteHelper.CreateText(labelBounds, "-MISSILE BAYS-\n------------------", Color.White, window.Display, TextAlignment.CENTER, true, 0);
                 menu.AddSprite(labelSprite, -1);
                 
                 int bayIndex = 0;
@@ -330,7 +330,7 @@ namespace IngameScript
                                 return bay.IsSelectable;
                             };
                             Func<bool> canRelease = canPress;
-                            ToggleButton button = new ToggleButton(buttonPos, selectButtonSize, 10f, 3f, 1f, getText, onPress, onRelease, isPressed, surface, canPress, canRelease);
+                            ToggleButton button = new ToggleButton(buttonPos, selectButtonSize, 7f, 3f, 1f, getText, onPress, onRelease, isPressed, surface, canPress, canRelease);
                             menu.AddButton(button, i);
                             bayIndex++;
                         }
@@ -348,7 +348,7 @@ namespace IngameScript
                     window.OpenMenu(missileFireMenu);
                     return true;
                 };
-                Button confirmButton = new Button(confirmButtonPos, confirmButtonSize, 14f, 4f, 1f, confirmText, action, surface);
+                Button confirmButton = new Button(confirmButtonPos, confirmButtonSize, 10f, 4f, 1f, confirmText, action, surface);
                 menu.AddButton(confirmButton, -1);
                 Vector2 cancelButtonSize = new Vector2(150f, 50f);
                 Vector2 cancelButtonPos = menu.Pos + new Vector2(menu.Size.X * 0.5f + 20f, menu.Size.Y - footerHeight * 0.5f - confirmButtonSize.Y * 0.5f);
@@ -359,7 +359,7 @@ namespace IngameScript
                     window.CloseMenu(menu);
                     return true;
                 };
-                Button cancelButton = new Button(cancelButtonPos, cancelButtonSize, 14f, 4f, 1f, cancelText, action, surface);
+                Button cancelButton = new Button(cancelButtonPos, cancelButtonSize, 10f, 4f, 1f, cancelText, action, surface);
                 menu.AddButton(cancelButton, -1);
                 return menu;
             }
@@ -403,7 +403,7 @@ namespace IngameScript
                     window.CloseMenu(menu);
                     return true;
                 };
-                Button button = new Button(buttonPos, buttonSize, 8f, 3f, 1f, getText, action, surface);
+                Button button = new Button(buttonPos, buttonSize, 5f, 5f, 2f, getText, action, surface);
                 menu.AddButton(button, -1);
 
                 buttonPos.X += buttonSize.X + spacing;
@@ -414,7 +414,7 @@ namespace IngameScript
                     window.CloseMenu(menu);
                     return true;
                 };
-                button = new Button(buttonPos, buttonSize, 8f, 3f, 1f, getText, action, surface);
+                button = new Button(buttonPos, buttonSize, 5f, 5f, 2f, getText, action, surface);
                 menu.AddButton(button, -1);
 
                 return menu;
@@ -452,7 +452,7 @@ namespace IngameScript
                 {
                     return true;
                 };
-                Button button = new Button(buttonPos, buttonSize, 8f, 3f, 1f, getText, action, surface);
+                Button button = new Button(buttonPos, buttonSize, 5f, 3f, 1f, getText, action, surface);
                 menu.AddButton(button, -1);
 
                 buttonPos.X += buttonSize.X + spacing;
@@ -461,7 +461,7 @@ namespace IngameScript
                 {
                     return true;
                 };
-                button = new Button(buttonPos, buttonSize, 8f, 3f, 1f, getText, action, surface);
+                button = new Button(buttonPos, buttonSize, 5f, 3f, 1f, getText, action, surface);
                 menu.AddButton(button, -1);
 
                 buttonPos.X += buttonSize.X + spacing;
@@ -470,7 +470,7 @@ namespace IngameScript
                 {
                     return true;
                 };
-                button = new Button(buttonPos, buttonSize, 8f, 3f, 1f, getText, action, surface);
+                button = new Button(buttonPos, buttonSize, 5f, 3f, 1f, getText, action, surface);
                 menu.AddButton(button, -1);
 
                 return menu;
@@ -509,7 +509,7 @@ namespace IngameScript
 
                 Vector2 labelPos = menu.Pos + new Vector2(menu.Size.X * 0.5f - labelSize.X * 0.5f, headerHeight * 0.5f - labelSize.Y * 0.5f);
                 RectangleF labelBounds = new RectangleF(labelPos, labelSize);
-                MySprite labelSprite = SpriteHelper.CreateText(labelBounds, "TARGETING LASERS\n------------------", Color.White, window.Display, TextAlignment.CENTER, true, 0);
+                MySprite labelSprite = SpriteHelper.CreateText(labelBounds, "-TARGETING LASERS-\n------------------", Color.White, window.Display, TextAlignment.CENTER, true, 0);
                 menu.AddSprite(labelSprite, -1);
 
                 int numPages = (int)Math.Ceiling((float)numLasers / (numRows * numColumns));
@@ -553,10 +553,10 @@ namespace IngameScript
                             };
                             Func<bool> canPress = () =>
                             {
-                                return laser.IsUnderControl;
+                                return !laser.IsUnderControl;
                             };
                             Func<bool> canRelease = canPress;
-                            Button button = new Button(buttonPos, ctrlButtonSize, 10f, 3f, 1f, getText, action, surface, canPress);
+                            Button button = new Button(buttonPos, ctrlButtonSize, 7f, 3f, 1f, getText, action, surface, canPress);
                             menu.AddButton(button, i);
                             laserIndex++;
                         }
@@ -569,7 +569,7 @@ namespace IngameScript
             {
                 Window window = new Window(ui, borderThickness);
 
-                Vector2 labelSize = new Vector2(200f, 150f);
+                Vector2 labelSize = new Vector2(250f, 100f);
                 Vector2 labelPos = window.Pos;
                 RectangleF labelBounds = new RectangleF(labelPos, labelSize);
                 MySprite labelFillSprite = new MySprite()
@@ -581,7 +581,6 @@ namespace IngameScript
                     Color = UIConfig.WindowFillColor,
                     Alignment = TextAlignment.CENTER
                 };
-                window.AddSprite(labelFillSprite);
                 MySprite labelBorderSprite = new MySprite()
                 {
                     Type = SpriteType.TEXTURE,
@@ -591,22 +590,24 @@ namespace IngameScript
                     Color = UIConfig.WindowBorderColor,
                     Alignment = TextAlignment.CENTER
                 };
+                MySprite labelTextSprite = SpriteHelper.CreateText(labelBounds, "-MAIN-", Color.White, ui.Display, TextAlignment.CENTER, true, borderThickness + 10f);
                 window.AddSprite(labelBorderSprite);
-                MySprite labelTextSprite = SpriteHelper.CreateText(labelBounds, "MAIN", Color.White, ui.Display, TextAlignment.CENTER, true, 10f);
+                window.AddSprite(labelFillSprite);
                 window.AddSprite(labelTextSprite);
 
-                float padding = 20f;
-                float spacing = 10f;
-                float headerHeight = 200f;
-                Vector2 buttonSize = new Vector2(200f, 100f);
+                float padding = 50f;
+                float spacing = 35f;
+                float headerHeight = 150f;
+                Vector2 buttonSize = new Vector2(350f, 125f);
                 Vector2 buttonPos = window.Pos + new Vector2(padding, headerHeight);
 
                 Func<string> getText = () => "LASER CTRL";
                 Func<bool> action = () =>
                 {
+                    window.OpenMenu(CreateLaserControlMenu(window.Center, window, true, true));
                     return true;
                 };
-                Button laserCtrlButton = new Button(buttonPos, buttonSize, 10f, 10f, 10f, getText, action, ui.Display);
+                Button laserCtrlButton = new Button(buttonPos, buttonSize, 20f, 10f, 5f, getText, action, ui.Display);
 
                 window.AddButton(laserCtrlButton);
 
@@ -619,7 +620,7 @@ namespace IngameScript
                     return true;
                 };
 
-                Button targetingButton = new Button(buttonPos, buttonSize, 10f, 10f, 10f, getText, action, ui.Display);
+                Button targetingButton = new Button(buttonPos, buttonSize, 20f, 10f, 5f, getText, action, ui.Display);
                 window.AddButton(targetingButton);
 
                 return window;

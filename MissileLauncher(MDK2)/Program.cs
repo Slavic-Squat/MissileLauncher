@@ -55,6 +55,7 @@ namespace IngameScript
                 _systemCoordinator.Command(argument);
             }
             _systemCoordinator.Run();
+            Echo($"Debug Counter: {DebugCounter}");
         }
     }
 }

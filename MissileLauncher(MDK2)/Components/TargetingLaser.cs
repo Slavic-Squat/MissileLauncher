@@ -264,6 +264,11 @@ namespace IngameScript
             {
                 IsControlPaused = false;
             }
+
+            public override string ToString()
+            {
+                return $"LASER [{ID}]\n----------------\nSTATUS: {(IsUnderControl ? "CONTROLLED" : "FREE")}\nLOCKED: {(HasTarget ? "YES" : "NO")}\nMAX DIST: {MaxRaycastDistance:0} m";
+            }
         }
     }
 }

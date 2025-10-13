@@ -93,7 +93,7 @@ namespace IngameScript
                 }
                 else
                 {
-                    fillColor = UIConfig.ButtonFillColor;
+                    fillColor = IsHighlighted ? UIConfig.ButtonFillColorHighlighted : UIConfig.ButtonFillColor;
                     borderColor = UIConfig.ButtonBorderColor;
                     textColor = UIConfig.ButtonTextColor;
                 }
@@ -141,7 +141,7 @@ namespace IngameScript
                     Alignment = TextAlignment.CENTER
                 };
 
-                _textSprite = SpriteHelper.CreateText(bounds, _textGetter(), textColor, _surface, TextAlignment.CENTER, true, _padding);
+                _textSprite = SpriteHelper.CreateText(bounds, _textGetter(), textColor, _surface, TextAlignment.CENTER, true, _borderThickness + _padding);
             }
 
             public void Press(DateTime time)

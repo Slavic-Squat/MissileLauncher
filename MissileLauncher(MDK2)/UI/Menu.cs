@@ -284,6 +284,7 @@ namespace IngameScript
                 if (input.CRelease)
                 {
                     Close();
+                    return;
                 }
 
                 List<IButton> allButtons = new List<IButton>(_commonButtons);

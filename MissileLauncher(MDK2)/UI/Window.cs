@@ -311,6 +311,7 @@ namespace IngameScript
                 if (input.CRelease)
                 {
                     Close();
+                    return;
                 }
 
                 if (_highlightables.Count == 0)
