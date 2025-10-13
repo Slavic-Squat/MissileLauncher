@@ -86,6 +86,7 @@ namespace IngameScript
 
                 long secureBroadcastPIN = Config.Get("Config", "SecureBroadcastPIN").ToInt64(123456);
                 Config.Set("Config", "SecureBroadcastPIN", secureBroadcastPIN.ToString());
+                _storageBlock.CustomData = Config.ToString();
 
                 CommandHandler = new CommandHandler(MePb, _commands);
                 CommunicationHandler = new CommunicationHandler(0, secureBroadcastPIN);
