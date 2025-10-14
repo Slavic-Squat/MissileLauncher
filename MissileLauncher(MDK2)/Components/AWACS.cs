@@ -120,8 +120,8 @@ namespace IngameScript
                         TimeSpan timeSinceLastDetection = time - Targets[targetID].TimeRecorded;
                         Vector3 estimatedTargetPos = Targets[targetID].Position + Targets[targetID].Velocity * (float)timeSinceLastDetection.TotalSeconds;
                         Vector3 estimatedTargetPosLocal = Vector3.TransformNormal(estimatedTargetPos - _referenceMatrix.Translation, Matrix.Transpose(_referenceMatrix));
-                        Vector3 estimatedTargetDirLocal = estimatedTargetPosLocal == Vector3.Zero ? Vector3.Zero : Vector3.Normalize(estimatedTargetPosLocal);
-                        float estimatedTargetDistance = (estimatedTargetPos - _referenceMatrix.Translation).Length();
+                        float estimatedTargetDistance = estimatedTargetPosLocal.Length();
+                        Vector3 estimatedTargetDirLocal = estimatedTargetDistance == 0 ? Vector3.Zero : estimatedTargetPosLocal / estimatedTargetDistance;
                         float targetElevation = MathHelper.ToDegrees((float)Math.Asin(estimatedTargetDirLocal.Y));
 
                         if (timeSinceLastDetection.TotalSeconds > 5 || estimatedTargetDistance >= MaxRaycastDistance * 0.8f || targetElevation >= 45)
