@@ -88,10 +88,14 @@ namespace IngameScript
                 {
                     Config.Clear();
                     Config.Set("Config", "SecureBroadcastPIN", "123456");
+                    Config.Set("Config", "IsMainClock", "TRUE");
                 }
 
                 long secureBroadcastPIN = Config.Get("Config", "SecureBroadcastPIN").ToInt64(123456);
                 Config.Set("Config", "SecureBroadcastPIN", secureBroadcastPIN.ToString());
+
+                IsMainClock = Config.Get("Config", "IsMainClock").ToBoolean(true);
+                Config.Set("Config", "IsMainClock", IsMainClock.ToString().ToUpper());
                 _storageBlock.CustomData = Config.ToString();
 
                 CommandHandler = new CommandHandler(MePb, _commands);
