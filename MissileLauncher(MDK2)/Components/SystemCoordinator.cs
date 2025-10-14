@@ -30,6 +30,7 @@ namespace IngameScript
             public static Vector3 ReferencePosition => ReferenceController.GetPosition();
             public static Vector3 ReferenceVelocity => ReferenceController.GetShipVelocities().LinearVelocity;
             public static long SelfID => ReferenceController.CubeGrid.EntityId;
+            public static EntityInfo SelfInfo { get; private set; }
 
             public MyIni Config { get; private set; }
             public CommunicationHandler CommunicationHandler { get; private set; }
@@ -120,6 +121,11 @@ namespace IngameScript
                 DebugEcho($"System Time: {SystemTime}");
                 CommunicationHandler.Recieve();
                 CommandHandler.RunCustomDataCommands();
+
+                SelfInfo = new EntityInfo(SelfID, ReferencePosition, ReferenceVelocity, SystemTime);
+                byte[] selfInfoData = SelfInfo.Serialize();
+
+                CommunicationHandler.SendBroadcast(selfInfoData, "FriendlyInfo", true);
 
                 foreach (var controlStation in ControlStations)
                 {

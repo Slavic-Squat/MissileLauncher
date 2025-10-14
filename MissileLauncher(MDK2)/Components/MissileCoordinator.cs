@@ -78,13 +78,6 @@ namespace IngameScript
                     bay.Run(time);
                 }
 
-                Vector3 selfPos = SystemCoordinator.ReferencePosition;
-                Vector3 selfVel = SystemCoordinator.ReferenceVelocity;
-                long selfID = SystemCoordinator.SelfID;
-                DateTime timeRecorded = time;
-
-                EntityInfo self = new EntityInfo(selfID, selfPos, selfVel, timeRecorded);
-
                 while (_communicationHandler.HasMessage("MyMissiles", true))
                 {
                     MyIGCMessage message;
@@ -112,7 +105,7 @@ namespace IngameScript
                         continue;
                     }
 
-                    byte[] selfData = self.Serialize();
+                    byte[] selfData = SystemCoordinator.SelfInfo.Serialize();
                     _communicationHandler.SendUnicast(selfData, missileAddress, "MyLauncherInfo", true);
 
                     long targetID = _addressTargetIDMap[missileAddress];
