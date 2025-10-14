@@ -7,6 +7,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using System.Net;
 using System.Text;
 using VRage;
 using VRage.Collections;
@@ -17,6 +18,7 @@ using VRage.Game.ModAPI.Ingame;
 using VRage.Game.ModAPI.Ingame.Utilities;
 using VRage.Game.ObjectBuilders.Definitions;
 using VRageMath;
+using static IngameScript.Program;
 
 namespace IngameScript
 {
@@ -32,6 +34,7 @@ namespace IngameScript
             public static long SelfID => ReferenceController.CubeGrid.EntityId;
             public static EntityInfo SelfInfo { get; private set; }
 
+            public bool IsMainClock { get; private set; } = true;
             public MyIni Config { get; private set; }
             public CommunicationHandler CommunicationHandler { get; private set; }
             public CommandHandler CommandHandler { get; private set; }
@@ -45,8 +48,10 @@ namespace IngameScript
             private Dictionary<string, Action<string[]>> _commands = new Dictionary<string, Action<string[]>>();
             private IMyTerminalBlock _storageBlock;
 
-            int _numOfControlStations;
-            int _numOfTargetingLasers;
+            private int _numOfControlStations;
+            private int _numOfTargetingLasers;
+
+            private DateTime _lastClockSync;
 
             public SystemCoordinator(int numOfControlStations, int numOfTargetingLasers)
             {
@@ -113,6 +118,10 @@ namespace IngameScript
                 AWACS = new AWACS(0);
                 TargetCoordinator = new TargetCoordinator(0, CommunicationHandler);
                 MissileCoordinator = new MissileCoordinator(0, 8, CommunicationHandler, TargetCoordinator.AllTargetsExt);
+
+                CommunicationHandler.RegisterBroadcastListener("FriendlyCommands", true);
+                _commands["SET_MAIN_CLOCK"] = (args) => SetMainClock(args[0]);
+                _commands["SYNC_CLOCK"] = (args) => SyncClock(args[0]);
             }
 
             public void Run()
@@ -145,9 +154,35 @@ namespace IngameScript
                 {
                     TargetCoordinator.AddLocalTarget(target);
                 }
+
+                if (IsMainClock && (SystemTime - _lastClockSync).TotalSeconds > 10)
+                {
+                    string command = $"SYNC_CLOCK {SystemTime.Ticks}";
+                    List<byte> commandData = new List<byte>()
+                    {
+                        (byte)SerializedTypes.Command,
+                    };
+                    commandData.AddRange(Encoding.ASCII.GetBytes(command));
+                    byte[] commandBytes = commandData.ToArray();
+                    CommunicationHandler.SendBroadcast(commandBytes, "FriendlyCommands", true);
+                    _lastClockSync = SystemTime;
+                }
+
+                while (CommunicationHandler.HasMessage("FriendlyCommands", true))
+                {
+                    MyIGCMessage msg;
+                    if (CommunicationHandler.TryRetrieveMessage("FriendlyCommands", true, out msg))
+                    {
+                        object msgObject = Deserializer.Deserialize(msg.Data as string);
+                        if (msgObject is string)
+                        {
+                            Command((string)msgObject);
+                        }
+                    }
+                }
             }
 
-            public void SyncTarget(TargetingLaser laser)
+            private void SyncTarget(TargetingLaser laser)
             {
                 EntityInfoExt target = laser.Target;
                 DebugEcho("SYNCING");
@@ -159,6 +194,22 @@ namespace IngameScript
             public void Command(string command)
             {
                 CommandHandler.RunCommands(command);
+            }
+
+            private void SetMainClock(string boolString)
+            {
+                bool parsedBool = boolString.ToUpper() == "TRUE" || boolString == "1";
+                IsMainClock = parsedBool;
+            }
+
+            private void SyncClock(string timeStringTicks)
+            {
+                if (IsMainClock) return;
+                long timeTicks;
+                if (long.TryParse(timeStringTicks, out timeTicks))
+                {
+                    SystemTime = new DateTime(timeTicks);
+                }
             }
         }
     }

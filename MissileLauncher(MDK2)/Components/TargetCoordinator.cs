@@ -49,7 +49,7 @@ namespace IngameScript
 
             private void Init()
             {
-                _communicationHandler.RegisterBroadcastListener("TargetInfo", true);
+                _communicationHandler.RegisterBroadcastListener("FriendlyTargetInfo", true);
                 _communicationHandler.RegisterBroadcastListener("AllMissiles", false);
                 _communicationHandler.RegisterBroadcastListener("FriendlyInfo", true);
 
@@ -61,10 +61,10 @@ namespace IngameScript
 
             public void Run(DateTime time)
             {
-                while (_communicationHandler.HasMessage("TargetInfo", true))
+                while (_communicationHandler.HasMessage("FriendlyTargetInfo", true))
                 {
                     MyIGCMessage message;
-                    if (_communicationHandler.TryRetrieveMessage("TargetInfo", true, out message))
+                    if (_communicationHandler.TryRetrieveMessage("FriendlyTargetInfo", true, out message))
                     {
                         object messageObject = Deserializer.Deserialize(message.Data as string);
                         if (messageObject is EntityInfo)
@@ -112,7 +112,7 @@ namespace IngameScript
 
                     var targetInfo = _targetsLocal[targetKey].Info;
                     byte[] data = targetInfo.Serialize();
-                    _communicationHandler.SendBroadcast(data, "TargetInfo", true);
+                    _communicationHandler.SendBroadcast(data, "FriendlyTargetInfo", true);
                 }
 
                 foreach (var targetKey in _targetsRemote.Keys.ToList())

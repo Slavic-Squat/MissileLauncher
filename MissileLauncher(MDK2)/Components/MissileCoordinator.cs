@@ -106,13 +106,13 @@ namespace IngameScript
                     }
 
                     byte[] selfData = SystemCoordinator.SelfInfo.Serialize();
-                    _communicationHandler.SendUnicast(selfData, missileAddress, "MyLauncherInfo", true);
+                    _communicationHandler.SendUnicast(selfData, missileAddress, "MyMissileLauncherInfo", true);
 
                     long targetID = _addressTargetIDMap[missileAddress];
                     if (_targetInfo.ContainsKey(targetID))
                     {
                         byte[] targetData = _targetInfo[targetID].Info.Serialize();
-                        _communicationHandler.SendUnicast(targetData, missileAddress, "MyTargetInfo", true);
+                        _communicationHandler.SendUnicast(targetData, missileAddress, "MyMissileTargetInfo", true);
                     }
                 }
 
@@ -254,12 +254,12 @@ namespace IngameScript
                 {
                     string command = $"SYNC_CLOCK {time.Ticks}";
                     List<byte> commandData = new List<byte>()
-                        {
-                            (byte)SerializedTypes.Command
-                        };
+                    {
+                        (byte)SerializedTypes.Command,
+                    };
                     commandData.AddRange(Encoding.ASCII.GetBytes(command));
                     byte[] commandBytes = commandData.ToArray();
-                    _communicationHandler.SendUnicast(commandBytes, address, "MyCommands", true);
+                    _communicationHandler.SendUnicast(commandBytes, address, "MyMissileCommands", true);
                 }
             }
 
@@ -272,11 +272,11 @@ namespace IngameScript
                     string command = "ABORT";
                     List<byte> commandData = new List<byte>()
                     {
-                        (byte)SerializedTypes.Command
+                        (byte)SerializedTypes.Command,
                     };
                     commandData.AddRange(Encoding.ASCII.GetBytes(command));
                     byte[] commandBytes = commandData.ToArray();
-                    _communicationHandler.SendUnicast(commandBytes, address, "MyCommands", true);
+                    _communicationHandler.SendUnicast(commandBytes, address, "MyMissileCommands", true);
                 }
             }
         }
