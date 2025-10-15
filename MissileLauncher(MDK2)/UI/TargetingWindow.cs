@@ -178,8 +178,8 @@ namespace IngameScript
                 InfoPanel targetingInfoPanel = new InfoPanel(targetingInfoPanelPos, targetingInfoPanelSize, 5f, 10f, targetingInfoGetter, Display);
                 AddInfoPanel(targetingInfoPanel);
 
-                Vector2 navModeInfoPanelSize = new Vector2(155f, 35f);
-                Vector2 navModeInfoPanelPos = Pos + new Vector2(0, 100f + 20f + navFilterPanel.Size.Y);
+                Vector2 navModeInfoPanelSize = new Vector2(180f, 35f);
+                Vector2 navModeInfoPanelPos = Pos + new Vector2(0, Size.Y - navModeInfoPanelSize.Y);
                 Func<string> navModeInfoGetter = () => $"NAV MODE: {GetName(NavMode)}";
                 InfoPanel navModeInfoPanel = new InfoPanel(navModeInfoPanelPos, navModeInfoPanelSize, 3f, 5f, navModeInfoGetter, Display);
                 AddInfoPanel(navModeInfoPanel);
