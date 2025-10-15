@@ -169,7 +169,7 @@ namespace IngameScript
                 ControlPanel actionsPanel = UIFactory.CreateTargetingActionsPanel(actionsPanelPos, this);
                 AddControlPanel(actionsPanel);
 
-                Vector2 coordinatorInfoPanelSize = new Vector2(150, 200f);
+                Vector2 coordinatorInfoPanelSize = new Vector2(200, 100f);
                 Vector2 coordinatorInfoPanelPos = Pos + new Vector2(Size.X - coordinatorInfoPanelSize.X, 0);
 
                 MissileCoordinator coordinator = UI.UIWireManager.MissileCoordinator;
@@ -178,14 +178,15 @@ namespace IngameScript
                 AddInfoPanel(coordinatorInfoPanel);
             }
 
-            private void OpenEntityMenu(long entityID)
+            private bool OpenEntityMenu(long entityID)
             {
                 if (_allEntities.Keys.Contains(entityID))
                 {
                     Vector2 menuPos = Pos + new Vector2(Size.X * 0.5f, Size.Y - 100f);
                     Menu menu = UIFactory.CreateEntityMenu(menuPos, entityID, this, true, true);
-                    OpenMenu(menu);
+                    return OpenMenu(menu);
                 }
+                return false;
             }
 
             private void SelectEntity(long entityID)
@@ -198,9 +199,9 @@ namespace IngameScript
                 SelectedEntityID = -1;
             }
 
-            public override void Update(DateTime time)
+            public override bool Update(DateTime time)
             {
-                if (!IsOpen) return;
+                if (!IsOpen) return false;
                 base.Update(time);
 
                 _allEntities = UI.UIWireManager.GetAllEntities();
@@ -209,11 +210,12 @@ namespace IngameScript
                 {
                     UnselectEntity();
                 }
+                return true;
             }
 
-            public override void Draw(MySpriteDrawFrame frame)
+            public override bool Draw(MySpriteDrawFrame frame)
             {
-                if (!IsOpen) return;
+                if (!IsOpen) return false;
                 BuildSprites();
                 frame.Add(_borderSprite);
                 frame.Add(_fillSprite);
@@ -247,9 +249,10 @@ namespace IngameScript
                 {
                     _highlightedElement?.Draw(frame);
                 }
+                return true;
             }
 
-            public void CycleNavMode()
+            public bool CycleNavMode()
             {
                 switch (NavMode)
                 {
@@ -261,39 +264,43 @@ namespace IngameScript
                 }
 
                 NavMode = NextNavMode(NavMode);
+                return true;
             }
 
-            public void CycleScopeScale()
+            public bool CycleScopeScale()
             {
                 ScopeScale = NextScopeScale(ScopeScale);
                 _targetingSpriteBuilder.Zoom = GetValue(ScopeScale);
+                return true;
             }
 
-            public void CycleTypeFilter()
+            public bool CycleTypeFilter()
             {
                 NavTypeFilter = NextEntityTypeFilter(NavTypeFilter);
+                return true;
             }
 
-            public void CycleRelationFilter()
+            public bool CycleRelationFilter()
             {
                 NavRelationFilter = NextEntityRelationFilter(NavRelationFilter);
+                return true;
             }
 
-            public void CycleSourceFilter()
+            public bool CycleSourceFilter()
             {
                 NavSourceFilter = NextEntitySourceFilter(NavSourceFilter);
+                return true;
             }
 
-            public override void Navigate(UserInput input, object caller)
+            public override bool Navigate(UserInput input, object caller)
             {
                 if (!IsOpen || !IsNavigating || IsPaused || !ReferenceEquals(Parent, caller))
                 {
-                    return;
+                    return false;
                 }
                 if (_navigatedElement != null)
                 {
-                    _navigatedElement.Navigate(input, this);
-                    return;
+                    return _navigatedElement.Navigate(input, this);
                 }
 
                 if (input.QRelease)
@@ -310,19 +317,20 @@ namespace IngameScript
                         NavigateTargeting(input);
                         break;
                 }
+                return true;
             }
 
-            private void NavigateUI(UserInput input, object caller)
+            private bool NavigateUI(UserInput input, object caller)
             {
-                base.Navigate(input, caller);
+                return base.Navigate(input, caller);
             }
 
-            private void NavigateTargeting(UserInput input)
+            private bool NavigateTargeting(UserInput input)
             {
                 if (input.CRelease)
                 {
                     Close();
-                    return;
+                    return false;
                 }
 
                 Dictionary<long, MyEntitySprite> filtered = _entitySprites.Where(kvp => Matches(kvp.Value.EntityInfo, NavTypeFilter, NavRelationFilter, NavSourceFilter)).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
@@ -330,7 +338,7 @@ namespace IngameScript
                 if (filtered.Count() == 0)
                 {
                     UnselectEntity();
-                    return;
+                    return false;
                 }
                 else if (!filtered.Keys.Contains(SelectedEntityID))
                 {
@@ -363,6 +371,8 @@ namespace IngameScript
                 {
                     OpenEntityMenu(SelectedEntityID);
                 }
+
+                return true;
             }
         }
     }

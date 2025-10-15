@@ -179,34 +179,37 @@ namespace IngameScript
                 }
             }
 
-            private void SyncTarget(TargetingLaser laser)
+            private bool SyncTarget(TargetingLaser laser)
             {
                 EntityInfoExt target = laser.Target;
-                DebugEcho("SYNCING");
 
-                if (target.IsValid)
-                    AWACS.AddTarget(target);
+                if (!target.IsValid) return false;
+
+                AWACS.AddTarget(target);
+                return true;
             }
 
-            public void Command(string command)
+            public bool Command(string command)
             {
-                CommandHandler.RunCommands(command);
+                return CommandHandler.RunCommands(command);
             }
 
-            private void SetMainClock(string boolString)
+            private bool SetMainClock(string boolString)
             {
                 bool parsedBool = boolString.ToUpper() == "TRUE" || boolString == "1";
                 IsMainClock = parsedBool;
+                return true;
             }
 
-            private void SyncClock(string timeStringTicks)
+            private bool SyncClock(string timeStringTicks)
             {
-                if (IsMainClock) return;
+                if (IsMainClock) return false;
                 long timeTicks;
                 if (long.TryParse(timeStringTicks, out timeTicks))
                 {
                     SystemTime = new DateTime(timeTicks);
                 }
+                return true;
             }
         }
     }

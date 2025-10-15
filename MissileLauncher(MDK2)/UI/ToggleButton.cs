@@ -164,11 +164,11 @@ namespace IngameScript
                 _textSprite = SpriteHelper.CreateText(bounds, _textGetter(), textColor, _surface, TextAlignment.CENTER, true, _borderThickness + _padding);
             }
 
-            public void Press()
+            public bool Press()
             {
                 if (!CanPress)
                 {
-                    return;
+                    return false;
                 }
 
                 _timePressed = Time;
@@ -178,7 +178,7 @@ namespace IngameScript
                     if (_onRelease?.Invoke() == false)
                     {
                         _state |= ButtonState.Errored;
-                        return;
+                        return false;
                     }
                 }
                 else
@@ -186,22 +186,25 @@ namespace IngameScript
                     if (_onPress?.Invoke() == false)
                     {
                         _state |= ButtonState.Errored;
-                        return;
+                        return false;
                     }
                 }
+                return true;
             }
 
-            public void Highlight()
+            public bool Highlight()
             {
                 _state |= ButtonState.Highlighted;
+                return true;
             }
 
-            public void Unhighlight()
+            public bool Unhighlight()
             {
                 _state &= ~ButtonState.Highlighted;
+                return true;
             }
 
-            public void Update(DateTime time)
+            public bool Update(DateTime time)
             {
                 Time = time;
                 if (_isPressed?.Invoke() == true)
@@ -226,9 +229,10 @@ namespace IngameScript
                 {
                     _state |= ButtonState.Disabled;
                 }
+                return true;
             }
 
-            public void Draw(MySpriteDrawFrame frame)
+            public bool Draw(MySpriteDrawFrame frame)
             {
                 BuildSprites();
                 if (IsHighlighted)
@@ -238,6 +242,7 @@ namespace IngameScript
                 frame.Add(_borderSprite);
                 frame.Add(_fillSprite);
                 frame.Add(_textSprite);
+                return true;
             }
         }
     }

@@ -27,13 +27,13 @@ namespace IngameScript
             IController Controller { get; }
             bool IsControlPaused { get; }
             bool IsUnderControl { get; }
-            event Action<IControllable> RequestRelease;
+            event Func<IControllable, bool> RequestRelease;
 
-            void Control(UserInput input, object caller);
+            bool Control(UserInput input, object caller);
             bool GiveControl(IController controller);
-            void RevokeControl(IController controller);
-            void PauseControl();
-            void ResumeControl();
+            bool RevokeControl(IController controller);
+            bool PauseControl();
+            bool ResumeControl();
         }
     }
 }

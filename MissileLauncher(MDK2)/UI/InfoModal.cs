@@ -87,13 +87,14 @@ namespace IngameScript
                 _textSprite = SpriteHelper.CreateText(Bounds, _text, new Color(252, 3, 94, 255), _surface, TextAlignment.CENTER, true, _borderThickness + _padding);
             }
 
-            public void Draw(MySpriteDrawFrame frame)
+            public bool Draw(MySpriteDrawFrame frame)
             {
                 BuildSprites();
                 frame.Add(_obscureSprite);
                 frame.Add(_borderSprite);
                 frame.Add(_fillSprite);
                 frame.Add(_textSprite);
+                return true;
             }
         }
     }

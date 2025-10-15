@@ -25,9 +25,9 @@ namespace IngameScript
         public interface IMenu : INavigable, IUpdatable
         {
             bool IsOpen { get; }
-            event Action<IMenu> RequestClose;
-            void Open(object caller);
-            void Close(object caller);
+            event Func<IMenu, bool> RequestClose;
+            bool Open(object caller);
+            bool Close(object caller);
         }
     }
 }

@@ -178,16 +178,18 @@ namespace IngameScript
                 _lastRunTime = time;
             }
 
-            public void AddTarget(EntityInfoExt target)
+            public bool AddTarget(EntityInfoExt target)
             {
                 Targets[target.EntityID] = target;
                 TargetsSyncInfo[target.EntityID] = false;
+                return true;
             }
 
-            public void RemoveTarget(long targetID)
+            public bool RemoveTarget(long targetID)
             {
                 Targets.Remove(targetID);
                 TargetsSyncInfo.Remove(targetID);
+                return true;
             }
         }
     }

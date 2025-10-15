@@ -34,7 +34,7 @@ namespace IngameScript
             public bool IsHighlighted { get; private set; } = false;
             public bool IsNavigating { get; private set; } = false;
             public bool IsPaused { get; private set; } = true;
-            public event Action<INavigable> RequestStopNavigation;
+            public event Func<INavigable, bool> RequestStopNavigation;
 
 
             private RectangleF _bounds;
@@ -105,61 +105,67 @@ namespace IngameScript
                 };
             }
 
-            public void Highlight()
+            public bool Highlight()
             {
                 IsHighlighted = true;
+                return true;
             }
 
-            public void Unhighlight()
+            public bool Unhighlight()
             {
                 IsHighlighted = false;
+                return true;
             }
 
-            public void StartNavigation(object caller)
+            public bool StartNavigation(object caller)
             {
                 if (!ReferenceEquals(Parent, caller))
                 {
-                    return;
+                    return false;
                 }
                 IsNavigating = true;
                 ResumeNavigation();
+                return true;
             }
 
-            private void StopNavigation()
+            private bool StopNavigation()
             {
-                RequestStopNavigation?.Invoke(this);
+                return RequestStopNavigation?.Invoke(this) ?? false;
             }
 
-            public void StopNavigation(object caller)
+            public bool StopNavigation(object caller)
             {
                 if (!ReferenceEquals(Parent, caller))
                 {
-                    return;
+                    return false;
                 }
                 IsNavigating = false;
                 PauseNavigation();
+                return true;
             }
 
-            public void PauseNavigation()
+            public bool PauseNavigation()
             {
                 IsPaused = true;
                 UnhighlightButton(_highlightedButton);
+                return true;
             }
 
-            public void ResumeNavigation()
+            public bool ResumeNavigation()
             {
                 IsPaused = false;
+                return true;
             }
 
-            public void AddButton(IButton button, int pageIndex)
+            public bool AddButton(IButton button, int pageIndex)
             {
-                if (button == null) return;
+                if (button == null) return false;
                 if (pageIndex < 0)
                 {
                     _commonButtons.Add(button);
                     _commonUpdatables.Add(button);
                     _commonUIElements.Add(button);
-                    return;
+                    return true;
                 }
                 else
                 {
@@ -174,14 +180,15 @@ namespace IngameScript
                     var page = _pages[pageIndex];
                     page.AddButton(button);
                 }
+                return true;
             }
 
-            public void AddSprite(MySprite sprite, int pageIndex)
+            public bool AddSprite(MySprite sprite, int pageIndex)
             {
                 if (pageIndex < 0)
                 {
                     _commonSprites.Add(sprite);
-                    return;
+                    return true;
                 }
                 else
                 {
@@ -196,15 +203,16 @@ namespace IngameScript
                     var page = _pages[pageIndex];
                     page.Sprites.Add(sprite);
                 }
+                return true;
             }
 
-            public void AddInfoPanel(InfoPanel panel, int pageIndex)
+            public bool AddInfoPanel(InfoPanel panel, int pageIndex)
             {
-                if (panel == null) return;
+                if (panel == null) return false;
                 if (pageIndex < 0)
                 {
                     _commonUIElements.Add(panel);
-                    return;
+                    return true;
                 }
                 else
                 {
@@ -219,31 +227,34 @@ namespace IngameScript
                     var page = _pages[pageIndex];
                     page.AddInfoPanel(panel);
                 }
+                return true;
             }
 
-            private void HighlightButton(IButton button)
+            private bool HighlightButton(IButton button)
             {
                 if (button == null || ReferenceEquals(button, _highlightedButton))
                 {
-                    return;
+                    return false;
                 }
                 UnhighlightButton(_highlightedButton);
                 button.Highlight();
                 _highlightedButton = button;
+                return true;
             }
 
-            private void UnhighlightButton(IButton button)
+            private bool UnhighlightButton(IButton button)
             {
-                if (button == null) return;
+                if (button == null) return false;
                 button.Unhighlight();
 
                 if (ReferenceEquals(button, _highlightedButton))
                 {
                     _highlightedButton = null;
                 }
+                return true;
             }
 
-            public void Update(DateTime time)
+            public bool Update(DateTime time)
             {
                 Time = time;
                 foreach (var updatable in _commonUpdatables)
@@ -255,15 +266,17 @@ namespace IngameScript
                 {
                     page.Updateables.ForEach(u => u.Update(time));
                 }
+                return true;
             }
 
-            private void ActivateButton(IButton button)
+            private bool ActivateButton(IButton button)
             {
-                if (button == null) return;
+                if (button == null) return false;
                 button.Press();
+                return true;
             }
 
-            public void Draw(MySpriteDrawFrame frame)
+            public bool Draw(MySpriteDrawFrame frame)
             {
                 BuildSprites();
                 if (IsHighlighted && (IsPaused || !IsNavigating))
@@ -289,19 +302,20 @@ namespace IngameScript
                     currentPage.Sprites.ForEach(s => frame.Add(s));
                     currentPage.UIElements.ForEach(e => e.Draw(frame));
                 }
+                return true;
             }
 
-            public void Navigate(UserInput input, object caller)
+            public bool Navigate(UserInput input, object caller)
             {
                 if (!IsNavigating || IsPaused || !ReferenceEquals(Parent, caller))
                 {
-                    return;
+                    return false;
                 }
 
                 if (input.CRelease)
                 {
                     StopNavigation();
-                    return;
+                    return false;
                 }
 
                 List<IButton> allButtons = new List<IButton>(_commonButtons);
@@ -324,7 +338,7 @@ namespace IngameScript
 
                 if (allButtons.Count == 0)
                 {
-                    return;
+                    return false;
                 }
 
                 if (!allButtons.Contains(_highlightedButton))
@@ -357,6 +371,7 @@ namespace IngameScript
                 {
                     ActivateButton(_highlightedButton);
                 }
+                return true;
             }
         }
     }

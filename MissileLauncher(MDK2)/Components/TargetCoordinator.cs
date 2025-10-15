@@ -128,7 +128,7 @@ namespace IngameScript
                 }
             }
 
-            private void AddRemoteTarget(EntityInfo entityInfo, bool friendly)
+            private bool AddRemoteTarget(EntityInfo entityInfo, bool friendly)
             {
                 var entityID = entityInfo.EntityID;
                 var relationID = entityID;
@@ -137,7 +137,7 @@ namespace IngameScript
                 {
                     if (entityInfo.SubType != EntityInfoSubType.MissileInfoLite)
                     {
-                        return;
+                        return false;
                     }
 
                     relationID = entityInfo.MissileInfoLite.Value.LauncherID;
@@ -145,7 +145,7 @@ namespace IngameScript
 
                 if (entityID == SystemCoordinator.SelfID || relationID == SystemCoordinator.SelfID)
                 {
-                    return;
+                    return false;
                 }
 
                 if (friendly)
@@ -181,16 +181,17 @@ namespace IngameScript
                     var original = AllTargetsExt[entityID];
                     AllTargetsExt[entityID] = original.Merge(entityInfoExt);
                 }
+                return true;
             }
 
-            public void AddLocalTarget(EntityInfoExt targetInfoExt)
+            public bool AddLocalTarget(EntityInfoExt targetInfoExt)
             {
                 var entityID = targetInfoExt.EntityID;
                 var relationID = entityID;
 
                 if (entityID == SystemCoordinator.SelfID)
                 {
-                    return;
+                    return false;
                 }
 
                 SetTargetRelation(relationID, targetInfoExt.Relation);
@@ -214,9 +215,10 @@ namespace IngameScript
                     var original = AllTargetsExt[entityID];
                     AllTargetsExt[entityID] = original.Merge(targetInfoExt);
                 }
+                return true;
             }
 
-            private void RemoveRemoteTarget(long entityID)
+            private bool RemoveRemoteTarget(long entityID)
             {
                 _targetsRemote.Remove(entityID);
 
@@ -234,9 +236,10 @@ namespace IngameScript
                         AllTargetsExt[entityID] = newInfo;
                     }
                 }
+                return true;
             }
 
-            private void RemoteLocalTarget(long entityID)
+            private bool RemoteLocalTarget(long entityID)
             {
                 _targetsLocal.Remove(entityID);
 
@@ -254,9 +257,10 @@ namespace IngameScript
                         AllTargetsExt[entityID] = newInfo;
                     }
                 }
+                return true;
             }
 
-            public void SetTargetRelation(long entityID, EntityRelation relation)
+            public bool SetTargetRelation(long entityID, EntityRelation relation)
             {
                 switch (relation)
                 {
@@ -311,6 +315,7 @@ namespace IngameScript
                         _targetsRemote[id] = newInfo;
                     }
                 }
+                return true;
             }
         }
     }

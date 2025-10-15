@@ -25,8 +25,8 @@ namespace IngameScript
         public interface IHighlightable : IUIElement
         {
             bool IsHighlighted { get; }
-            void Highlight();
-            void Unhighlight();
+            bool Highlight();
+            bool Unhighlight();
         }
     }
 }

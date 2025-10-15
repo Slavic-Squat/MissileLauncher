@@ -145,11 +145,11 @@ namespace IngameScript
                 _textSprite = SpriteHelper.CreateText(bounds, _textGetter(), textColor, _surface, TextAlignment.CENTER, true, _borderThickness + _padding);
             }
 
-            public void Press()
+            public bool Press()
             {
                 if (!CanPress)
                 {
-                    return;
+                    return false;
                 }
 
                 _timePressed = Time;
@@ -157,22 +157,25 @@ namespace IngameScript
                 if (_action?.Invoke() == false)
                 {
                     _state |= ButtonState.Errored;
-                    return;
+                    return false;
                 }
                 _state |= ButtonState.Pressed;
+                return true;
             }
 
-            public void Highlight()
+            public bool Highlight()
             {
                 _state |= ButtonState.Highlighted;
+                return true;
             }
 
-            public void Unhighlight()
+            public bool Unhighlight()
             {
                 _state &= ~ButtonState.Highlighted;
+                return true;
             }
 
-            public void Update(DateTime time)
+            public bool Update(DateTime time)
             {
                 Time = time;
                 if (time - _timePressed > TimeSpan.FromSeconds(1) && _state.HasFlag(ButtonState.Pressed))
@@ -192,9 +195,10 @@ namespace IngameScript
                 {
                     _state |= ButtonState.Disabled;
                 }
+                return true;
             }
 
-            public void Draw(MySpriteDrawFrame frame)
+            public bool Draw(MySpriteDrawFrame frame)
             {
                 BuildSprites();
                 if (IsHighlighted)
@@ -204,6 +208,7 @@ namespace IngameScript
                 frame.Add(_borderSprite);
                 frame.Add(_fillSprite);
                 frame.Add(_textSprite);
+                return true;
             }
         }
     }

@@ -99,13 +99,14 @@ namespace IngameScript
                 return true;
             }
 
-            public void ReleaseFireControl(MissileCoordinator coordinator)
+            public bool ReleaseFireControl(MissileCoordinator coordinator)
             {
-                coordinator.RevokeFireControl(this);
+                bool success = coordinator.RevokeFireControl(this);
                 HasFireControl = false;
+                return success;
             }
 
-            public void TakeControl(IControllable controllable)
+            public bool TakeControl(IControllable controllable)
             {
                 if (IsControlling)
                 {
@@ -113,23 +114,25 @@ namespace IngameScript
                 }
                 if (controllable == null || !controllable.GiveControl(this))
                 {
-                    return;
+                    return false;
                 }
                 controllable.RequestRelease += ReleaseControl;
                 Controllable = controllable;
 
                 _ui.OpenModal(new InfoModal(_ui.Bounds.Center - _ui.Bounds.Size * 0.75f * 0.5f, _ui.Bounds.Size * 0.75f, 10f, 10f, () => !IsControlling, $"UI Navigation Disabled\nReason: Controlling Object", PrimaryDisplay));
+                return true;
             }
 
-            public void ReleaseControl(IControllable controllable)
+            public bool ReleaseControl(IControllable controllable)
             {
                 if (controllable == null || !ReferenceEquals(Controllable, controllable))
                 {
-                    return;
+                    return false;
                 }
                 controllable.RevokeControl(this);
                 controllable.RequestRelease -= ReleaseControl;
                 Controllable = null;
+                return true;
             }
         }
     }

@@ -27,12 +27,12 @@ namespace IngameScript
             object Parent { get; }
             bool IsNavigating { get; }
             bool IsPaused { get; }
-            event Action<INavigable> RequestStopNavigation;
-            void StartNavigation(object caller);
-            void StopNavigation(object caller);
-            void PauseNavigation();
-            void ResumeNavigation();
-            void Navigate(UserInput input, object caller);
+            event Func<INavigable, bool> RequestStopNavigation;
+            bool StartNavigation(object caller);
+            bool StopNavigation(object caller);
+            bool PauseNavigation();
+            bool ResumeNavigation();
+            bool Navigate(UserInput input, object caller);
         }
     }
 }

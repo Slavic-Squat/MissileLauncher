@@ -66,24 +66,25 @@ namespace IngameScript
                 }
             }
 
-            public void OpenWindow(IWindow window)
+            public bool OpenWindow(IWindow window)
             {
                 if (window == null || ReferenceEquals(_activeWindow, window) || !ReferenceEquals(this, window.Parent))
                 {
-                    return;
+                    return false;
                 }
                 CloseWindow(_activeWindow);
                 _activeWindow = window;
                 window.Open(this);
                 window.StartNavigation(this);
                 window.RequestClose += CloseWindow;
+                return true;
             }
 
-            public void CloseWindow(IWindow window)
+            public bool CloseWindow(IWindow window)
             {
                 if (window == null || !ReferenceEquals(this, window.Parent))
                 {
-                    return;
+                    return false;
                 }
                 if (ReferenceEquals(_activeWindow, window))
                 {
@@ -92,18 +93,20 @@ namespace IngameScript
                 window.Close(this);
                 window.StopNavigation(this);
                 window.RequestClose -= CloseWindow;
+                return true;
             }
 
-            public void OpenModal(IModal modal)
+            public bool OpenModal(IModal modal)
             {
                 if (modal == null || ReferenceEquals(_activeModal, modal))
                 {
-                    return;
+                    return false;
                 }
                 _activeModal = modal;
+                return true;
             }
 
-            public void Update(DateTime time)
+            public bool Update(DateTime time)
             {
                 if (_activeModal?.CanClose ?? false)
                 {
@@ -117,27 +120,30 @@ namespace IngameScript
                 }
 
                 _activeWindow?.Update(time);
+                return true;
             }
 
-            public void Navigate(UserInput input, object caller)
+            public bool Navigate(UserInput input, object caller)
             {
                 if (!ReferenceEquals(Station, caller))
                 {
-                    return;
+                    return false;
                 }
                 if (_activeModal != null)
                 {
-                    return;
+                    return true;
                 }
                 _activeWindow?.Navigate(input, this);
+                return true;
             }
 
-            public void Draw()
+            public bool Draw()
             {
                 var frame = Display.DrawFrame();
                 _activeWindow?.Draw(frame);
                 _activeModal?.Draw(frame);
                 frame.Dispose();
+                return true;
             }
         }
     }

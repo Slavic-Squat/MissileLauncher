@@ -118,7 +118,7 @@ namespace IngameScript
                 
                 if (MissileID != -1 && MissileAddress != -1 && MissileType != MissileType.Unknown && MissileGuidanceType != MissileGuidanceType.Unknown && MissilePayload != MissilePayload.Unknown)
                 {
-                    Status = BayStatus.Loaded;
+                    Status = BayStatus.Ready;
                 }
             }
 
@@ -143,26 +143,16 @@ namespace IngameScript
                 }
             }
 
-            public bool ActivateMissile()
+            public bool Launch()
             {
-                if (Status == BayStatus.Loaded)
+                if (Status == BayStatus.Ready)
                 {
                     _missileComputer.Enabled = true;
                     if (!_missileComputer.TryRun("ON"))
                     {
                         return false;
                     }
-                    _missileComputer.CustomData += $"\nACTIVATE {IGCS.Me} {Time.Ticks}";                    
-                    Status = BayStatus.Ready;
-                    return true;
-                }
-                return false;
-            }
-
-            public bool Launch()
-            {
-                if (Status == BayStatus.Ready)
-                {
+                    _missileComputer.CustomData += $"\nACTIVATE {IGCS.Me} {Time.Ticks}";
                     _missileComputer.CustomData += $"\nLAUNCH";
                     Status = BayStatus.Launching;
                     return true;

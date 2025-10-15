@@ -37,7 +37,7 @@ namespace IngameScript
                 _storageBlock.CustomData = _commandsHeader;
             }
 
-            public void RunCustomDataCommands()
+            public bool RunCustomDataCommands()
             {
                 string commands = null;
                 if (!_storageBlock.CustomData.StartsWith(_commandsHeader))
@@ -50,16 +50,18 @@ namespace IngameScript
                 }
                 if (commands != null && commands != "")
                 {
-                    RunCommands(commands);
+                    bool success = RunCommands(commands);
                     _storageBlock.CustomData = _commandsHeader;
+                    return success;
                 }
+                return false;
             }
 
-            public void RunCommands(string commandsString)
+            public bool RunCommands(string commandsString)
             {
                 if (commandsString == null || commandsString == "")
                 {
-                    return;
+                    return false;
                 }
                 string[] separatedCommandStrings = commandsString.Split('|', '\n');
                 foreach (string commandString in separatedCommandStrings)
@@ -84,6 +86,7 @@ namespace IngameScript
                         }
                     }
                 }
+                return true;
             }
         }
     }

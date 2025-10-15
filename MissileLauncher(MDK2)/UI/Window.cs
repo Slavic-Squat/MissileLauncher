@@ -34,8 +34,8 @@ namespace IngameScript
             public bool IsOpen { get; private set; } = false;
             public bool IsNavigating { get; private set; } = false;
             public bool IsPaused { get; private set; } = true;
-            public event Action<IWindow> RequestClose;
-            public event Action<INavigable> RequestStopNavigation;
+            public event Func<IWindow, bool> RequestClose;
+            public event Func<INavigable, bool> RequestStopNavigation;
 
             public IMyTextSurface Display => UI.Display;
 
@@ -104,108 +104,119 @@ namespace IngameScript
                 };
             }
 
-            public virtual void Open(object caller)
+            public virtual bool Open(object caller)
             {
                 if (!ReferenceEquals(Parent, caller))
                 {
-                    return;
+                    return false;
                 }
                 IsOpen = true;
+                return true;
             }
 
-            protected virtual void Close()
+            protected virtual bool Close()
             {
-                RequestClose?.Invoke(this);
+                return RequestClose?.Invoke(this) ?? false;
             }
 
-            public virtual void Close(object caller)
+            public virtual bool Close(object caller)
             {
                 if (!ReferenceEquals(Parent, caller))
                 {
-                    return;
+                    return false;
                 }
                 IsOpen = false;
+                return true;
             }
 
-            public virtual void StartNavigation(object caller)
+            public virtual bool StartNavigation(object caller)
             {
                 if (!ReferenceEquals(Parent, caller))
                 {
-                    return;
+                    return false;
                 }
                 IsNavigating = true;
                 ResumeNavigation();
+                return true;
             }
 
-            protected virtual void StopNavigation()
+            protected virtual bool StopNavigation()
             {
-                RequestStopNavigation?.Invoke(this);
+                return RequestStopNavigation?.Invoke(this) ?? false;
             }
 
-            public virtual void StopNavigation(object caller)
+            public virtual bool StopNavigation(object caller)
             {
                 if (!ReferenceEquals(Parent, caller))
                 {
-                    return;
+                    return false;
                 }
                 IsNavigating = false;
                 PauseNavigation();
+                return true;
             }
 
-            public virtual void ResumeNavigation()
+            public virtual bool ResumeNavigation()
             {
                 IsPaused = false;
+                return true;
             }
 
-            public virtual void PauseNavigation()
+            public virtual bool PauseNavigation()
             {
                 IsPaused = true;
                 UnhighlightElement(_highlightedElement);
+                return true;
             }
 
-            public virtual void AddButton(IButton button)
+            public virtual bool AddButton(IButton button)
             {
-                if (button == null) return;
+                if (button == null) return false;
                 _uiElements.Add(button);
                 _updatables.Add(button);
                 _highlightables.Add(button);
+                return true;
             }
 
-            public virtual void AddSprite(MySprite sprite)
+            public virtual bool AddSprite(MySprite sprite)
             {
                 _additionalSprites.Add(sprite);
+                return true;
             }
 
-            public virtual void AddInfoPanel(InfoPanel panel)
+            public virtual bool AddInfoPanel(InfoPanel panel)
             {
-                if (panel == null) return;
+                if (panel == null) return false;
                 _uiElements.Add(panel);
+                return true;
             }
 
-            public virtual void AddControlPanel(ControlPanel panel)
+            public virtual bool AddControlPanel(ControlPanel panel)
             {
-                if (panel == null || !ReferenceEquals(this, panel.Parent)) return;
+                if (panel == null || !ReferenceEquals(this, panel.Parent)) return false;
                 _uiElements.Add(panel);
                 _updatables.Add(panel);
                 _highlightables.Add(panel);
+                return true;
             }
 
-            protected virtual void HighlightElement(IHighlightable highlightable)
+            protected virtual bool HighlightElement(IHighlightable highlightable)
             {
                 if (highlightable == null || ReferenceEquals(highlightable, _highlightedElement))
                 {
-                    return;
+                    return false;
                 }
                 UnhighlightElement(_highlightedElement);
                 highlightable.Highlight();
                 _highlightedElement = highlightable;
+                return true;
             }
 
-            protected virtual void UnhighlightElement(IHighlightable hightlightable)
+            protected virtual bool UnhighlightElement(IHighlightable hightlightable)
             {
                 if (hightlightable == null)
                 {
-                    return;
+                    return false;
                 }
                 hightlightable.Unhighlight();
 
@@ -213,11 +224,12 @@ namespace IngameScript
                 {
                     _highlightedElement = null;
                 }
+                return true;
             }
 
-            protected virtual void ActivateHighlightable(IHighlightable highlightable)
+            protected virtual bool ActivateHighlightable(IHighlightable highlightable)
             {
-                if (highlightable == null) return;
+                if (highlightable == null) return false;
                 if (highlightable is IButton)
                 {
                     ((IButton)highlightable).Press();
@@ -226,13 +238,14 @@ namespace IngameScript
                 {
                     StartNavigatingElement((INavigable)highlightable);
                 }
+                return true;
             }
 
-            public virtual void StartNavigatingElement(INavigable navigable)
+            public virtual bool StartNavigatingElement(INavigable navigable)
             {
                 if (navigable == null || ReferenceEquals(navigable, _navigatedElement) || !ReferenceEquals(this, navigable.Parent))
                 {
-                    return;
+                    return false;
                 }
                 _navigables.Add(navigable);
                 navigable.StartNavigation(this);
@@ -240,13 +253,14 @@ namespace IngameScript
                 
                 _navigatedElement?.PauseNavigation();
                 _navigatedElement = navigable;
+                return true;
             }
 
-            public virtual void StopNavigatingElement(INavigable navigable)
+            public virtual bool StopNavigatingElement(INavigable navigable)
             {
                 if (navigable == null || !ReferenceEquals(this, navigable.Parent))
                 {
-                    return;
+                    return false;
                 }
 
                 navigable.StopNavigation(this);
@@ -262,11 +276,12 @@ namespace IngameScript
                         _navigatedElement.ResumeNavigation();
                     }
                 }
+                return true;
             }
 
-            public virtual void OpenMenu(IMenu menu)
+            public virtual bool OpenMenu(IMenu menu)
             {
-                if (menu == null || !ReferenceEquals(this, menu.Parent)) return;
+                if (menu == null || !ReferenceEquals(this, menu.Parent)) return false;
                 _updatables.Add(menu);
                 _uiElements.Add(menu);
 
@@ -274,13 +289,12 @@ namespace IngameScript
                 menu.RequestClose += CloseMenu;
 
                 StartNavigatingElement(menu);
-
-                
+                return true;
             }
 
-            public virtual void CloseMenu(IMenu menu)
+            public virtual bool CloseMenu(IMenu menu)
             {
-                if (menu == null || !ReferenceEquals(this, menu.Parent)) return;
+                if (menu == null || !ReferenceEquals(this, menu.Parent)) return false;
                 _updatables.Remove(menu);
                 _uiElements.Remove(menu);
 
@@ -288,21 +302,23 @@ namespace IngameScript
 
                 menu.RequestClose -= CloseMenu;
                 menu.Close(this);
+                return true;
             }
 
-            public virtual void Update(DateTime time)
+            public virtual bool Update(DateTime time)
             {
-                if (!IsOpen) return;
+                if (!IsOpen) return false;
                 Time = time;
                 foreach (var updatable in _updatables.ToList())
                 {
                     updatable.Update(time);
                 }
+                return true;
             }
 
-            public virtual void Draw(MySpriteDrawFrame frame)
+            public virtual bool Draw(MySpriteDrawFrame frame)
             {
-                if (!IsOpen) return;
+                if (!IsOpen) return false;
                 BuildSprites();
                 frame.Add(_borderSprite);
                 frame.Add(_fillSprite);
@@ -330,29 +346,30 @@ namespace IngameScript
                 {
                     _highlightedElement?.Draw(frame);
                 }
+
+                return true;
             }
 
-            public virtual void Navigate(UserInput input, object caller)
+            public virtual bool Navigate(UserInput input, object caller)
             {
                 if (!IsOpen || !IsNavigating || IsPaused || !ReferenceEquals(Parent, caller))
                 {
-                    return;
+                    return false;
                 }
                 if (_navigatedElement != null)
                 {
-                    _navigatedElement.Navigate(input, this);
-                    return;
+                    return _navigatedElement.Navigate(input, this);
                 }
 
                 if (input.CRelease)
                 {
                     Close();
-                    return;
+                    return false;
                 }
 
                 if (_highlightables.Count == 0)
                 {
-                    return;
+                    return false;
                 }
 
                 if (!_highlightables.Contains(_highlightedElement))
@@ -385,6 +402,7 @@ namespace IngameScript
                 {
                     ActivateHighlightable(_highlightedElement);
                 }
+                return true;
             }
         }
     }

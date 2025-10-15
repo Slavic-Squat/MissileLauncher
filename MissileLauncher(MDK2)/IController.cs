@@ -28,8 +28,8 @@ namespace IngameScript
             UserInput Input { get; }
             bool IsControlling { get; }
 
-            void TakeControl(IControllable controllable);
-            void ReleaseControl(IControllable controllable);
+            bool TakeControl(IControllable controllable);
+            bool ReleaseControl(IControllable controllable);
         }
     }
 }
