@@ -40,7 +40,7 @@ namespace IngameScript
             MePb = Me;
             Runtime.UpdateFrequency = UpdateFrequency.Update1;
 
-            _systemCoordinator = new SystemCoordinator(1, 1);
+            _systemCoordinator = new SystemCoordinator();
         }
 
         public void Save()

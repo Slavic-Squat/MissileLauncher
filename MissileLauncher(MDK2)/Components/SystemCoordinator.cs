@@ -48,16 +48,11 @@ namespace IngameScript
             private Dictionary<string, Action<string[]>> _commands = new Dictionary<string, Action<string[]>>();
             private IMyTerminalBlock _storageBlock;
 
-            private int _numOfControlStations;
-            private int _numOfTargetingLasers;
-
             private DateTime _lastClockSync;
 
-            public SystemCoordinator(int numOfControlStations, int numOfTargetingLasers)
+            public SystemCoordinator()
             {
                 SystemTime = DateTime.Now;
-                _numOfControlStations = numOfControlStations;
-                _numOfTargetingLasers = numOfTargetingLasers;
                 GetBlocks();
                 Init();
             }
@@ -85,11 +80,10 @@ namespace IngameScript
                 }
 
                 long secureBroadcastPIN = Config.Get("Config", "SecureBroadcastPIN").ToInt64(123456);
-                Config.Set("Config", "SecureBroadcastPIN", secureBroadcastPIN.ToString());
+                Config.Set("Config", "SecureBroadcastPIN", secureBroadcastPIN);
 
                 IsMainClock = Config.Get("Config", "IsMainClock").ToBoolean(true);
-                Config.Set("Config", "IsMainClock", IsMainClock.ToString().ToUpper());
-                _storageBlock.CustomData = Config.ToString();
+                Config.Set("Config", "IsMainClock", IsMainClock);
 
                 CommandHandler = new CommandHandler(MePb, _commands);
                 CommunicationHandler = new CommunicationHandler(0, secureBroadcastPIN);
@@ -99,26 +93,40 @@ namespace IngameScript
 
                 UIWireManager = new UIWireManager(this);
 
-                for (int i = 0; i < _numOfControlStations; i++)
+                int numControlStations = Config.Get("Config", "NumControlStations").ToInt32(1);
+                Config.Set("Config", "NumControlStations", numControlStations);
+                for (int i = 0; i < numControlStations; i++)
                 {
                     ControlStation controlStation = new ControlStation(i, UIWireManager);
                     ControlStations.Add(controlStation);
                 }
 
-                for (int i = 0; i < _numOfTargetingLasers; i++)
+                int numLasers = Config.Get("Targeting", "NumOfLasers").ToInt32(1);
+                Config.Set("Targeting", "NumOfLasers", numLasers);
+                for (int i = 0; i < numLasers; i++)
                 {
-                    TargetingLaser laser = new TargetingLaser(i);
+                    float maxLaserDist = Config.Get("Targeting", $"Laser[{i}]_MaxDistance").ToSingle(5000);
+                    Config.Set("Targeting", $"Laser[{i}]_MaxDistance", maxLaserDist);
+                    float sensitivity = Config.Get("Targeting", $"Laser[{i}]_Sensitivity").ToSingle(0.05f);
+                    Config.Set("Targeting", $"Laser[{i}]_Sensitivity", sensitivity);
+                    TargetingLaser laser = new TargetingLaser(i, sensitivity, maxLaserDist);
                     laser.SyncRequested += SyncTarget;
                     TargetingLasers.Add(laser);
                 }
 
-                AWACS = new AWACS(0);
+                float maxAWACSDist = Config.Get("AWACS", "MaxDistance").ToSingle(5000);
+                Config.Set("AWACS", "MaxDistance", maxAWACSDist);
+                AWACS = new AWACS(0, maxAWACSDist);
                 TargetCoordinator = new TargetCoordinator(0, CommunicationHandler);
+                int numOfBays = Config.Get("Missiles", "NumOfBays").ToInt32(1);
+                Config.Set("Missiles", "NumOfBays", numOfBays);
                 MissileCoordinator = new MissileCoordinator(0, 8, CommunicationHandler, TargetCoordinator.AllTargetsExt);
 
                 CommunicationHandler.RegisterBroadcastListener("FriendlyCommands", true);
                 _commands["SET_MAIN_CLOCK"] = (args) => SetMainClock(args[0]);
                 _commands["SYNC_CLOCK"] = (args) => SyncClock(args[0]);
+
+                _storageBlock.CustomData = Config.ToString();
             }
 
             public void Run()
