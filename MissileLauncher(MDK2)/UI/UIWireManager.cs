@@ -37,6 +37,7 @@ namespace IngameScript
             public MissileCoordinator MissileCoordinator => _systemCoordinator.MissileCoordinator;
             public TargetCoordinator TargetCoordinator => _systemCoordinator.TargetCoordinator;
             public List<MissileBay> MissileBays => _systemCoordinator.MissileCoordinator.MissileBays;
+            public AWACS AWACS => _systemCoordinator.AWACS;
 
             public UIWireManager(SystemCoordinator systemCoordinator)
             {

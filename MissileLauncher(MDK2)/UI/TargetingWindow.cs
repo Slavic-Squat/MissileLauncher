@@ -169,13 +169,20 @@ namespace IngameScript
                 ControlPanel actionsPanel = UIFactory.CreateTargetingActionsPanel(actionsPanelPos, this);
                 AddControlPanel(actionsPanel);
 
-                Vector2 coordinatorInfoPanelSize = new Vector2(200, 100f);
-                Vector2 coordinatorInfoPanelPos = Pos + new Vector2(Size.X - coordinatorInfoPanelSize.X, 0);
+                Vector2 targetingInfoPanelSize = new Vector2(200, 130f);
+                Vector2 targetingInfoPanelPos = Pos + new Vector2(Size.X - targetingInfoPanelSize.X, 0);
 
                 MissileCoordinator coordinator = UI.UIWireManager.MissileCoordinator;
-                Func<string> coordinatorInfoGetter = () => coordinator.ToString();
-                InfoPanel coordinatorInfoPanel = new InfoPanel(coordinatorInfoPanelPos, coordinatorInfoPanelSize, 5f, 10f, coordinatorInfoGetter, Display);
-                AddInfoPanel(coordinatorInfoPanel);
+                AWACS awacs = UI.UIWireManager.AWACS;
+                Func<string> targetingInfoGetter = () => coordinator.ToString() + $"\nAWACS TRGTS: {awacs.TargetCount}";
+                InfoPanel targetingInfoPanel = new InfoPanel(targetingInfoPanelPos, targetingInfoPanelSize, 5f, 10f, targetingInfoGetter, Display);
+                AddInfoPanel(targetingInfoPanel);
+
+                Vector2 navModeInfoPanelSize = new Vector2(155f, 35f);
+                Vector2 navModeInfoPanelPos = Pos + new Vector2(0, 100f + 20f + navFilterPanel.Size.Y);
+                Func<string> navModeInfoGetter = () => $"NAV MODE: {GetName(NavMode)}";
+                InfoPanel navModeInfoPanel = new InfoPanel(navModeInfoPanelPos, navModeInfoPanelSize, 3f, 5f, navModeInfoGetter, Display);
+                AddInfoPanel(navModeInfoPanel);
             }
 
             private bool OpenEntityMenu(long entityID)

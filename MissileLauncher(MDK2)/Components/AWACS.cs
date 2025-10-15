@@ -60,6 +60,7 @@ namespace IngameScript
                 }
             }
             public Dictionary<long, EntityInfoExt> Targets { get; private set; }
+            public int TargetCount => Targets.Count;
             public Dictionary<long, bool> TargetsSyncInfo {  get; private set; }
             #endregion
 
