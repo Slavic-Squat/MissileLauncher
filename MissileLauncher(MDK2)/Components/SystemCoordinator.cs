@@ -26,7 +26,7 @@ namespace IngameScript
     {
         public class SystemCoordinator
         {
-            public static DateTime SystemTime { get; private set; }
+            public static double SystemTime { get; private set; }
             public static IMyShipController ReferenceController { get; private set; }
             public static Matrix ReferenceBasis => ReferenceController.WorldMatrix;
             public static Vector3 ReferencePosition => ReferenceController.GetPosition();
@@ -48,11 +48,10 @@ namespace IngameScript
             private Dictionary<string, Action<string[]>> _commands = new Dictionary<string, Action<string[]>>();
             private IMyTerminalBlock _storageBlock;
 
-            private DateTime _lastClockSync;
+            private double _lastClockSync;
 
             public SystemCoordinator()
             {
-                SystemTime = DateTime.Now;
                 GetBlocks();
                 Init();
             }
@@ -131,7 +130,7 @@ namespace IngameScript
 
             public void Run()
             {
-                SystemTime += RuntimeInfo.TimeSinceLastRun;
+                SystemTime += RuntimeInfo.TimeSinceLastRun.TotalSeconds;
                 DebugEcho($"System Time: {SystemTime}");
                 CommunicationHandler.Recieve();
                 CommandHandler.RunCustomDataCommands();
@@ -160,9 +159,9 @@ namespace IngameScript
                     TargetCoordinator.AddLocalTarget(target);
                 }
 
-                if (IsMainClock && (SystemTime - _lastClockSync).TotalSeconds > 10)
+                if (IsMainClock && (SystemTime - _lastClockSync) > 10f)
                 {
-                    string command = $"SYNC_CLOCK {SystemTime.Ticks}";
+                    string command = $"SYNC_CLOCK {SystemTime}";
                     List<byte> commandData = new List<byte>()
                     {
                         (byte)SerializedTypes.Command,
@@ -209,13 +208,13 @@ namespace IngameScript
                 return true;
             }
 
-            private bool SyncClock(string timeStringTicks)
+            private bool SyncClock(string timeString)
             {
                 if (IsMainClock) return false;
-                long timeTicks;
-                if (long.TryParse(timeStringTicks, out timeTicks))
+                double time;
+                if (double.TryParse(timeString, out time))
                 {
-                    SystemTime = new DateTime(timeTicks);
+                    SystemTime = time;
                 }
                 return true;
             }

@@ -24,9 +24,9 @@ namespace IngameScript
     {
         public class UserInput
         {
-            public DateTime Time { get; private set; }
+            public double Time { get; private set; }
             private IMyShipController _inputBlock;
-            private DateTime _lastRunTime;
+            private double _lastRunTime;
 
             public bool WPress { get; private set; } = false;
             private float _secondsWPressed;
@@ -83,10 +83,10 @@ namespace IngameScript
                 _inputBlock = inputBlock;
             }
 
-            public void Run(DateTime time)
+            public void Run(double time)
             {
                 Time = time;
-                if (_lastRunTime == DateTime.MinValue)
+                if (_lastRunTime == 0)
                 {
                     _lastRunTime = time;
                 }
@@ -96,7 +96,7 @@ namespace IngameScript
 
             private void ListenForInput()
             {
-                float deltaSeconds = (float)(Time - _lastRunTime).TotalSeconds;
+                float deltaSeconds = (float)(Time - _lastRunTime);
 
 
                 if (_inputBlock.MoveIndicator.Z < 0)

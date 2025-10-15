@@ -32,7 +32,7 @@ namespace IngameScript
 
             #region Properties
             public int ID {  get; private set; }
-            public DateTime Time { get; private set; }
+            public double Time { get; private set; }
             public BayStatus Status { get; private set; } = BayStatus.Empty;
             public MissileType MissileType { get; private set; } = MissileType.Unknown;
             public MissileGuidanceType MissileGuidanceType { get; private set; } = MissileGuidanceType.Unknown;
@@ -53,7 +53,7 @@ namespace IngameScript
             public bool IsSelectable => Status == BayStatus.Loaded || Status == BayStatus.Ready;
             #endregion
 
-            private DateTime _timeLastRegister = DateTime.MinValue;
+            private double _timeLastRegister;
 
             public MissileBay(int id)
             {
@@ -122,10 +122,10 @@ namespace IngameScript
                 }
             }
 
-            public void Run(DateTime time)
+            public void Run(double time)
             {
                 Time = time;
-                if (Status == BayStatus.Empty && time - _timeLastRegister > TimeSpan.FromSeconds(10))
+                if (Status == BayStatus.Empty && (time - _timeLastRegister) > 10f)
                 {
                     RegisterMissile();
                     _timeLastRegister = time;
@@ -152,7 +152,7 @@ namespace IngameScript
                     {
                         return false;
                     }
-                    _missileComputer.CustomData += $"\nACTIVATE {IGCS.Me} {Time.Ticks}";
+                    _missileComputer.CustomData += $"\nACTIVATE {IGCS.Me} {Time}";
                     _missileComputer.CustomData += $"\nLAUNCH";
                     Status = BayStatus.Launching;
                     return true;

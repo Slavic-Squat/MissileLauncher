@@ -25,7 +25,7 @@ namespace IngameScript
         public class ControlStation : IController
         {
             public int ID { get; private set; }
-            public DateTime Time { get; private set; }
+            public double Time { get; private set; }
             public bool HasFireControl { get; private set; }
             public IControllable Controllable { get; private set; }
             public UserInput Input { get; private set; }
@@ -73,7 +73,7 @@ namespace IngameScript
                 _ui = new UI(this, PrimaryDisplay, _uiWireManager);
             }
 
-            public void Run(DateTime time)
+            public void Run(double time)
             {
                 Time = time;
                 Input.Run(time);

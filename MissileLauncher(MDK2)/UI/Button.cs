@@ -24,7 +24,7 @@ namespace IngameScript
     {
         public class Button : IButton
         {
-            public DateTime Time { get; private set; }
+            public double Time { get; private set; }
             public RectangleF Bounds => _bounds;
             public Vector2 Pos => Bounds.Position;
             public Vector2 Size => Bounds.Size;
@@ -46,7 +46,7 @@ namespace IngameScript
 
             private Func<bool> _action;
             private ButtonState _state = ButtonState.None;
-            private DateTime _timePressed = DateTime.MinValue;
+            private double _timePressed;
             private Func<bool> _canPress;
             private Func<string> _textGetter;
 
@@ -175,14 +175,14 @@ namespace IngameScript
                 return true;
             }
 
-            public bool Update(DateTime time)
+            public bool Update(double time)
             {
                 Time = time;
-                if (time - _timePressed > TimeSpan.FromSeconds(1) && _state.HasFlag(ButtonState.Pressed))
+                if ((time - _timePressed) > 1f && _state.HasFlag(ButtonState.Pressed))
                 {
                     _state &= ~ButtonState.Pressed;
                 }
-                else if (time - _timePressed > TimeSpan.FromSeconds(2) && _state.HasFlag(ButtonState.Errored))
+                else if ((time - _timePressed) > 2 && _state.HasFlag(ButtonState.Errored))
                 {
                     _state &= ~ButtonState.Errored;
                 }

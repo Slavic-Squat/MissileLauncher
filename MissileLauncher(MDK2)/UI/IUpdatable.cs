@@ -24,7 +24,8 @@ namespace IngameScript
     {
         public interface IUpdatable
         {
-            bool Update(DateTime time);
+            double Time { get; }
+            bool Update(double time);
         }
     }
 }

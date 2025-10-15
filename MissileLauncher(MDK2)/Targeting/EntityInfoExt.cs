@@ -29,7 +29,7 @@ namespace IngameScript
             public long EntityID => Info.EntityID;
             public Vector3 Position => Info.Position;
             public Vector3 Velocity => Info.Velocity;
-            public DateTime TimeRecorded => Info.TimeRecorded;
+            public double TimeRecorded => Info.TimeRecorded;
             public EntityType Type => Info.Type;
             public EntityInfoSubType SubType => Info.SubType;
             public EntitySource Source { get; private set; }
@@ -46,7 +46,7 @@ namespace IngameScript
                 IsValid = true;
             }
 
-            public EntityInfoExt(MyDetectedEntityInfo entityInfo, DateTime timeRecorded)
+            public EntityInfoExt(MyDetectedEntityInfo entityInfo, double timeRecorded)
             {
                 Info = new EntityInfo(entityInfo, timeRecorded);
                 Source = EntitySource.Local;
@@ -117,7 +117,7 @@ namespace IngameScript
                     sb.Append($"SPD: {speed:0} m/s\n");
                 }
 
-                float age = (float)(SystemCoordinator.SystemTime - Info.TimeRecorded).TotalMilliseconds;
+                float age = (float)(SystemCoordinator.SystemTime - Info.TimeRecorded) * 1000;
                 if (age > 1000f)
                 {
                     age /= 1000f;

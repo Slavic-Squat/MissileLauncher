@@ -26,7 +26,7 @@ namespace IngameScript
         public class Menu : IMenu
         {
             public object Parent { get; private set; }
-            public DateTime Time { get; private set; }
+            public double Time { get; private set; }
             public RectangleF Bounds => _bounds;
             public Vector2 Pos => _bounds.Position;
             public Vector2 Size => _bounds.Size;
@@ -281,7 +281,7 @@ namespace IngameScript
                 return true;
             }
 
-            public virtual bool Update(DateTime time)
+            public virtual bool Update(double time)
             {
                 if (!IsOpen) return false;
 

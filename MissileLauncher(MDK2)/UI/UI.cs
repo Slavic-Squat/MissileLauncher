@@ -25,7 +25,7 @@ namespace IngameScript
         public class UI
         {
             public ControlStation Station { get; private set; }
-            public DateTime Time { get; private set; }
+            public double Time { get; private set; }
             public bool HasActiveWindow => _activeWindow != null;
             public IMyTextSurface Display { get; private set; }
             public Vector2 SurfaceSize => Display.SurfaceSize;
@@ -55,7 +55,7 @@ namespace IngameScript
                 OpenWindow(mainWindow);
             }
 
-            public void Run(DateTime time)
+            public void Run(double time)
             {
                 Time = time;
                 Update(time);
@@ -106,7 +106,7 @@ namespace IngameScript
                 return true;
             }
 
-            public bool Update(DateTime time)
+            public bool Update(double time)
             {
                 if (_activeModal?.CanClose ?? false)
                 {

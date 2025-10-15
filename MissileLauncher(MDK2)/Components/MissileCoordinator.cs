@@ -26,7 +26,7 @@ namespace IngameScript
         {
             #region Properties
             public int ID { get; private set; }
-            public DateTime Time { get; private set; }
+            public double Time { get; private set; }
             public Dictionary<long, EntityInfoExt> MyMissilesExt { get; private set; }
             public ControlStation Station { get; private set; }
             public bool FireControlAvail => Station == null;
@@ -52,8 +52,8 @@ namespace IngameScript
 
             private IEnumerator<bool> _launchCoroutine;
 
-            private DateTime _lastClockSync = DateTime.MinValue;
-            private DateTime _lastLaunch = DateTime.MinValue;
+            private double _lastClockSync;
+            private double _lastLaunch;
 
             public MissileCoordinator(int id, int numBays, CommunicationHandler communicationHandler, Dictionary<long, EntityInfoExt> targetInfo)
             {
@@ -76,7 +76,7 @@ namespace IngameScript
                 _communicationHandler.RegisterTag("MyMissiles", true);
             }
 
-            public void Run(DateTime time)
+            public void Run(double time)
             {
                 Time = time;
 
@@ -125,7 +125,7 @@ namespace IngameScript
                     }
                 }
 
-                if (time - _lastClockSync > TimeSpan.FromSeconds(10))
+                if ((time - _lastClockSync) > 10f)
                 {
                     SyncClocks();
                 }
@@ -283,7 +283,7 @@ namespace IngameScript
 
             private bool LaunchMissile(MissileBay bay, long targetID)
             {
-                if (Time - _lastLaunch < TimeSpan.FromSeconds(1) || !_selectedBays.Contains(bay)) return false;
+                if ((Time - _lastLaunch) < 1f || !_selectedBays.Contains(bay)) return false;
 
                 long missileID = bay.MissileID;
                 long missileAddress = bay.MissileAddress;
@@ -331,7 +331,7 @@ namespace IngameScript
 
                 foreach (long address in _addressMissileIDMap.Keys.ToList())
                 {
-                    string command = $"SYNC_CLOCK {Time.Ticks}";
+                    string command = $"SYNC_CLOCK {Time}";
                     List<byte> commandData = new List<byte>()
                     {
                         (byte)SerializedTypes.Command,

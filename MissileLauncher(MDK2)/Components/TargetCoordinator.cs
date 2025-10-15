@@ -30,7 +30,7 @@ namespace IngameScript
 
             #region Properties
             public int ID { get; private set; }
-            public DateTime Time { get; private set; }
+            public double Time { get; private set; }
 
             private Dictionary<long, EntityInfoExt> _targetsLocal = new Dictionary<long, EntityInfoExt>();
             private Dictionary<long, EntityInfoExt> _targetsRemote = new Dictionary<long, EntityInfoExt>();
@@ -60,7 +60,7 @@ namespace IngameScript
                 FriendlyIDs = new HashSet<long>();
             }
 
-            public void Run(DateTime time)
+            public void Run(double time)
             {
                 Time = time;
                 while (_communicationHandler.HasMessage("FriendlyTargetInfo", true))
@@ -104,9 +104,9 @@ namespace IngameScript
 
                 foreach (var targetKey in _targetsLocal.Keys.ToList())
                 {
-                    TimeSpan timeSinceLastDetection = time - _targetsLocal[targetKey].TimeRecorded;
+                    float timeSinceLastDetection = (float)(time - _targetsLocal[targetKey].TimeRecorded);
 
-                    if (timeSinceLastDetection.TotalSeconds > 5)
+                    if (timeSinceLastDetection > 5f)
                     {
                         RemoteLocalTarget(targetKey);
                         continue;
@@ -119,9 +119,9 @@ namespace IngameScript
 
                 foreach (var targetKey in _targetsRemote.Keys.ToList())
                 {
-                    TimeSpan timeSinceLastDetection = time - _targetsRemote[targetKey].TimeRecorded;
+                    float timeSinceLastDetection = (float)(time - _targetsRemote[targetKey].TimeRecorded);
 
-                    if (timeSinceLastDetection.TotalSeconds > 5)
+                    if (timeSinceLastDetection > 5f)
                     {
                         RemoveRemoteTarget(targetKey);
                     }

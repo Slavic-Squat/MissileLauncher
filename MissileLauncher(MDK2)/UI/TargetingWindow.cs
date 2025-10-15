@@ -206,7 +206,7 @@ namespace IngameScript
                 SelectedEntityID = -1;
             }
 
-            public override bool Update(DateTime time)
+            public override bool Update(double time)
             {
                 if (!IsOpen) return false;
                 base.Update(time);

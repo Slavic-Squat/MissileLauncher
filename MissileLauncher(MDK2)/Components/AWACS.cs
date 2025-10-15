@@ -38,12 +38,12 @@ namespace IngameScript
             private float _spinRotorAngle;
             private bool _spinRotorInverted;
 
-            private DateTime _lastRunTime;
+            private double _lastRunTime;
             #endregion
 
             #region Properties
             public int ID { get; private set; }
-            public DateTime Time { get; private set; }
+            public double Time { get; private set; }
             public float MaxRaycastDistance
             {
                 get
@@ -96,10 +96,10 @@ namespace IngameScript
                 _cameraArray3 = new CameraArray(4, _maxRaycastDistance);
             }
 
-            public void Run(DateTime time)
+            public void Run(double time)
             {
                 Time = time;
-                if (_lastRunTime == default(DateTime))
+                if (_lastRunTime == 0)
                     _lastRunTime = time;
 
                 _cameraArray0.Update(time);
@@ -120,14 +120,14 @@ namespace IngameScript
 
                     foreach (var targetID in Targets.Keys.ToList())
                     {
-                        TimeSpan timeSinceLastDetection = time - Targets[targetID].TimeRecorded;
-                        Vector3 estimatedTargetPos = Targets[targetID].Position + Targets[targetID].Velocity * (float)timeSinceLastDetection.TotalSeconds;
+                        float timeSinceLastDetection = (float)(time - Targets[targetID].TimeRecorded);
+                        Vector3 estimatedTargetPos = Targets[targetID].Position + Targets[targetID].Velocity * timeSinceLastDetection;
                         Vector3 estimatedTargetPosLocal = Vector3.TransformNormal(estimatedTargetPos - _referenceMatrix.Translation, Matrix.Transpose(_referenceMatrix));
                         float estimatedTargetDistance = estimatedTargetPosLocal.Length();
                         Vector3 estimatedTargetDirLocal = estimatedTargetDistance == 0 ? Vector3.Zero : estimatedTargetPosLocal / estimatedTargetDistance;
                         float targetElevation = MathHelper.ToDegrees((float)Math.Asin(estimatedTargetDirLocal.Y));
 
-                        if (timeSinceLastDetection.TotalSeconds > 5 || estimatedTargetDistance >= MaxRaycastDistance * 0.8f || targetElevation >= 45)
+                        if (timeSinceLastDetection > 5 || estimatedTargetDistance >= MaxRaycastDistance * 0.8f || targetElevation >= 45)
                         {
                             RemoveTarget(targetID);
                         }
@@ -144,8 +144,8 @@ namespace IngameScript
 
                         EntityInfoExt target = Targets[targetID];
                         MyDetectedEntityInfo raycastResult = default(MyDetectedEntityInfo);
-                        TimeSpan timeSinceLastDetection = time - Targets[targetID].TimeRecorded;
-                        Vector3 estimatedTargetPos = Targets[targetID].Position + Targets[targetID].Velocity * (float)timeSinceLastDetection.TotalSeconds;
+                        float timeSinceLastDetection = (float)(time - Targets[targetID].TimeRecorded);
+                        Vector3 estimatedTargetPos = Targets[targetID].Position + Targets[targetID].Velocity * timeSinceLastDetection;
                         Vector3 estimatedTargetPosLocal = Vector3.TransformNormal(estimatedTargetPos - _referenceMatrix.Translation, Matrix.Transpose(_referenceMatrix));
                         Vector3 estimatedTargetDirLocal = estimatedTargetPosLocal == Vector3.Zero ? Vector3.Zero : Vector3.Normalize(estimatedTargetPosLocal);
                         float targetAzimuth = MathHelper.ToDegrees((float)Math.Atan2(-estimatedTargetDirLocal.X, -estimatedTargetDirLocal.Z));

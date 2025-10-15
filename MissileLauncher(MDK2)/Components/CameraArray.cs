@@ -26,8 +26,8 @@ namespace IngameScript
         public class CameraArray
         {
             private List<IMyCameraBlock> _cameras = new List<IMyCameraBlock>();
-            public DateTime Time { get; private set; }
-            private DateTime _lastUpdateTime;
+            public double Time { get; private set; }
+            private double _lastUpdateTime;
             private int _cameraIndex;
             private float _totalAvailableRaycastDistance;
 
@@ -60,13 +60,13 @@ namespace IngameScript
                 }
             }
 
-            public bool Update(DateTime time)
+            public bool Update(double time)
             {
                 Time = time;
-                if (_lastUpdateTime == default(DateTime))
+                if (_lastUpdateTime == 0)
                     _lastUpdateTime = time;
 
-                _totalAvailableRaycastDistance += (float)(time - _lastUpdateTime).TotalSeconds * 2000f * _cameras.Count;
+                _totalAvailableRaycastDistance += (float)(time - _lastUpdateTime) * 2000f * _cameras.Count;
                 _lastUpdateTime = time;
 
                 return true;

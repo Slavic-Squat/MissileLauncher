@@ -26,7 +26,7 @@ namespace IngameScript
         public class ControlPanel : IPanel, INavigable, IUpdatable, IHighlightable
         {
             public object Parent { get; private set; }
-            public DateTime Time { get; private set; }
+            public double Time { get; private set; }
             public RectangleF Bounds => _bounds;
             public Vector2 Pos => _bounds.Position;
             public Vector2 Size => _bounds.Size;
@@ -254,7 +254,7 @@ namespace IngameScript
                 return true;
             }
 
-            public bool Update(DateTime time)
+            public bool Update(double time)
             {
                 Time = time;
                 foreach (var updatable in _commonUpdatables)

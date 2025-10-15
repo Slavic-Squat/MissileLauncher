@@ -33,13 +33,13 @@ namespace IngameScript
 
             #region State Info
             private float _maxRaycastDistance;
-            private DateTime _lastRunTime;
+            private double _lastRunTime;
             private Matrix _referenceMatrix;
             private bool _azimuthRotorInverted;
             private bool _elevationRotorInverted;
             private float _azimuthRotorAngle;
             private float _elevationRotorAngle;
-            private DateTime _lastUniqueDetectionTime;
+            private double _lastUniqueDetectionTime;
             private int _matchingDetectionCounter;
             private MyDetectedEntityInfo _previouslyDetectedEntity;
             #endregion
@@ -51,7 +51,7 @@ namespace IngameScript
 
             #region Properties
             public int ID { get; private set; }
-            public DateTime Time { get; private set; }
+            public double Time { get; private set; }
             public IController Controller { get; private set; }
             public bool IsControlPaused { get; private set; } = true;
             public bool IsUnderControl => Controller != null;
@@ -110,10 +110,10 @@ namespace IngameScript
                 _elevationPID = new PIDControl(25, 2, 0.1f);
             }
 
-            public void Run(DateTime time)
+            public void Run(double time)
             {
                 Time = time;
-                if (_lastRunTime == default(DateTime))
+                if (_lastRunTime == 0)
                     _lastRunTime = time;
 
                 _azimuthRotorAngle = _azimuthRotorInverted ? -_azimuthRotor.Angle : _azimuthRotor.Angle;
@@ -138,14 +138,13 @@ namespace IngameScript
 
             private void AutoTrack()
             {
-                float timeDeltaMiliseconds = (float)(Time - _lastRunTime).TotalMilliseconds;
-                float timeDeltaSeconds = (float)(Time - _lastRunTime).TotalSeconds;
+                float timeDeltaSeconds = (float)(Time - _lastRunTime);
 
-                TimeSpan timeSinceLastDetection = Time - Target.TimeRecorded;
-                Vector3 estimatedTargetPosition = Target.Position + Target.Velocity * (float)timeSinceLastDetection.TotalSeconds;
+                float timeSinceLastDetection = (float)(Time - Target.TimeRecorded);
+                Vector3 estimatedTargetPosition = Target.Position + Target.Velocity * timeSinceLastDetection;
                 float estimatedTargetDistance = (estimatedTargetPosition - _referenceMatrix.Translation).Length();
 
-                if (estimatedTargetDistance > MaxRaycastDistance * 0.8f || timeSinceLastDetection.TotalSeconds > 5)
+                if (estimatedTargetDistance > MaxRaycastDistance * 0.8f || timeSinceLastDetection > 5f)
                 {
                     ForgetTarget();
                 }
@@ -205,8 +204,8 @@ namespace IngameScript
 
                         _previouslyDetectedEntity = raycastResult;
 
-                        TimeSpan timeSinceLastUniqueDetection = Time - _lastUniqueDetectionTime;
-                        if (timeSinceLastUniqueDetection.TotalSeconds > 2 && _matchingDetectionCounter >= 3)
+                        float timeSinceLastUniqueDetection = (float)(Time - _lastUniqueDetectionTime);
+                        if (timeSinceLastUniqueDetection > 2f && _matchingDetectionCounter >= 3)
                         {
                             Target = new EntityInfoExt(raycastResult, Time);
                         }

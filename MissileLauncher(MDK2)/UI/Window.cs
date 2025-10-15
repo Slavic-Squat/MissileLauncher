@@ -25,7 +25,7 @@ namespace IngameScript
         public class Window : IWindow
         {
             public UI UI { get; private set; }
-            public DateTime Time { get; private set; }
+            public double Time { get; private set; }
             public object Parent { get; private set; }
             public RectangleF Bounds => _bounds;
             public Vector2 Pos => _bounds.Position;
@@ -305,7 +305,7 @@ namespace IngameScript
                 return true;
             }
 
-            public virtual bool Update(DateTime time)
+            public virtual bool Update(double time)
             {
                 if (!IsOpen) return false;
                 Time = time;
