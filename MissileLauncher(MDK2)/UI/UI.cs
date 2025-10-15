@@ -59,11 +59,7 @@ namespace IngameScript
             {
                 Time = time;
                 Update(time);
-                if (_runCounter++ >= 9)
-                {
-                    Draw();
-                    _runCounter = 0;
-                }
+                Draw();
             }
 
             public bool OpenWindow(IWindow window)
