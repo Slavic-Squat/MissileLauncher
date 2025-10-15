@@ -9,6 +9,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Remove="DebugAPI.cs" />
+    <Compile Remove="UI\ModalMenu.cs" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Mal.Mdk2.PbAnalyzers" Version="2.1.13">

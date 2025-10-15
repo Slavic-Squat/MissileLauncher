@@ -161,7 +161,7 @@ namespace IngameScript
                     Data = "Radial_Grad_0",
                     Position = new Vector2(511, 511),
                     Size = new Vector2(1024, 1024),
-                    Color = new Color(255, 36, 75, 255),
+                    Color = new Color(1, 89, 68, 255),
                     Alignment = TextAlignment.CENTER,
                     RotationOrScale = 0f
                 };

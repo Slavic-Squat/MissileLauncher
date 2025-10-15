@@ -83,7 +83,7 @@ namespace IngameScript
                     return station.HasFireControl;
                 };
 
-                ToggleButton toggleButton = new ToggleButton(buttonPos, buttonSize, 5f, 3f, 2f, getText, onPress, onRelease, isPressed, surface, canPress, canRelease);
+                ToggleButton toggleButton = new ToggleButton(buttonPos, buttonSize, 5f, 3f, 2f, getText, onPress, onRelease, isPressed, surface, canPress: canPress, canRelease: canRelease);
                 panel.AddButton(toggleButton, -1);
 
                 buttonPos.X += buttonSize.X + spacing;
@@ -96,7 +96,11 @@ namespace IngameScript
                     window.OpenMenu(bayMenu);
                     return true;
                 };
-                button = new Button(buttonPos, buttonSize, 5f, 3f, 2f, getText, action, surface);
+                canPress = () =>
+                {
+                    return station.HasFireControl;
+                };
+                button = new Button(buttonPos, buttonSize, 5f, 3f, 2f, getText, action, surface, canPress: canPress);
                 panel.AddButton(button, -1);
 
                 return panel;
@@ -123,7 +127,7 @@ namespace IngameScript
 
                 Vector2 labelPos = panel.Pos + new Vector2(panel.Size.X / 2f - labelSize.X / 2f, padding);
                 RectangleF labelBounds = new RectangleF(labelPos, labelSize);
-                MySprite labelSprite = SpriteHelper.CreateText(labelBounds, "-NAV_FILTER-\n------------------", Color.White, surface, TextAlignment.CENTER, true, 0);
+                MySprite labelSprite = SpriteHelper.CreateText(labelBounds, "-NAV FILTER-\n------------------", Color.White, surface, TextAlignment.CENTER, true, 0);
                 panel.AddSprite(labelSprite, -1);
 
                 Vector2 buttonPos = panel.Pos + new Vector2(panel.Size.X / 2f - buttonSize.X / 2f, padding + labelSize.Y);
@@ -465,7 +469,7 @@ namespace IngameScript
                                 return bay.IsSelectable;
                             };
                             Func<bool> canRelease = canPress;
-                            ToggleButton button = new ToggleButton(buttonPos, selectButtonSize, 7f, 3f, 1f, getText, onPress, onRelease, isPressed, surface, canPress, canRelease);
+                            ToggleButton button = new ToggleButton(buttonPos, selectButtonSize, 7f, 3f, 1f, getText, onPress, onRelease, isPressed, surface, canPress: canPress, canRelease: canRelease);
                             menu.AddButton(button, i);
                             bayIndex++;
                         }
@@ -478,7 +482,6 @@ namespace IngameScript
                 Func<bool> action = () =>
                 {
                     wireManager.SelectAllBays(station);
-                    window.CloseMenu(menu);
                     return true;
                 };
                 Button confirmButton = new Button(confirmButtonPos, confirmButtonSize, 10f, 4f, 1f, confirmText, action, surface);
@@ -489,7 +492,6 @@ namespace IngameScript
                 action = () =>
                 {
                     wireManager.ClearSelectedBays(station);
-                    window.CloseMenu(menu);
                     return true;
                 };
                 Button cancelButton = new Button(cancelButtonPos, cancelButtonSize, 10f, 4f, 1f, cancelText, action, surface);
@@ -697,7 +699,7 @@ namespace IngameScript
                 getText = () => "TARGETING";
                 action = () =>
                 {
-                    ui.OpenWindow(new TargetingWindow(ui, 10f));
+                    ui.OpenWindow(new TargetingWindow(ui, 5f));
                     return true;
                 };
 

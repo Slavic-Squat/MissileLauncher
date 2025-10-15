@@ -51,16 +51,16 @@ namespace IngameScript
 
                 Bounds = new RectangleF(new Vector2(0, (TextureSize.Y - SurfaceSize.Y) * 0.5f), SurfaceSize);
 
-                Window mainWindow = UIFactory.CreateMainWindow(this, 10f);
+                Window mainWindow = UIFactory.CreateMainWindow(this, 5f);
                 OpenWindow(mainWindow);
             }
 
             public void Run(DateTime time)
             {
                 Time = time;
+                Update(time);
                 if (_runCounter++ >= 9)
                 {
-                    Update(time);
                     Draw();
                     _runCounter = 0;
                 }
@@ -112,7 +112,7 @@ namespace IngameScript
 
                 if (!HasActiveWindow)
                 {
-                    Window mainWindow = UIFactory.CreateMainWindow(this, 10f);
+                    Window mainWindow = UIFactory.CreateMainWindow(this, 5f);
                     OpenWindow(mainWindow);
                 }
 

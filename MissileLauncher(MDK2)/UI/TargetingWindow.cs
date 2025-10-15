@@ -25,8 +25,8 @@ namespace IngameScript
     {
         public class TargetingWindow : Window
         {
-            public NavMode NavMode { get; private set; } = NavMode.UI;
-            public EntityTypeFilter NavTypeFilter { get; private set; } = EntityTypeFilter.All;
+            public NavMode NavMode { get; private set; } = NavMode.Targeting;
+            public EntityTypeFilter NavTypeFilter { get; private set; } = EntityTypeFilter.Targets;
             public EntityRelationFilter NavRelationFilter { get; private set; } = EntityRelationFilter.All;
             public EntitySourceFilter NavSourceFilter { get; private set; } = EntitySourceFilter.Both;
             public ScopeScale ScopeScale { get; private set; } = ScopeScale.Close;
@@ -169,8 +169,8 @@ namespace IngameScript
                 ControlPanel actionsPanel = UIFactory.CreateTargetingActionsPanel(actionsPanelPos, this);
                 AddControlPanel(actionsPanel);
 
-                Vector2 coordinatorInfoPanelPos = Pos + new Vector2(250 + actionsPanel.Size.X, 0);
-                Vector2 coordinatorInfoPanelSize = new Vector2(Size.X - 250 - actionsPanel.Size.X, 200f);
+                Vector2 coordinatorInfoPanelSize = new Vector2(150, 200f);
+                Vector2 coordinatorInfoPanelPos = Pos + new Vector2(Size.X - coordinatorInfoPanelSize.X, 0);
 
                 MissileCoordinator coordinator = UI.UIWireManager.MissileCoordinator;
                 Func<string> coordinatorInfoGetter = () => coordinator.ToString();
@@ -183,7 +183,7 @@ namespace IngameScript
                 if (_allEntities.Keys.Contains(entityID))
                 {
                     Vector2 menuPos = Pos + new Vector2(Size.X * 0.5f, Size.Y - 100f);
-                    Menu menu = UIFactory.CreateEntityMenu(menuPos, entityID, this, false, true);
+                    Menu menu = UIFactory.CreateEntityMenu(menuPos, entityID, this, true, true);
                     OpenMenu(menu);
                 }
             }
@@ -254,10 +254,9 @@ namespace IngameScript
                 switch (NavMode)
                 {
                     case NavMode.UI:
-                        PauseNavigation();
+                        UnhighlightElement(_highlightedElement);
                         break;
                     case NavMode.Targeting:
-                        ResumeNavigation();
                         break;
                 }
 
@@ -336,6 +335,8 @@ namespace IngameScript
                 else if (!filtered.Keys.Contains(SelectedEntityID))
                 {
                     UnselectEntity();
+                    long firstEntityID = filtered.Keys.OrderBy(id => filtered[id].EntityInfo.Position.X + filtered[id].EntityInfo.Position.Y).FirstOrDefault();
+                    SelectEntity(firstEntityID);
                 }
 
                 if (input.WRelease)

@@ -80,9 +80,9 @@ namespace IngameScript
             {
                 Time = time;
 
+                NumLoadedBays = 0;
                 foreach (var bay in MissileBays)
                 {
-                    NumLoadedBays = 0;
                     bay.Run(time);
                     if (bay.Status == BayStatus.Loaded) NumLoadedBays++;
                 }
@@ -383,7 +383,7 @@ namespace IngameScript
 
             public override string ToString()
             {
-                return $"SELECTED BAYS: {NumSelectedBays}/{NumBays}\nLOADED BAYS: {NumLoadedBays}/{NumBays}\nTRACKED MISSILES: {NumMissiles}\nFIRE CONTROL: {(FireControlAvail ? "AVAILABLE" : "IN USE")}\nLAST SYNC: {(Time - _lastClockSync).TotalMilliseconds:0} ms\nLAST LAUNCH: {(Time - _lastLaunch).TotalSeconds:0.0} s";
+                return $"SELECTED BAYS: {NumSelectedBays}/{NumBays}\nLOADED BAYS: {NumLoadedBays}/{NumBays}\nTRACKED MISLS: {NumMissiles}\nFIRE CONTROL: {(FireControlAvail ? "AVAIL" : "IN USE")}";
             }
         }
     }

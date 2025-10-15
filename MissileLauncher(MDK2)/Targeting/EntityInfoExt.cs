@@ -93,7 +93,7 @@ namespace IngameScript
 
             public override string ToString()
             {
-                StringBuilder sb = new StringBuilder($"INFO:\n-----------------------\nTYPE: {GetName(Type)}\nSRC: {GetName(Source)}\nREL: {GetName(Relation)}\n");
+                StringBuilder sb = new StringBuilder($"[{GetName(Type)} INFO]\n-----------------------\nTYPE: {GetName(Type)}\nSRC: {GetName(Source)}\nREL: {GetName(Relation)}\n");
 
                 float distance = Vector3.Distance(SystemCoordinator.ReferencePosition, Position);
                 if (distance > 1000f)

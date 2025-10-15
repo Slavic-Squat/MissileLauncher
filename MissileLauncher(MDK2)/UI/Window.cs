@@ -224,23 +224,22 @@ namespace IngameScript
                 }
                 else if (highlightable is INavigable)
                 {
-                    NavigateElement((INavigable)highlightable);
+                    StartNavigatingElement((INavigable)highlightable);
                 }
             }
 
-            public virtual void NavigateElement(INavigable navigable)
+            public virtual void StartNavigatingElement(INavigable navigable)
             {
                 if (navigable == null || ReferenceEquals(navigable, _navigatedElement) || !ReferenceEquals(this, navigable.Parent))
                 {
                     return;
                 }
-                _navigatedElement?.PauseNavigation();
-
                 _navigables.Add(navigable);
-                _navigatedElement = navigable;
-
                 navigable.StartNavigation(this);
                 navigable.RequestStopNavigation += StopNavigatingElement;
+                
+                _navigatedElement?.PauseNavigation();
+                _navigatedElement = navigable;
             }
 
             public virtual void StopNavigatingElement(INavigable navigable)
@@ -249,15 +248,20 @@ namespace IngameScript
                 {
                     return;
                 }
+
+                navigable.StopNavigation(this);
+                navigable.RequestStopNavigation -= StopNavigatingElement;
+                _navigables.Remove(navigable);
+
                 if (ReferenceEquals(navigable, _navigatedElement))
                 {
                     _navigatedElement = null;
+                    if (_navigables.Count > 0)
+                    {
+                        _navigatedElement = _navigables.Last();
+                        _navigatedElement.ResumeNavigation();
+                    }
                 }
-                _navigables.Remove(navigable);
-                navigable.StopNavigation(this);
-                navigable.RequestStopNavigation -= StopNavigatingElement;
-
-                NavigateElement(_navigables.LastOrDefault());
             }
 
             public virtual void OpenMenu(IMenu menu)
@@ -266,10 +270,12 @@ namespace IngameScript
                 _updatables.Add(menu);
                 _uiElements.Add(menu);
 
-                NavigateElement(menu);
-
                 menu.Open(this);
                 menu.RequestClose += CloseMenu;
+
+                StartNavigatingElement(menu);
+
+                
             }
 
             public virtual void CloseMenu(IMenu menu)
