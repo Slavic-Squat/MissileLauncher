@@ -272,6 +272,8 @@ namespace IngameScript
 
             public virtual void Update(DateTime time)
             {
+                if (!IsOpen) return;
+
                 Time = time;
                 if (_autoClose?.Invoke() ?? false)
                 {
@@ -297,6 +299,7 @@ namespace IngameScript
 
             public virtual void Draw(MySpriteDrawFrame frame)
             {
+                if (!IsOpen || !IsNavigating || IsPaused) return;
                 BuildSprites();
                 if (_obscure)
                 {
@@ -325,7 +328,7 @@ namespace IngameScript
 
             public virtual void Navigate(UserInput input, object caller)
             {
-                if (!IsNavigating || IsPaused || !ReferenceEquals(Parent, caller))
+                if (!IsOpen || !IsNavigating || IsPaused || !ReferenceEquals(Parent, caller))
                 {
                     return;
                 }

@@ -234,7 +234,7 @@ namespace IngameScript
                 {
                     return;
                 }
-                StopNavigatingElement(_navigatedElement);
+                _navigatedElement?.PauseNavigation();
 
                 _navigables.Add(navigable);
                 _navigatedElement = navigable;
@@ -286,6 +286,7 @@ namespace IngameScript
 
             public virtual void Update(DateTime time)
             {
+                if (!IsOpen) return;
                 Time = time;
                 foreach (var updatable in _updatables.ToList())
                 {
@@ -295,6 +296,7 @@ namespace IngameScript
 
             public virtual void Draw(MySpriteDrawFrame frame)
             {
+                if (!IsOpen) return;
                 BuildSprites();
                 frame.Add(_borderSprite);
                 frame.Add(_fillSprite);
