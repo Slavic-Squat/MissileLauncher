@@ -101,8 +101,8 @@ namespace IngameScript
                     ControlStations.Add(controlStation);
                 }
 
-                int numLasers = Config.Get("Targeting", "NumOfLasers").ToInt32(1);
-                Config.Set("Targeting", "NumOfLasers", numLasers);
+                int numLasers = Config.Get("Targeting", "NumLasers").ToInt32(1);
+                Config.Set("Targeting", "NumLasers", numLasers);
                 for (int i = 0; i < numLasers; i++)
                 {
                     float maxLaserDist = Config.Get("Targeting", $"Laser{i}MaxDistance").ToSingle(5000);
@@ -118,9 +118,9 @@ namespace IngameScript
                 Config.Set("AWACS", "MaxDistance", maxAWACSDist);
                 AWACS = new AWACS(0, maxAWACSDist);
                 TargetCoordinator = new TargetCoordinator(0, CommunicationHandler);
-                int numOfBays = Config.Get("Missiles", "NumOfBays").ToInt32(1);
-                Config.Set("Missiles", "NumOfBays", numOfBays);
-                MissileCoordinator = new MissileCoordinator(0, 8, CommunicationHandler, TargetCoordinator.AllTargetsExt);
+                int numBays = Config.Get("Missiles", "NumBays").ToInt32(1);
+                Config.Set("Missiles", "NumBays", numBays);
+                MissileCoordinator = new MissileCoordinator(0, numBays, CommunicationHandler, TargetCoordinator.AllTargetsExt);
 
                 CommunicationHandler.RegisterBroadcastListener("FriendlyCommands", true);
                 _commands["SET_MAIN_CLOCK"] = (args) => SetMainClock(args[0]);
