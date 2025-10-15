@@ -28,6 +28,12 @@ namespace IngameScript
             public int ID { get; private set; }
             public DateTime Time { get; private set; }
             public Dictionary<long, EntityInfoExt> MyMissilesExt { get; private set; }
+            public ControlStation Station { get; private set; }
+            public bool FireControlAvail => Station == null;
+            public int NumBays { get; private set; }
+            public int NumSelectedBays => _selectedBays.Count;
+            public int NumLoadedBays { get; private set; }
+            public bool IsLaunching => _launchCoroutine != null;
             #endregion
 
             #region Components
@@ -35,9 +41,8 @@ namespace IngameScript
             #endregion
 
             private CommunicationHandler _communicationHandler;
-            private int _numberOfMissileBays;
 
-            private HashSet<int> _selectedBays = new HashSet<int>();
+            private HashSet<MissileBay> _selectedBays = new HashSet<MissileBay>();
             private Dictionary<long, long> _addressMissileIDMap = new Dictionary<long, long>();
             private Dictionary<long, long> _addressTargetIDMap = new Dictionary<long, long>();
             private Dictionary<long, long> _missileIDAddressMap = new Dictionary<long, long>();
@@ -47,11 +52,12 @@ namespace IngameScript
             private IEnumerator<bool> _launchCoroutine;
 
             private DateTime _lastClockSync = DateTime.MinValue;
+            private DateTime _lastLaunch = DateTime.MinValue;
 
-            public MissileCoordinator(int id, int numberOfMissileBays, CommunicationHandler communicationHandler, Dictionary<long, EntityInfoExt> targetInfo)
+            public MissileCoordinator(int id, int numBays, CommunicationHandler communicationHandler, Dictionary<long, EntityInfoExt> targetInfo)
             {
                 ID = id;
-                _numberOfMissileBays = numberOfMissileBays;
+                NumBays = numBays;
                 _communicationHandler = communicationHandler;
                 _targetInfo = targetInfo;
                 Init();
@@ -61,7 +67,7 @@ namespace IngameScript
             {
                 MissileBays = new List<MissileBay>();
                 MyMissilesExt = new Dictionary<long, EntityInfoExt>();
-                for (int i = 0; i < _numberOfMissileBays; i++)
+                for (int i = 0; i < NumBays; i++)
                 {
                     MissileBays.Add(new MissileBay(i));
                 }
@@ -75,7 +81,9 @@ namespace IngameScript
 
                 foreach (var bay in MissileBays)
                 {
+                    NumLoadedBays = 0;
                     bay.Run(time);
+                    if (bay.Status == BayStatus.Loaded) NumLoadedBays++;
                 }
 
                 while (_communicationHandler.HasMessage("MyMissiles", true))
@@ -118,7 +126,7 @@ namespace IngameScript
 
                 if (time - _lastClockSync > TimeSpan.FromSeconds(10))
                 {
-                    SyncClocks(time);
+                    SyncClocks();
                 }
 
                 if (_launchCoroutine != null && !_launchCoroutine.MoveNext())
@@ -170,89 +178,153 @@ namespace IngameScript
                 _addressTargetIDMap.Remove(address);
             }
 
-            public void SelectBay(int bayID)
+            public void SelectBay(MissileBay bay, object caller)
             {
-                if (bayID >= 0 && bayID < MissileBays.Count)
+                if (caller == null || FireControlAvail || !ReferenceEquals(Station, caller) || bay == null)
                 {
-                    var bay = MissileBays[bayID];
-                    if (!bay.IsSelectable) return;
-                    _selectedBays.Add(bayID);
-                    bay.IsSelected = true;
+                    return;
                 }
+                SelectBay(bay);
             }
 
-            public void DeselectBay(int bayID)
+            private void SelectBay(MissileBay bay)
             {
-                if (bayID >= 0 && bayID < MissileBays.Count)
-                {
-                    var bay = MissileBays[bayID];
-                    bay.IsSelected = false;
-                    _selectedBays.Remove(bayID);
-                }
+                if (!bay.IsSelectable) return;
+                _selectedBays.Add(bay);
+                bay.IsSelected = true;
             }
 
-            public void ToggleBaySelection(int bayID)
+            public void DeselectBay(MissileBay bay, object caller)
             {
-                if (_selectedBays.Contains(bayID))
+                if (caller == null || FireControlAvail || !ReferenceEquals(Station, caller) || bay == null)
                 {
-                    DeselectBay(bayID);
+                    return;
+                }
+                DeselectBay(bay);
+            }
+
+            private void DeselectBay(MissileBay bay)
+            {
+                bay.IsSelected = false;
+                _selectedBays.Remove(bay);
+            }
+
+            public void ToggleBaySelection(MissileBay bay, object caller)
+            {
+                if (caller == null || FireControlAvail || !ReferenceEquals(Station, caller) || bay == null)
+                {
+                    return;
+                }
+                ToggleBaySelection(bay);
+            }
+
+            private void ToggleBaySelection(MissileBay bay)
+            {
+                if (_selectedBays.Contains(bay))
+                {
+                    DeselectBay(bay);
                 }
                 else
                 {
-                    SelectBay(bayID);
+                    SelectBay(bay);
                 }
             }
 
-            public void ClearSelectedBays()
+            public void ClearSelectedBays(object caller)
             {
-                foreach (int bayID in _selectedBays.ToList())
+                if (caller == null || FireControlAvail || !ReferenceEquals(Station, caller))
                 {
-                    DeselectBay(bayID);
+                    return;
+                }
+                ClearSelectedBays();
+            }
+
+            private void ClearSelectedBays()
+            {
+                foreach (var bay in _selectedBays.ToList())
+                {
+                    DeselectBay(bay);
                 }
             }
 
-            public void LaunchMissiles(long targetID)
+            public void SelectAllBays(object caller)
             {
-                if (_launchCoroutine != null) return;
+                if (caller == null || FireControlAvail || !ReferenceEquals(Station, caller))
+                {
+                    return;
+                }
+                SelectAllBays();
+            }
+
+            private void SelectAllBays()
+            {
+                MissileBays.ForEach(bay => SelectBay(bay));
+            }
+
+            public void LaunchMissile(long targetID, object caller)
+            {
+                if (caller == null || FireControlAvail || !ReferenceEquals(Station, caller) || IsLaunching)
+                {
+                    return;
+                }
+                if (_selectedBays.Count == 0) return;
+                var bay = _selectedBays.First();
+                LaunchMissile(bay, targetID);
+            }
+
+            private bool LaunchMissile(MissileBay bay, long targetID)
+            {
+                if (Time - _lastLaunch < TimeSpan.FromSeconds(1) || !_selectedBays.Contains(bay)) return false;
+
+                if (!bay.ActivateMissile()) return false;
+
+                long missileID = bay.MissileID;
+                long missileAddress = bay.MissileAddress;
+
+                RegisterMissileAddress(missileAddress, missileID, targetID);
+
+                if (!bay.Launch())
+                {
+                    return false;
+                }
+                _lastLaunch = Time;
+                DeselectBay(bay);
+                return true;
+            }
+
+            public void LaunchMissiles(long targetID, object caller)
+            {
+                if (caller == null || FireControlAvail || !ReferenceEquals(Station, caller) || IsLaunching)
+                {
+                    return;
+                }
+                LaunchMissiles(targetID);
+            }
+
+            private void LaunchMissiles(long targetID)
+            {
                 _launchCoroutine = HandleLaunch(targetID);
             }
 
             private IEnumerator<bool> HandleLaunch(long targetID)
             {
-                DateTime timeOfLastLaunch = DateTime.MinValue;
                 foreach (var bayID in _selectedBays.ToList())
                 {
-                    while (Time - timeOfLastLaunch < TimeSpan.FromSeconds(1))
+                    while (!LaunchMissile(bayID, targetID))
                     {
                         yield return false;
                     }
-                    while (MissileBays[bayID].Status == BayStatus.Loaded && !MissileBays[bayID].ActivateMissile(Time))
-                    {
-                        DebugEcho("Failed to initialize missile.");
-                        yield return false;
-                    }
-
-                    long missileID = MissileBays[bayID].MissileID;
-                    long missileAddress = MissileBays[bayID].MissileAddress;
-
-                    RegisterMissileAddress(missileAddress, missileID, targetID);
-
-                    if (MissileBays[bayID].Launch())
-                    {
-                        timeOfLastLaunch = Time;
-                    }                    
-                    DeselectBay(bayID);
                 }
                 yield return true;
             }
 
-            public void SyncClocks(DateTime time)
+            private void SyncClocks()
             {
-                _lastClockSync = time;
+                _lastClockSync = Time;
 
                 foreach (long address in _addressMissileIDMap.Keys.ToList())
                 {
-                    string command = $"SYNC_CLOCK {time.Ticks}";
+                    string command = $"SYNC_CLOCK {Time.Ticks}";
                     List<byte> commandData = new List<byte>()
                     {
                         (byte)SerializedTypes.Command,
@@ -263,7 +335,16 @@ namespace IngameScript
                 }
             }
 
-            public void AbortMissile(long missileID)
+            public void AbortMissile(long missileID, object caller)
+            {
+                if (caller == null || FireControlAvail || !ReferenceEquals(Station, caller))
+                {
+                    return;
+                }
+                AbortMissile(missileID);
+            }
+
+            private void AbortMissile(long missileID)
             {
                 if (!_missileIDAddressMap.ContainsKey(missileID)) return;
                 long address = _missileIDAddressMap[missileID];
@@ -278,6 +359,25 @@ namespace IngameScript
                     byte[] commandBytes = commandData.ToArray();
                     _communicationHandler.SendUnicast(commandBytes, address, "MyMissileCommands", true);
                 }
+            }
+
+            public bool GiveFireControl(ControlStation station)
+            {
+                if (station == null || !FireControlAvail || ReferenceEquals(Station, station))
+                {
+                    return false;
+                }
+                Station = station;
+                return true;
+            }
+
+            public void RevokeFireControl(ControlStation station)
+            {
+                if (station == null || FireControlAvail || !ReferenceEquals(Station, station))
+                {
+                    return;
+                }
+                Station = null;
             }
         }
     }

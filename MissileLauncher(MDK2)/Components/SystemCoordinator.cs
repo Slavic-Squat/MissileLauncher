@@ -71,14 +71,7 @@ namespace IngameScript
                     throw new Exception("No Main Cockpit Found");
                 }
                 ReferenceController = ctrlBlocks[0];
-
-                List<IMyTerminalBlock> storageBlocks = new List<IMyTerminalBlock>();
-                GTS.GetBlocksOfType(storageBlocks, sb => sb.IsSameConstructAs(MePb) && sb.CustomData.Contains("[Config]"));
-                if (storageBlocks.Count == 0)
-                {
-                    throw new Exception("No Storage Block Found With [Config] In Custom Data");
-                }
-                _storageBlock = storageBlocks[0];
+                _storageBlock = ReferenceController;
             }
 
             private void Init()

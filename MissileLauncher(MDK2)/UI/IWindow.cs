@@ -27,8 +27,8 @@ namespace IngameScript
             UI UI { get; }
             bool IsOpen { get; }
             event Action<IWindow> RequestClose;
-            void OnOpen();
-            void OnClose();
+            void Open(object caller);
+            void Close(object caller);
         }
     }
 }

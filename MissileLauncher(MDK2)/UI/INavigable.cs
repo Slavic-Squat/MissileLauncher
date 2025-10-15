@@ -24,14 +24,15 @@ namespace IngameScript
     {
         public interface INavigable : IUIElement
         {
+            object Parent { get; }
             bool IsNavigating { get; }
             bool IsPaused { get; }
             event Action<INavigable> RequestStopNavigation;
-            void OnStartNavigation();
-            void OnStopNavigation();
+            void StartNavigation(object caller);
+            void StopNavigation(object caller);
             void PauseNavigation();
             void ResumeNavigation();
-            void Navigate(UserInput input, DateTime time);
+            void Navigate(UserInput input, object caller);
         }
     }
 }

@@ -25,6 +25,8 @@ namespace IngameScript
     {
         public class Menu : IMenu
         {
+            public object Parent { get; private set; }
+            public DateTime Time { get; private set; }
             public RectangleF Bounds => _bounds;
             public Vector2 Pos => _bounds.Position;
             public Vector2 Size => _bounds.Size;
@@ -54,8 +56,9 @@ namespace IngameScript
 
             protected List<MySprite> _commonSprites = new List<MySprite>();
 
-            public Menu(Vector2 pos, Vector2 size, float borderThickness, bool obscure = false, IMyTextSurface surface = null, Func<bool> autoClose = null)
+            public Menu(object parent, Vector2 pos, Vector2 size, float borderThickness, bool obscure = false, IMyTextSurface surface = null, Func<bool> autoClose = null)
             {
+                Parent = parent;
                 _bounds = new RectangleF(pos, size);
                 _borderThickness = borderThickness;
                 _obscure = obscure;
@@ -116,8 +119,12 @@ namespace IngameScript
                 };
             }
 
-            public virtual void OnOpen()
+            public virtual void Open(object caller)
             {
+                if (!ReferenceEquals(Parent, caller))
+                {
+                    return;
+                }
                 IsOpen = true;
             }
 
@@ -126,13 +133,21 @@ namespace IngameScript
                 RequestClose?.Invoke(this);
             }
 
-            public virtual void OnClose()
+            public virtual void Close(object caller)
             {
+                if (!ReferenceEquals(Parent, caller))
+                {
+                    return;
+                }
                 IsOpen = false;
             }
 
-            public virtual void OnStartNavigation()
+            public virtual void StartNavigation(object caller)
             {
+                if (!ReferenceEquals(Parent, caller))
+                {
+                    return;
+                }
                 IsNavigating = true;
                 ResumeNavigation();
             }
@@ -142,8 +157,12 @@ namespace IngameScript
                 RequestStopNavigation?.Invoke(this);
             }
 
-            public virtual void OnStopNavigation()
+            public virtual void StopNavigation(object caller)
             {
+                if (!ReferenceEquals(Parent, caller))
+                {
+                    return;
+                }
                 IsNavigating = false;
                 PauseNavigation();
             }
@@ -253,6 +272,7 @@ namespace IngameScript
 
             public virtual void Update(DateTime time)
             {
+                Time = time;
                 if (_autoClose?.Invoke() ?? false)
                 {
                     Close();
@@ -269,10 +289,10 @@ namespace IngameScript
                 }
             }
 
-            protected virtual void ActivateButton(IButton button, DateTime time)
+            protected virtual void ActivateButton(IButton button)
             {
                 if (button == null) return;
-                button.Press(time);
+                button.Press();
             }
 
             public virtual void Draw(MySpriteDrawFrame frame)
@@ -303,9 +323,9 @@ namespace IngameScript
                 }
             }
 
-            public virtual void Navigate(UserInput input, DateTime time)
+            public virtual void Navigate(UserInput input, object caller)
             {
-                if (!IsNavigating || IsPaused)
+                if (!IsNavigating || IsPaused || !ReferenceEquals(Parent, caller))
                 {
                     return;
                 }
@@ -366,7 +386,7 @@ namespace IngameScript
                 }
                 else if (input.SpaceRelease)
                 {
-                    ActivateButton(_highlightedButton, time);
+                    ActivateButton(_highlightedButton);
                 }
             }
         }

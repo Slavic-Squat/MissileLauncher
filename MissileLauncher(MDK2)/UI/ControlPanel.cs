@@ -25,6 +25,8 @@ namespace IngameScript
     {
         public class ControlPanel : IPanel, INavigable, IUpdatable, IHighlightable
         {
+            public object Parent { get; private set; }
+            public DateTime Time { get; private set; }
             public RectangleF Bounds => _bounds;
             public Vector2 Pos => _bounds.Position;
             public Vector2 Size => _bounds.Size;
@@ -51,8 +53,9 @@ namespace IngameScript
 
             private List<MySprite> _commonSprites = new List<MySprite>();
 
-            public ControlPanel(Vector2 pos, Vector2 size, float borderThickness, float highlightThickness)
+            public ControlPanel(object parent, Vector2 pos, Vector2 size, float borderThickness, float highlightThickness)
             {
+                Parent = parent;
                 _bounds = new RectangleF(pos, size);
                 _borderThickness = borderThickness;
                 _highlightThickness = highlightThickness;
@@ -112,8 +115,12 @@ namespace IngameScript
                 IsHighlighted = false;
             }
 
-            public void OnStartNavigation()
+            public void StartNavigation(object caller)
             {
+                if (!ReferenceEquals(Parent, caller))
+                {
+                    return;
+                }
                 IsNavigating = true;
                 ResumeNavigation();
             }
@@ -123,8 +130,12 @@ namespace IngameScript
                 RequestStopNavigation?.Invoke(this);
             }
 
-            public void OnStopNavigation()
+            public void StopNavigation(object caller)
             {
+                if (!ReferenceEquals(Parent, caller))
+                {
+                    return;
+                }
                 IsNavigating = false;
                 PauseNavigation();
             }
@@ -234,6 +245,7 @@ namespace IngameScript
 
             public void Update(DateTime time)
             {
+                Time = time;
                 foreach (var updatable in _commonUpdatables)
                 {
                     updatable.Update(time);
@@ -245,10 +257,10 @@ namespace IngameScript
                 }
             }
 
-            private void ActivateButton(IButton button, DateTime time)
+            private void ActivateButton(IButton button)
             {
                 if (button == null) return;
-                button.Press(time);
+                button.Press();
             }
 
             public void Draw(MySpriteDrawFrame frame)
@@ -279,9 +291,9 @@ namespace IngameScript
                 }
             }
 
-            public void Navigate(UserInput input, DateTime time)
+            public void Navigate(UserInput input, object caller)
             {
-                if (!IsNavigating || IsPaused)
+                if (!IsNavigating || IsPaused || !ReferenceEquals(Parent, caller))
                 {
                     return;
                 }
@@ -343,7 +355,7 @@ namespace IngameScript
                 }
                 else if (input.SpaceRelease)
                 {
-                    ActivateButton(_highlightedButton, time);
+                    ActivateButton(_highlightedButton);
                 }
             }
         }

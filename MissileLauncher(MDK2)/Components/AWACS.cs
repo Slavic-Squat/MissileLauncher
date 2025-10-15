@@ -43,6 +43,7 @@ namespace IngameScript
 
             #region Properties
             public int ID { get; private set; }
+            public DateTime Time { get; private set; }
             public float MaxRaycastDistance
             {
                 get
@@ -96,6 +97,7 @@ namespace IngameScript
 
             public void Run(DateTime time)
             {
+                Time = time;
                 if (_lastRunTime == default(DateTime))
                     _lastRunTime = time;
 
@@ -149,19 +151,19 @@ namespace IngameScript
 
                         if (targetAzimuth > -45 && targetAzimuth < 45)
                         {
-                            raycastResult = _cameraArray0.Raycast(estimatedTargetPos, time, 0.1f);
+                            raycastResult = _cameraArray0.Raycast(estimatedTargetPos, 0.1f);
                         }
                         else if (targetAzimuth > 45 && targetAzimuth < 135)
                         {
-                            raycastResult = _cameraArray1.Raycast(estimatedTargetPos, time, 0.1f);
+                            raycastResult = _cameraArray1.Raycast(estimatedTargetPos, 0.1f);
                         }
                         else if (targetAzimuth > 135 || targetAzimuth < -135)
                         {
-                            raycastResult = _cameraArray2.Raycast(estimatedTargetPos, time, 0.1f);
+                            raycastResult = _cameraArray2.Raycast(estimatedTargetPos, 0.1f);
                         }
                         else if (targetAzimuth > -135 && targetAzimuth < -45)
                         {
-                            raycastResult = _cameraArray3.Raycast(estimatedTargetPos, time, 0.1f);
+                            raycastResult = _cameraArray3.Raycast(estimatedTargetPos, 0.1f);
                         }
 
                         if (raycastResult.EntityId == targetID)

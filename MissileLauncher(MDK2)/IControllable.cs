@@ -24,13 +24,14 @@ namespace IngameScript
     {
         public interface IControllable
         {
+            IController Controller { get; }
             bool IsControlPaused { get; }
             bool IsUnderControl { get; }
             event Action<IControllable> RequestRelease;
 
-            void Control(UserInput input, DateTime time);
-            void OnTakeControl();
-            void OnRelease();
+            void Control(UserInput input, object caller);
+            bool GiveControl(IController controller);
+            void RevokeControl(IController controller);
             void PauseControl();
             void ResumeControl();
         }

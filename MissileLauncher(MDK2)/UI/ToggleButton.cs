@@ -24,6 +24,7 @@ namespace IngameScript
     {
         public class ToggleButton : IButton
         {
+            public DateTime Time { get; private set; }
             public RectangleF Bounds => _bounds;
             public Vector2 Pos => Bounds.Position;
             public Vector2 Size => Bounds.Size;
@@ -163,14 +164,14 @@ namespace IngameScript
                 _textSprite = SpriteHelper.CreateText(bounds, _textGetter(), textColor, _surface, TextAlignment.CENTER, true, _borderThickness + _padding);
             }
 
-            public void Press(DateTime time)
+            public void Press()
             {
                 if (!CanPress)
                 {
                     return;
                 }
 
-                _timePressed = time;
+                _timePressed = Time;
 
                 if (_state.HasFlag(ButtonState.Pressed))
                 {
@@ -202,6 +203,7 @@ namespace IngameScript
 
             public void Update(DateTime time)
             {
+                Time = time;
                 if (_isPressed?.Invoke() == true)
                 {
                     _state |= ButtonState.Pressed;

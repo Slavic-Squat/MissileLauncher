@@ -25,6 +25,8 @@ namespace IngameScript
         public class Window : IWindow
         {
             public UI UI { get; private set; }
+            public DateTime Time { get; private set; }
+            public object Parent { get; private set; }
             public RectangleF Bounds => _bounds;
             public Vector2 Pos => _bounds.Position;
             public Vector2 Size => _bounds.Size;
@@ -55,6 +57,7 @@ namespace IngameScript
             public Window(UI ui, Vector2 pos, Vector2 size, float borderThickness)
             {
                 UI = ui;
+                Parent = ui;
 
                 _bounds = new RectangleF(pos, size);
                 _borderThickness = borderThickness;
@@ -65,6 +68,7 @@ namespace IngameScript
             public Window(UI ui, float borderThickness)
             {
                 UI = ui;
+                Parent = ui;
 
                 _bounds = ui.Bounds;
                 _borderThickness = borderThickness;
@@ -100,8 +104,12 @@ namespace IngameScript
                 };
             }
 
-            public virtual void OnOpen()
+            public virtual void Open(object caller)
             {
+                if (!ReferenceEquals(Parent, caller))
+                {
+                    return;
+                }
                 IsOpen = true;
             }
 
@@ -110,13 +118,21 @@ namespace IngameScript
                 RequestClose?.Invoke(this);
             }
 
-            public virtual void OnClose()
+            public virtual void Close(object caller)
             {
+                if (!ReferenceEquals(Parent, caller))
+                {
+                    return;
+                }
                 IsOpen = false;
             }
 
-            public virtual void OnStartNavigation()
+            public virtual void StartNavigation(object caller)
             {
+                if (!ReferenceEquals(Parent, caller))
+                {
+                    return;
+                }
                 IsNavigating = true;
                 ResumeNavigation();
             }
@@ -126,8 +142,12 @@ namespace IngameScript
                 RequestStopNavigation?.Invoke(this);
             }
 
-            public virtual void OnStopNavigation()
+            public virtual void StopNavigation(object caller)
             {
+                if (!ReferenceEquals(Parent, caller))
+                {
+                    return;
+                }
                 IsNavigating = false;
                 PauseNavigation();
             }
@@ -164,7 +184,7 @@ namespace IngameScript
 
             public virtual void AddControlPanel(ControlPanel panel)
             {
-                if (panel == null) return;
+                if (panel == null || !ReferenceEquals(this, panel.Parent)) return;
                 _uiElements.Add(panel);
                 _updatables.Add(panel);
                 _highlightables.Add(panel);
@@ -195,12 +215,12 @@ namespace IngameScript
                 }
             }
 
-            protected virtual void ActivateHighlightable(IHighlightable highlightable, DateTime time)
+            protected virtual void ActivateHighlightable(IHighlightable highlightable)
             {
                 if (highlightable == null) return;
                 if (highlightable is IButton)
                 {
-                    ((IButton)highlightable).Press(time);
+                    ((IButton)highlightable).Press();
                 }
                 else if (highlightable is INavigable)
                 {
@@ -210,20 +230,22 @@ namespace IngameScript
 
             public virtual void NavigateElement(INavigable navigable)
             {
-                if (navigable == null || ReferenceEquals(navigable, _navigatedElement))
+                if (navigable == null || ReferenceEquals(navigable, _navigatedElement) || !ReferenceEquals(this, navigable.Parent))
                 {
                     return;
                 }
                 StopNavigatingElement(_navigatedElement);
+
                 _navigables.Add(navigable);
                 _navigatedElement = navigable;
-                navigable.OnStartNavigation();
+
+                navigable.StartNavigation(this);
                 navigable.RequestStopNavigation += StopNavigatingElement;
             }
 
             public virtual void StopNavigatingElement(INavigable navigable)
             {
-                if (navigable == null)
+                if (navigable == null || !ReferenceEquals(this, navigable.Parent))
                 {
                     return;
                 }
@@ -232,7 +254,7 @@ namespace IngameScript
                     _navigatedElement = null;
                 }
                 _navigables.Remove(navigable);
-                navigable.OnStopNavigation();
+                navigable.StopNavigation(this);
                 navigable.RequestStopNavigation -= StopNavigatingElement;
 
                 NavigateElement(_navigables.LastOrDefault());
@@ -240,29 +262,31 @@ namespace IngameScript
 
             public virtual void OpenMenu(IMenu menu)
             {
-                if (menu == null) return;
+                if (menu == null || !ReferenceEquals(this, menu.Parent)) return;
                 _updatables.Add(menu);
                 _uiElements.Add(menu);
 
                 NavigateElement(menu);
 
-                menu.OnOpen();
+                menu.Open(this);
                 menu.RequestClose += CloseMenu;
             }
 
             public virtual void CloseMenu(IMenu menu)
             {
-                if (menu == null) return;
+                if (menu == null || ReferenceEquals(this, menu.Parent)) return;
                 _updatables.Remove(menu);
                 _uiElements.Remove(menu);
 
                 StopNavigatingElement(menu);
+
                 menu.RequestClose -= CloseMenu;
-                menu.OnClose();
+                menu.Close(this);
             }
 
             public virtual void Update(DateTime time)
             {
+                Time = time;
                 foreach (var updatable in _updatables.ToList())
                 {
                     updatable.Update(time);
@@ -300,11 +324,15 @@ namespace IngameScript
                 }
             }
 
-            public virtual void Navigate(UserInput input, DateTime time)
+            public virtual void Navigate(UserInput input, object caller)
             {
+                if (!IsOpen || !IsNavigating || IsPaused || !ReferenceEquals(Parent, caller))
+                {
+                    return;
+                }
                 if (_navigatedElement != null)
                 {
-                    _navigatedElement.Navigate(input, time);
+                    _navigatedElement.Navigate(input, this);
                     return;
                 }
 
@@ -347,7 +375,7 @@ namespace IngameScript
                 }
                 else if (input.SpaceRelease)
                 {
-                    ActivateHighlightable(_highlightedElement, time);
+                    ActivateHighlightable(_highlightedElement);
                 }
             }
         }

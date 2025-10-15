@@ -24,7 +24,8 @@ namespace IngameScript
     {
         public class UI
         {
-            public IController Controller { get; private set; }
+            public ControlStation Station { get; private set; }
+            public DateTime Time { get; private set; }
             public bool HasActiveWindow => _activeWindow != null;
             public IMyTextSurface Display { get; private set; }
             public Vector2 SurfaceSize => Display.SurfaceSize;
@@ -38,9 +39,9 @@ namespace IngameScript
             private IWindow _activeWindow = null;
             private IModal _activeModal = null;
             private int _runCounter;
-            public UI (IController controller, IMyTextSurface display, UIWireManager uiWireManager)
+            public UI (ControlStation station, IMyTextSurface display, UIWireManager uiWireManager)
             {
-                Controller = controller;
+                Station = station;
                 Display = display;
                 UIWireManager = uiWireManager;
 
@@ -56,6 +57,7 @@ namespace IngameScript
 
             public void Run(DateTime time)
             {
+                Time = time;
                 if (_runCounter++ >= 9)
                 {
                     Update(time);
@@ -66,20 +68,20 @@ namespace IngameScript
 
             public void OpenWindow(IWindow window)
             {
-                if (window == null || ReferenceEquals(_activeWindow, window))
+                if (window == null || ReferenceEquals(_activeWindow, window) || !ReferenceEquals(this, window.Parent))
                 {
                     return;
                 }
                 CloseWindow(_activeWindow);
                 _activeWindow = window;
-                window.OnOpen();
-                window.OnStartNavigation();
+                window.Open(this);
+                window.StartNavigation(this);
                 window.RequestClose += CloseWindow;
             }
 
             public void CloseWindow(IWindow window)
             {
-                if (window == null)
+                if (window == null || !ReferenceEquals(this, window.Parent))
                 {
                     return;
                 }
@@ -87,8 +89,8 @@ namespace IngameScript
                 {
                     _activeWindow = null;
                 }
-                window.OnClose();
-                window.OnStopNavigation();
+                window.Close(this);
+                window.StopNavigation(this);
                 window.RequestClose -= CloseWindow;
             }
 
@@ -117,13 +119,17 @@ namespace IngameScript
                 _activeWindow?.Update(time);
             }
 
-            public void Navigate(UserInput input, DateTime time)
+            public void Navigate(UserInput input, object caller)
             {
+                if (!ReferenceEquals(Station, caller))
+                {
+                    return;
+                }
                 if (_activeModal != null)
                 {
                     return;
                 }
-                _activeWindow?.Navigate(input, time);
+                _activeWindow?.Navigate(input, this);
             }
 
             public void Draw()

@@ -29,7 +29,7 @@ namespace IngameScript
 
             private Func<bool> _canClose;
 
-            public ModalMenu(Vector2 pos, Vector2 size, float borderThickness, Func<bool> canClose, bool obscure = false, IMyTextSurface surface = null, Func<bool> autoClose = null) : base(pos, size, borderThickness, obscure, surface, autoClose)
+            public ModalMenu(object parent, Vector2 pos, Vector2 size, float borderThickness, Func<bool> canClose, bool obscure = false, IMyTextSurface surface = null, Func<bool> autoClose = null) : base(parent, pos, size, borderThickness, obscure, surface, autoClose)
             {
                 _canClose = canClose;
             }

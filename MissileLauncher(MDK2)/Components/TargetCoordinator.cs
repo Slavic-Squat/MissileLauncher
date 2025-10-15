@@ -30,6 +30,7 @@ namespace IngameScript
 
             #region Properties
             public int ID { get; private set; }
+            public DateTime Time { get; private set; }
 
             private Dictionary<long, EntityInfoExt> _targetsLocal = new Dictionary<long, EntityInfoExt>();
             private Dictionary<long, EntityInfoExt> _targetsRemote = new Dictionary<long, EntityInfoExt>();
@@ -61,6 +62,7 @@ namespace IngameScript
 
             public void Run(DateTime time)
             {
+                Time = time;
                 while (_communicationHandler.HasMessage("FriendlyTargetInfo", true))
                 {
                     MyIGCMessage message;

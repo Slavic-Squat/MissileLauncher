@@ -26,6 +26,7 @@ namespace IngameScript
         public class CameraArray
         {
             private List<IMyCameraBlock> _cameras = new List<IMyCameraBlock>();
+            public DateTime Time { get; private set; }
             private DateTime _lastUpdateTime;
             private int _cameraIndex;
             private float _totalAvailableRaycastDistance;
@@ -61,6 +62,7 @@ namespace IngameScript
 
             public void Update(DateTime time)
             {
+                Time = time;
                 if (_lastUpdateTime == default(DateTime))
                     _lastUpdateTime = time;
 
@@ -68,9 +70,9 @@ namespace IngameScript
                 _lastUpdateTime = time;
             }
 
-            public MyDetectedEntityInfo Raycast(Vector3 raycastTarget, DateTime time)
+            public MyDetectedEntityInfo Raycast(Vector3 raycastTarget)
             {
-                if (CanScan(raycastTarget, time))
+                if (CanScan(raycastTarget))
                 {
                     var result = _cameras[_cameraIndex].Raycast(raycastTarget);
                     float distanceUsed = Vector3.Distance(raycastTarget, _cameras[_cameraIndex].GetPosition());
@@ -85,18 +87,16 @@ namespace IngameScript
                 }
             }
 
-            public MyDetectedEntityInfo Raycast(Vector3 raycastTarget, DateTime time, float overshoot)
+            public MyDetectedEntityInfo Raycast(Vector3 raycastTarget, float overshoot)
             {
                 Vector3 raycastOvershoot = (raycastTarget - _cameras[_cameraIndex].GetPosition()) * overshoot;
                 raycastTarget += raycastOvershoot;
 
-                return Raycast(raycastTarget, time);
+                return Raycast(raycastTarget);
             }
 
-            public bool CanScan(Vector3 raycastTarget, DateTime time)
+            public bool CanScan(Vector3 raycastTarget)
             {
-                Update(time);
-
                 float raycastDistance = Vector3.Distance(raycastTarget, _cameras[_cameraIndex].GetPosition());
 
                 if (_cameras[_cameraIndex].CanScan(raycastTarget) && !Recharging && raycastDistance < MaxRaycastDistance)
@@ -109,12 +109,12 @@ namespace IngameScript
                 }
             }
 
-            public bool CanScan(Vector3 raycastTarget, DateTime time, float overshoot)
+            public bool CanScan(Vector3 raycastTarget, float overshoot)
             {
                 Vector3 raycastOvershoot = (raycastTarget - _cameras[_cameraIndex].GetPosition()) * overshoot;
                 raycastTarget += raycastOvershoot;
 
-                return CanScan(raycastTarget, time);
+                return CanScan(raycastTarget);
             }
 
             public Vector3 GetCameraPosition() => _cameras[_cameraIndex].GetPosition();

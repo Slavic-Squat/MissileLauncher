@@ -25,6 +25,8 @@ namespace IngameScript
         public class ControlStation : IController
         {
             public int ID { get; private set; }
+            public DateTime Time { get; private set; }
+            public bool HasFireControl { get; private set; }
             public IControllable Controllable { get; private set; }
             public UserInput Input { get; private set; }
             public bool IsControlling => Controllable != null;
@@ -73,17 +75,34 @@ namespace IngameScript
 
             public void Run(DateTime time)
             {
+                Time = time;
                 Input.Run(time);
                 _ui.Run(time);
 
                 if (!IsControlling)
                 {
-                    _ui.Navigate(Input, time);
+                    _ui.Navigate(Input, this);
                 }
                 else
                 {
-                    Controllable.Control(Input, time);
+                    Controllable.Control(Input, this);
                 }
+            }
+
+            public bool TakeFireControl(MissileCoordinator coordinator)
+            {
+                if (!coordinator.GiveFireControl(this))
+                {
+                    return false;
+                }
+                HasFireControl = true;
+                return true;
+            }
+
+            public void ReleaseFireControl(MissileCoordinator coordinator)
+            {
+                coordinator.RevokeFireControl(this);
+                HasFireControl = false;
             }
 
             public void TakeControl(IControllable controllable)
@@ -92,7 +111,10 @@ namespace IngameScript
                 {
                     ReleaseControl(Controllable);
                 }
-                controllable.OnTakeControl();
+                if (controllable == null || !controllable.GiveControl(this))
+                {
+                    return;
+                }
                 controllable.RequestRelease += ReleaseControl;
                 Controllable = controllable;
 
@@ -101,12 +123,12 @@ namespace IngameScript
 
             public void ReleaseControl(IControllable controllable)
             {
-                controllable.OnRelease();
-                controllable.RequestRelease -= ReleaseControl;
-                if (Controllable == controllable)
+                if (controllable == null || !ReferenceEquals(Controllable, controllable))
                 {
-                    Controllable = null;
+                    return;
                 }
+                controllable.RevokeControl(this);
+                controllable.RequestRelease -= ReleaseControl;
             }
         }
     }

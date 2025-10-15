@@ -51,8 +51,10 @@ namespace IngameScript
 
             #region Properties
             public int ID { get; private set; }
+            public DateTime Time { get; private set; }
+            public IController Controller { get; private set; }
             public bool IsControlPaused { get; private set; } = true;
-            public bool IsUnderControl { get; private set; } = false;
+            public bool IsUnderControl => Controller != null;
             public bool HasTarget => Target.IsValid;
             public float MaxRaycastDistance
             {
@@ -110,6 +112,7 @@ namespace IngameScript
 
             public void Run(DateTime time)
             {
+                Time = time;
                 if (_lastRunTime == default(DateTime))
                     _lastRunTime = time;
 
@@ -127,18 +130,18 @@ namespace IngameScript
 
                 if (HasTarget && !ManualOverride)
                 {
-                    AutoTrack(time);
+                    AutoTrack();
                 }
 
                 _lastRunTime = time;
             }
 
-            private void AutoTrack(DateTime time)
+            private void AutoTrack()
             {
-                float timeDeltaMiliseconds = (float)(time - _lastRunTime).TotalMilliseconds;
-                float timeDeltaSeconds = (float)(time - _lastRunTime).TotalSeconds;
+                float timeDeltaMiliseconds = (float)(Time - _lastRunTime).TotalMilliseconds;
+                float timeDeltaSeconds = (float)(Time - _lastRunTime).TotalSeconds;
 
-                TimeSpan timeSinceLastDetection = time - Target.TimeRecorded;
+                TimeSpan timeSinceLastDetection = Time - Target.TimeRecorded;
                 Vector3 estimatedTargetPosition = Target.Position + Target.Velocity * (float)timeSinceLastDetection.TotalSeconds;
                 float estimatedTargetDistance = (estimatedTargetPosition - _referenceMatrix.Translation).Length();
 
@@ -157,7 +160,7 @@ namespace IngameScript
                     var elevationInput = _elevationPID.Run(elevationError, timeDeltaSeconds) / Sensitivity;
 
                     MoveLaser(azimuthInput, elevationInput);
-                    FireLaser(time, estimatedTargetPosition, 0.1f);
+                    FireLaser(estimatedTargetPosition, 0.1f);
                 }
             }
 
@@ -173,18 +176,18 @@ namespace IngameScript
                 _matchingDetectionCounter = 0;
             }
 
-            private void FireLaser(DateTime time, Vector3 raycastTarget, float overshoot)
+            private void FireLaser(Vector3 raycastTarget, float overshoot)
             {
-                if (!_cameraArray.CanScan(raycastTarget, time, 0.1f))
+                if (!_cameraArray.CanScan(raycastTarget, 0.1f))
                     return;
 
-                var raycastResult = _cameraArray.Raycast(raycastTarget, time, 0.1f);
+                var raycastResult = _cameraArray.Raycast(raycastTarget, 0.1f);
 
                 if (!raycastResult.IsEmpty())
                 {
                     if (HasTarget && raycastResult.EntityId == Target.EntityID)
                     {
-                        var freshTarget = new EntityInfoExt(raycastResult, time);
+                        var freshTarget = new EntityInfoExt(raycastResult, Time);
                         Target = Target.Merge(freshTarget);
                     }
 
@@ -196,24 +199,24 @@ namespace IngameScript
                         }
                         else
                         {
-                            _lastUniqueDetectionTime = time;
+                            _lastUniqueDetectionTime = Time;
                             _matchingDetectionCounter = 0;
                         }
 
                         _previouslyDetectedEntity = raycastResult;
 
-                        TimeSpan timeSinceLastUniqueDetection = time - _lastUniqueDetectionTime;
+                        TimeSpan timeSinceLastUniqueDetection = Time - _lastUniqueDetectionTime;
                         if (timeSinceLastUniqueDetection.TotalSeconds > 2 && _matchingDetectionCounter >= 3)
                         {
-                            Target = new EntityInfoExt(raycastResult, time);
+                            Target = new EntityInfoExt(raycastResult, Time);
                         }
                     }
                 }
             }
 
-            public void Control(UserInput input, DateTime time)
+            public void Control(UserInput input, object caller)
             {
-                if (!IsUnderControl || IsControlPaused)
+                if (!IsUnderControl || IsControlPaused || !ReferenceEquals(Controller, caller))
                     return;
 
                 if (input.QRelease)
@@ -228,12 +231,12 @@ namespace IngameScript
                     if (input.SpacePress)
                     {
                         Vector3 raycastTarget = _referenceMatrix.Forward * MaxRaycastDistance * 0.9f + _referenceMatrix.Translation;
-                        FireLaser(time, raycastTarget, 0f);
+                        FireLaser(raycastTarget, 0f);
                     }
                 }
                 if (input.CHeldAndReleased)
                 {
-                    ReleaseControl();
+                    RevokeControl();
                     return;
                 }
                 else if (input.CRelease)
@@ -242,20 +245,29 @@ namespace IngameScript
                 }
             }
 
-            public void OnTakeControl()
+            public bool GiveControl(IController controller)
             {
-                IsUnderControl = true;
+                if (controller == null || IsUnderControl || ReferenceEquals(Controller, controller))
+                {
+                    return false;
+                }
+                Controller = controller;
                 ResumeControl();
+                return true;
             }
 
-            public void OnRelease()
+            public void RevokeControl(IController controller)
             {
-                IsUnderControl = false;
+                if (controller == null || !IsUnderControl || !ReferenceEquals(Controller, controller))
+                {
+                    return;
+                }
+                Controller = null;
                 PauseControl();
                 MoveLaser(0, 0);
             }
 
-            private void ReleaseControl()
+            private void RevokeControl()
             {
                 RequestRelease?.Invoke(this);
             }

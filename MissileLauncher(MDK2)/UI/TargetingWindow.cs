@@ -71,10 +71,14 @@ namespace IngameScript
                 InfoPanel targetPanel = new InfoPanel(targetPanelPos, targetPanelSize, 5f, 10f, targetInfoGetter, Display);
                 AddInfoPanel(targetPanel);
 
-                Vector2 optionsPanelPos = Pos + new Vector2(0, Size.Y * 0.5f);
+                Vector2 navFilterPanelPos = Pos + new Vector2(0, Size.Y * 0.5f);
 
-                ControlPanel optionsPanel = UIFactory.CreateTargetingOptionsPanel(optionsPanelPos, this, true);
-                AddControlPanel(optionsPanel);
+                ControlPanel navFilterPanel = UIFactory.CreateTargetingNavFilterPanel(navFilterPanelPos, this, true);
+                AddControlPanel(navFilterPanel);
+
+                Vector2 actionsPanelPos = Pos;
+                ControlPanel actionsPanel = UIFactory.CreateTargetingActionsPanel(actionsPanelPos, this);
+                AddControlPanel(actionsPanel);
             }
 
             private void OpenEntityMenu(long entityID)
@@ -182,11 +186,15 @@ namespace IngameScript
                 NavSourceFilter = NextEntitySourceFilter(NavSourceFilter);
             }
 
-            public override void Navigate(UserInput input, DateTime time)
+            public override void Navigate(UserInput input, object caller)
             {
+                if (!ReferenceEquals(Parent, caller))
+                {
+                    return;
+                }
                 if (_navigatedElement != null)
                 {
-                    _navigatedElement.Navigate(input, time);
+                    _navigatedElement.Navigate(input, this);
                     return;
                 }
 
@@ -198,20 +206,20 @@ namespace IngameScript
                 switch (NavMode)
                 {
                     case NavMode.UI:
-                        NavigateUI(input, time);
+                        NavigateUI(input, caller);
                         break;
                     case NavMode.Targeting:
-                        NavigateTargeting(input, time);
+                        NavigateTargeting(input);
                         break;
                 }
             }
 
-            private void NavigateUI(UserInput input, DateTime time)
+            private void NavigateUI(UserInput input, object caller)
             {
-                base.Navigate(input, time);
+                base.Navigate(input, caller);
             }
 
-            private void NavigateTargeting(UserInput input, DateTime time)
+            private void NavigateTargeting(UserInput input)
             {
                 if (input.CRelease)
                 {
