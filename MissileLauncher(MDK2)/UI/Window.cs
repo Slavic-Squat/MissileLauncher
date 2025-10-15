@@ -274,7 +274,7 @@ namespace IngameScript
 
             public virtual void CloseMenu(IMenu menu)
             {
-                if (menu == null || ReferenceEquals(this, menu.Parent)) return;
+                if (menu == null || !ReferenceEquals(this, menu.Parent)) return;
                 _updatables.Remove(menu);
                 _uiElements.Remove(menu);
 

@@ -110,7 +110,6 @@ namespace IngameScript
                     MissileType = GetMissileType(missileConfig.Get("Config", "Type").ToString());
                     MissileGuidanceType = GetMissileGuidanceType(missileConfig.Get("Config", "GuidanceType").ToString());
                     MissilePayload = GetMissilePayload(missileConfig.Get("Config", "Payload").ToString());
-                    DebugCounter++;
                 }
                 else
                 {

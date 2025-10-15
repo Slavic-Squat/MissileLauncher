@@ -129,6 +129,7 @@ namespace IngameScript
                 }
                 controllable.RevokeControl(this);
                 controllable.RequestRelease -= ReleaseControl;
+                Controllable = null;
             }
         }
     }

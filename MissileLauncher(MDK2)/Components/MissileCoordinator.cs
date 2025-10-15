@@ -34,6 +34,7 @@ namespace IngameScript
             public int NumSelectedBays => _selectedBays.Count;
             public int NumLoadedBays { get; private set; }
             public bool IsLaunching => _launchCoroutine != null;
+            public int NumMissiles => MyMissilesExt.Count;
             #endregion
 
             #region Components
@@ -378,6 +379,11 @@ namespace IngameScript
                     return;
                 }
                 Station = null;
+            }
+
+            public override string ToString()
+            {
+                return $"SELECTED BAYS: {NumSelectedBays}/{NumBays}\nLOADED BAYS: {NumLoadedBays}/{NumBays}\nTRACKED MISSILES: {NumMissiles}\nFIRE CONTROL: {(FireControlAvail ? "AVAILABLE" : "IN USE")}\nLAST SYNC: {(Time - _lastClockSync).TotalMilliseconds:0} ms\nLAST LAUNCH: {(Time - _lastLaunch).TotalSeconds:0.0} s";
             }
         }
     }

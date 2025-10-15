@@ -291,7 +291,7 @@ namespace IngameScript
                 }
                 else
                 {
-                    int numButtons = 3;
+                    int numButtons = 4;
                     float totalWidth = numButtons * buttonSize.X + (numButtons - 1) * spacing + 2 * padding;
                     float totalHeight = buttonSize.Y + 2 * padding;
                     Vector2 menuSize = new Vector2(totalWidth, totalHeight);

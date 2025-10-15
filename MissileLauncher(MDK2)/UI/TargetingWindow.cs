@@ -17,6 +17,7 @@ using VRage.Game.ModAPI.Ingame;
 using VRage.Game.ModAPI.Ingame.Utilities;
 using VRage.Game.ObjectBuilders.Definitions;
 using VRageMath;
+using static IngameScript.Program;
 
 namespace IngameScript
 {
@@ -48,15 +49,103 @@ namespace IngameScript
                 Init();
             }
 
-            public void Init()
+            protected override void BuildSprites()
+            {
+                _additionalSprites.Clear();
+                base.BuildSprites();
+
+                Vector2 leftBorderSize = new Vector2(_borderThickness, Size.Y);
+                Vector2 leftBorderPos = Pos;
+                RectangleF leftBorderBounds = new RectangleF(leftBorderPos, leftBorderSize);
+                MySprite leftBorderSprite = new MySprite()
+                {
+                    Type = SpriteType.TEXTURE,
+                    Data = "SquareSimple",
+                    Position = leftBorderBounds.Center,
+                    Size = leftBorderBounds.Size,
+                    Color = UIConfig.WindowBorderColor,
+                    Alignment = TextAlignment.CENTER
+                };
+                _additionalSprites.Add(leftBorderSprite);
+
+                Vector2 rightBorderSize = new Vector2(_borderThickness, Size.Y);
+                Vector2 rightBorderPos = Pos + new Vector2(Size.X - _borderThickness, 0);
+                RectangleF rightBorderBounds = new RectangleF(rightBorderPos, rightBorderSize);
+                MySprite rightBorderSprite = new MySprite()
+                {
+                    Type = SpriteType.TEXTURE,
+                    Data = "SquareSimple",
+                    Position = rightBorderBounds.Center,
+                    Size = rightBorderBounds.Size,
+                    Color = UIConfig.WindowBorderColor,
+                    Alignment = TextAlignment.CENTER
+                };
+                _additionalSprites.Add(rightBorderSprite);
+
+                Vector2 topBorderSize = new Vector2(Size.X, _borderThickness);
+                Vector2 topBorderPos = Pos;
+                RectangleF topBorderBounds = new RectangleF(topBorderPos, topBorderSize);
+                MySprite topBorderSprite = new MySprite()
+                {
+                    Type = SpriteType.TEXTURE,
+                    Data = "SquareSimple",
+                    Position = topBorderBounds.Center,
+                    Size = topBorderBounds.Size,
+                    Color = UIConfig.WindowBorderColor,
+                    Alignment = TextAlignment.CENTER
+                };
+                _additionalSprites.Add(topBorderSprite);
+
+                Vector2 bottomBorderSize = new Vector2(Size.X, _borderThickness);
+                Vector2 bottomBorderPos = Pos + new Vector2(0, Size.Y - _borderThickness);
+                RectangleF bottomBorderBounds = new RectangleF(bottomBorderPos, bottomBorderSize);
+                MySprite bottomBorderSprite = new MySprite()
+                {
+                    Type = SpriteType.TEXTURE,
+                    Data = "SquareSimple",
+                    Position = bottomBorderBounds.Center,
+                    Size = bottomBorderBounds.Size,
+                    Color = UIConfig.WindowBorderColor,
+                    Alignment = TextAlignment.CENTER
+                };
+                _additionalSprites.Add(bottomBorderSprite);
+
+                Vector2 labelSize = new Vector2(250f, 100f);
+                Vector2 labelPos = Pos;
+                RectangleF labelBounds = new RectangleF(labelPos, labelSize);
+                MySprite labelFillSprite = new MySprite()
+                {
+                    Type = SpriteType.TEXTURE,
+                    Data = "SquareSimple",
+                    Position = labelBounds.Center,
+                    Size = labelBounds.Size - 2 * _borderThickness,
+                    Color = UIConfig.WindowFillColor,
+                    Alignment = TextAlignment.CENTER
+                };
+                MySprite labelBorderSprite = new MySprite()
+                {
+                    Type = SpriteType.TEXTURE,
+                    Data = "SquareSimple",
+                    Position = labelBounds.Center,
+                    Size = labelBounds.Size,
+                    Color = UIConfig.WindowBorderColor,
+                    Alignment = TextAlignment.CENTER
+                };
+                MySprite labelTextSprite = SpriteHelper.CreateText(labelBounds, "-TARGETING-", Color.White, Display, TextAlignment.CENTER, true, _borderThickness + 10f);
+                AddSprite(labelBorderSprite);
+                AddSprite(labelFillSprite);
+                AddSprite(labelTextSprite);
+            }
+
+            private void Init()
             {
                 _allEntities = UI.UIWireManager.GetAllEntities();
 
                 _targetingSpriteBuilder = new TargetingSpriteBuilder();
                 _targetingSpriteBuilder.Zoom = GetValue(ScopeScale);
 
-                Vector2 targetPanelSize = new Vector2(150, 200);
-                Vector2 targetPanelPos = Pos + new Vector2(Size.X - targetPanelSize.X, Size.Y * 0.5f - targetPanelSize.Y * 0.5f);
+                Vector2 targetInfoPanelSize = new Vector2(150, 200);
+                Vector2 targetInfoPanelPos = Pos + new Vector2(Size.X - targetInfoPanelSize.X, Size.Y * 0.5f - targetInfoPanelSize.Y * 0.5f);
                 Func<string> targetInfoGetter = () =>
                 {
                     if (_entitySprites.Keys.Contains(SelectedEntityID))
@@ -68,17 +157,25 @@ namespace IngameScript
                         return "No Target Selected";
                     }
                 };
-                InfoPanel targetPanel = new InfoPanel(targetPanelPos, targetPanelSize, 5f, 10f, targetInfoGetter, Display);
+                InfoPanel targetPanel = new InfoPanel(targetInfoPanelPos, targetInfoPanelSize, 5f, 10f, targetInfoGetter, Display);
                 AddInfoPanel(targetPanel);
 
-                Vector2 navFilterPanelPos = Pos + new Vector2(0, Size.Y * 0.5f);
+                Vector2 navFilterPanelPos = Pos + new Vector2(0, 100f);
 
-                ControlPanel navFilterPanel = UIFactory.CreateTargetingNavFilterPanel(navFilterPanelPos, this, true);
+                ControlPanel navFilterPanel = UIFactory.CreateTargetingNavFilterPanel(navFilterPanelPos, this);
                 AddControlPanel(navFilterPanel);
 
-                Vector2 actionsPanelPos = Pos;
+                Vector2 actionsPanelPos = Pos + new Vector2(250f, 0);
                 ControlPanel actionsPanel = UIFactory.CreateTargetingActionsPanel(actionsPanelPos, this);
                 AddControlPanel(actionsPanel);
+
+                Vector2 coordinatorInfoPanelPos = Pos + new Vector2(250 + actionsPanel.Size.X, 0);
+                Vector2 coordinatorInfoPanelSize = new Vector2(Size.X - 250 - actionsPanel.Size.X, 200f);
+
+                MissileCoordinator coordinator = UI.UIWireManager.MissileCoordinator;
+                Func<string> coordinatorInfoGetter = () => coordinator.ToString();
+                InfoPanel coordinatorInfoPanel = new InfoPanel(coordinatorInfoPanelPos, coordinatorInfoPanelSize, 5f, 10f, coordinatorInfoGetter, Display);
+                AddInfoPanel(coordinatorInfoPanel);
             }
 
             private void OpenEntityMenu(long entityID)
@@ -103,6 +200,7 @@ namespace IngameScript
 
             public override void Update(DateTime time)
             {
+                if (!IsOpen) return;
                 base.Update(time);
 
                 _allEntities = UI.UIWireManager.GetAllEntities();
@@ -115,6 +213,7 @@ namespace IngameScript
 
             public override void Draw(MySpriteDrawFrame frame)
             {
+                if (!IsOpen) return;
                 BuildSprites();
                 frame.Add(_borderSprite);
                 frame.Add(_fillSprite);
@@ -188,7 +287,7 @@ namespace IngameScript
 
             public override void Navigate(UserInput input, object caller)
             {
-                if (!ReferenceEquals(Parent, caller))
+                if (!IsOpen || !IsNavigating || IsPaused || !ReferenceEquals(Parent, caller))
                 {
                     return;
                 }
