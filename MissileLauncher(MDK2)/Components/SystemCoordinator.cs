@@ -105,10 +105,10 @@ namespace IngameScript
                 Config.Set("Targeting", "NumOfLasers", numLasers);
                 for (int i = 0; i < numLasers; i++)
                 {
-                    float maxLaserDist = Config.Get("Targeting", $"Laser[{i}]_MaxDistance").ToSingle(5000);
-                    Config.Set("Targeting", $"Laser[{i}]_MaxDistance", maxLaserDist);
-                    float sensitivity = Config.Get("Targeting", $"Laser[{i}]_Sensitivity").ToSingle(0.05f);
-                    Config.Set("Targeting", $"Laser[{i}]_Sensitivity", sensitivity);
+                    float maxLaserDist = Config.Get("Targeting", $"Laser{i}MaxDistance").ToSingle(5000);
+                    Config.Set("Targeting", $"Laser{i}MaxDistance", maxLaserDist);
+                    float sensitivity = Config.Get("Targeting", $"Laser{i}Sensitivity").ToSingle(0.05f);
+                    Config.Set("Targeting", $"Laser{i}Sensitivity", sensitivity);
                     TargetingLaser laser = new TargetingLaser(i, sensitivity, maxLaserDist);
                     laser.SyncRequested += SyncTarget;
                     TargetingLasers.Add(laser);
