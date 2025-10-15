@@ -43,6 +43,7 @@ namespace IngameScript
                 if (!_storageBlock.CustomData.StartsWith(_commandsHeader))
                 {
                     _storageBlock.CustomData = _commandsHeader;
+                    return false;
                 }
                 else
                 {
