@@ -174,7 +174,7 @@ namespace IngameScript
                     Data = "StarryBackground",
                     Position = new Vector2(511, 511),
                     Size = new Vector2(1024, 1024),
-                    Color = Color.White,
+                    Color = new Color(200, 200, 200, 255),
                     Alignment = TextAlignment.CENTER,
                     RotationOrScale = 0f
                 };
@@ -257,16 +257,16 @@ namespace IngameScript
                     switch (entityInfoExt.Relation)
                     {
                         case EntityRelation.Me:
-                            spriteColor = Color.Cyan;
+                            spriteColor = UIConfig.MeColor;
                             break;
                         case EntityRelation.Neutral:
-                            spriteColor = Color.Orange;
+                            spriteColor = UIConfig.NeutralColor;
                             break;
                         case EntityRelation.Friendly:
-                            spriteColor = Color.Lime;
+                            spriteColor = UIConfig.FriendlyColor;
                             break;
                         case EntityRelation.Hostile:
-                            spriteColor = Color.OrangeRed;
+                            spriteColor = UIConfig.HostileColor;
                             break;
                         default:
                             spriteColor = Color.White;
@@ -327,7 +327,7 @@ namespace IngameScript
                             Data = "Selector_0",
                             Position = entityPosPixel,
                             Size = MySpriteExtEntity.Sprite.Size * 1.5f,
-                            Color = Color.Yellow,
+                            Color = UIConfig.SelectorColor,
                             Alignment = TextAlignment.CENTER,
                             RotationOrScale = 0f,
                         };
