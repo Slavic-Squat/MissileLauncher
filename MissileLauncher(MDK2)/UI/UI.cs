@@ -38,7 +38,6 @@ namespace IngameScript
 
             private IWindow _activeWindow = null;
             private IModal _activeModal = null;
-            private int _runCounter;
             public UI (ControlStation station, IMyTextSurface display, UIWireManager uiWireManager)
             {
                 Station = station;
