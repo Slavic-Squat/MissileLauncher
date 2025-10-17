@@ -87,7 +87,7 @@ namespace IngameScript
                     return;
                 }
                 List<IMyProgrammableBlock> pbBlocks = new List<IMyProgrammableBlock>();
-                GTS.GetBlocksOfType(pbBlocks, pb => pb.IsSameConstructAs(missileConnector) && pb.CustomName == "Computer");
+                GTS.GetBlocksOfType(pbBlocks, pb => pb.IsSameConstructAs(missileConnector));
                 if (pbBlocks.Count == 0)
                 {
                     return;

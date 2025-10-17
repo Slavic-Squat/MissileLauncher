@@ -128,6 +128,11 @@ namespace IngameScript
 
                 _cameraArray.Update(time);
 
+                if (!IsUnderControl && !HasTarget)
+                {
+                    MoveLaser(0, 0);
+                }
+
                 if (HasTarget && !ManualOverride)
                 {
                     AutoTrack();
