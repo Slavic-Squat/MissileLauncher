@@ -25,7 +25,7 @@ namespace IngameScript
         public class AWACS
         {
             #region Parts
-            private IMyMotorStator _spinRotor;
+            private Rotor _spinRotor;
             private CameraArray _cameraArray0;
             private CameraArray _cameraArray1;
             private CameraArray _cameraArray2;
@@ -34,9 +34,6 @@ namespace IngameScript
 
             #region State Info
             private Matrix _referenceMatrix;
-
-            private float _spinRotorAngle;
-            private bool _spinRotorInverted;
 
             private double _lastRunTime;
             #endregion
@@ -76,17 +73,11 @@ namespace IngameScript
 
             private void GetBlocks()
             {
-                _spinRotor = GTS.GetBlockWithName($"Spin Rotor [{ID}]") as IMyMotorStator;
-                if (_spinRotor == null)
-                {
-                    throw new Exception("No Spin Rotor Found For AWACS");
-                }
+                _spinRotor = new Rotor($"AWACS Spin Rotor [{ID}]");
             }
 
             private void Init()
             {
-                _spinRotorInverted = _spinRotor.CustomData.Contains("Inverted");
-
                 Targets = new Dictionary<long, EntityInfoExt>();
                 TargetsSyncInfo = new Dictionary<long, bool>();
 
@@ -109,14 +100,11 @@ namespace IngameScript
 
                 if (Targets.Count != 0)
                 {
-                    _spinRotorAngle = _spinRotorInverted ? -_spinRotor.Angle : _spinRotor.Angle;
-                    _spinRotorAngle = MiscUtilities.LoopInRange(_spinRotorAngle, -(float)Math.PI, (float)Math.PI);
+                    Quaternion rotation = Quaternion.CreateFromAxisAngle(_spinRotor.RotorBlock.WorldMatrix.Up, _spinRotor.CurrentAngle);
 
-                    Quaternion rotation = Quaternion.CreateFromAxisAngle(_spinRotor.WorldMatrix.Up, _spinRotorAngle);
+                    _referenceMatrix = Matrix.Transform(_spinRotor.RotorBlock.WorldMatrix, rotation);
 
-                    _referenceMatrix = Matrix.Transform(_spinRotor.WorldMatrix, rotation);
-
-                    _referenceMatrix.Translation = _spinRotor.GetPosition();
+                    _referenceMatrix.Translation = _spinRotor.RotorBlock.GetPosition();
 
                     foreach (var targetID in Targets.Keys.ToList())
                     {

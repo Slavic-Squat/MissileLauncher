@@ -26,8 +26,8 @@ namespace IngameScript
         public class TargetingLaser : IControllable
         {
             #region Parts
-            private IMyMotorStator _azimuthRotor;
-            private IMyMotorStator _elevationRotor;
+            private Rotor _azimuthRotor;
+            private Rotor _elevationRotor;
             private CameraArray _cameraArray;
             #endregion
 
@@ -35,10 +35,6 @@ namespace IngameScript
             private float _maxRaycastDistance;
             private double _lastRunTime;
             private Matrix _referenceMatrix;
-            private bool _azimuthRotorInverted;
-            private bool _elevationRotorInverted;
-            private float _azimuthRotorAngle;
-            private float _elevationRotorAngle;
             private double _lastUniqueDetectionTime;
             private int _matchingDetectionCounter;
             private MyDetectedEntityInfo _previouslyDetectedEntity;
@@ -88,23 +84,12 @@ namespace IngameScript
 
             private void GetBlocks()
             {
-                _azimuthRotor = GTS.GetBlockWithName($"Azimuth Rotor [{ID}]") as IMyMotorStator;
-                if (_azimuthRotor == null)
-                {
-                    throw new Exception($"No Azimuth Rotor Found For Targeting Laser [{ID}]");
-                }
-                _elevationRotor = GTS.GetBlockWithName($"Elevation Rotor [{ID}]") as IMyMotorStator;
-                if (_elevationRotor == null)
-                {
-                    throw new Exception($"No Elevation Rotor Found For Targeting Laser [{ID}]");
-                }
+                _azimuthRotor = new Rotor($"Azimuth Rotor [{ID}]");
+                _elevationRotor = new Rotor($"Elevation Rotor [{ID}]");
             }
 
             private void Init()
             {
-                _azimuthRotorInverted = _azimuthRotor.CustomData.Contains("Inverted");
-                _elevationRotorInverted = _elevationRotor.CustomData.Contains("Inverted");
-
                 _cameraArray = new CameraArray(0, _maxRaycastDistance);
                 _azimuthPID = new PIDControl(25, 2, 0.1f);
                 _elevationPID = new PIDControl(25, 2, 0.1f);
@@ -116,12 +101,9 @@ namespace IngameScript
                 if (_lastRunTime == 0)
                     _lastRunTime = time;
 
-                _azimuthRotorAngle = _azimuthRotorInverted ? -_azimuthRotor.Angle : _azimuthRotor.Angle;
-                _elevationRotorAngle = _elevationRotorInverted ? -_elevationRotor.Angle : _elevationRotor.Angle;
-
-                Matrix H0 = _azimuthRotor.WorldMatrix;
-                Matrix H1 = Matrix.CreateRotationY(_azimuthRotorAngle);
-                Matrix H2 = Matrix.CreateRotationX(_elevationRotorAngle);
+                Matrix H0 = _azimuthRotor.RotorBlock.WorldMatrix;
+                Matrix H1 = Matrix.CreateRotationY(_azimuthRotor.CurrentAngle);
+                Matrix H2 = Matrix.CreateRotationX(_elevationRotor.CurrentAngle);
                 H2.Translation = new Vector3(0, 3, 0);
 
                 _referenceMatrix = H2 * H1 * H0;
@@ -170,8 +152,8 @@ namespace IngameScript
 
             private void MoveLaser(float azimuthInput, float elevationInput)
             {
-                _elevationRotor.TargetVelocityRad = _elevationRotorInverted ? -elevationInput * Sensitivity : elevationInput * Sensitivity;
-                _azimuthRotor.TargetVelocityRad = _azimuthRotorInverted ? -azimuthInput * Sensitivity : azimuthInput * Sensitivity;
+                _elevationRotor.Velocity = elevationInput * Sensitivity;
+                _azimuthRotor.Velocity = azimuthInput * Sensitivity;
             }
 
             private void ForgetTarget()
