@@ -121,6 +121,14 @@ namespace IngameScript
 
                 IsInverted = RotorBlock.CustomData.Contains("-Inverted");
             }
+
+            public Rotor(IMyMotorStator rotorBlock)
+            {
+                if (rotorBlock == null)
+                    throw new ArgumentNullException("rotorBlock");
+                RotorBlock = rotorBlock;
+                IsInverted = RotorBlock.CustomData.Contains("-Inverted");
+            }
         }
     }
 }
