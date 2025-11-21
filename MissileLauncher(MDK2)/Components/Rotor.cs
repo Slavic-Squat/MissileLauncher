@@ -92,8 +92,8 @@ namespace IngameScript
                 }
             }
 
-            public bool IsMaxed => CurrentAngle >= MaxAngle - MathHelper.EPSILON;
-            public bool IsMinned => CurrentAngle <= MinAngle + MathHelper.EPSILON;
+            public bool IsMaxed => CurrentAngle >= MaxAngle - 0.01f;
+            public bool IsMinned => CurrentAngle <= MinAngle + 0.01f;
             public bool IsSaturated
             {
                 get
