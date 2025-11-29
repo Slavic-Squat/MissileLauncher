@@ -27,7 +27,7 @@ namespace IngameScript
             Vector2 Size { get; }
             Vector2 Center { get; }
             RectangleF Bounds { get; }
-            bool Draw(MySpriteDrawFrame frame);
+            void Draw(MySpriteDrawFrame frame);
         }
     }
 }

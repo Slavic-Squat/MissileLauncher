@@ -48,7 +48,7 @@ namespace IngameScript
             [Flags]
             public enum ButtonState
             {
-                None = 0, Highlighted = 1, Pressed = 1 << 1, Disabled = 1 << 2, Errored = 1 << 3
+                None = 0, Highlighted = 1, Pressed = 1 << 1, Disabled = 1 << 2
             }
 
             private RectangleF _bounds;
@@ -57,8 +57,8 @@ namespace IngameScript
             private float _borderThickness;
             private float _highlightThickness;
 
-            private Func<bool> _onPress;
-            private Func<bool> _onRelease;
+            private Action _onPress;
+            private Action _onRelease;
             private Func<bool> _isPressed;
             private ButtonState _state = ButtonState.None;
             private double _timePressed;
@@ -73,7 +73,7 @@ namespace IngameScript
 
             private IMyTextSurface _surface;
 
-            public ToggleButton(Vector2 pos, Vector2 size, float padding, float borderThickness, float highlightThickness, Func<string> textGetter, Func<bool> onPress, Func<bool> onRelease, Func<bool> isPressed, IMyTextSurface surface, Func<bool> canPress = null, Func<bool> canRelease = null)
+            public ToggleButton(Vector2 pos, Vector2 size, float padding, float borderThickness, float highlightThickness, Func<string> textGetter, Action onPress, Action onRelease, Func<bool> isPressed, IMyTextSurface surface, Func<bool> canPress = null, Func<bool> canRelease = null)
             {
                 _bounds = new RectangleF(pos, size);
                 _padding = padding;
@@ -98,12 +98,6 @@ namespace IngameScript
                     fillColor = UIConfig.ButtonFillColorDisabled;
                     borderColor = UIConfig.ButtonBorderColorDisabled;
                     textColor = UIConfig.ButtonTextColorDisabled;
-                }
-                else if (_state.HasFlag(ButtonState.Errored))
-                {
-                    fillColor = UIConfig.ButtonFillErrored;
-                    borderColor = UIConfig.ButtonBorderColorErrored;
-                    textColor = UIConfig.ButtonTextColorErrored;
                 }
                 else if (_state.HasFlag(ButtonState.Pressed))
                 {
@@ -164,47 +158,36 @@ namespace IngameScript
                 _textSprite = SpriteHelper.CreateText(bounds, _textGetter(), textColor, _surface, TextAlignment.CENTER, true, _borderThickness + _padding);
             }
 
-            public bool Press()
+            public void Press()
             {
                 if (!CanPress)
                 {
-                    return false;
+                    return;
                 }
 
                 _timePressed = Time;
 
                 if (_state.HasFlag(ButtonState.Pressed))
                 {
-                    if (_onRelease?.Invoke() == false)
-                    {
-                        _state |= ButtonState.Errored;
-                        return false;
-                    }
+                    _onRelease?.Invoke();
                 }
                 else
                 {
-                    if (_onPress?.Invoke() == false)
-                    {
-                        _state |= ButtonState.Errored;
-                        return false;
-                    }
+                    _onPress?.Invoke();
                 }
-                return true;
             }
 
-            public bool Highlight()
+            public void Highlight()
             {
                 _state |= ButtonState.Highlighted;
-                return true;
             }
 
-            public bool Unhighlight()
+            public void Unhighlight()
             {
                 _state &= ~ButtonState.Highlighted;
-                return true;
             }
 
-            public bool Update(double time)
+            public void Update(double time)
             {
                 Time = time;
                 if (_isPressed?.Invoke() == true)
@@ -216,11 +199,6 @@ namespace IngameScript
                     _state &= ~ButtonState.Pressed;
                 }
 
-                if ((time - _timePressed) > 2f && _state.HasFlag(ButtonState.Errored))
-                {
-                    _state &= ~ButtonState.Errored;
-                }
-
                 if (CanPress && _state.HasFlag(ButtonState.Disabled))
                 {
                     _state &= ~ButtonState.Disabled;
@@ -229,10 +207,9 @@ namespace IngameScript
                 {
                     _state |= ButtonState.Disabled;
                 }
-                return true;
             }
 
-            public bool Draw(MySpriteDrawFrame frame)
+            public void Draw(MySpriteDrawFrame frame)
             {
                 BuildSprites();
                 if (IsHighlighted)
@@ -242,7 +219,6 @@ namespace IngameScript
                 frame.Add(_borderSprite);
                 frame.Add(_fillSprite);
                 frame.Add(_textSprite);
-                return true;
             }
         }
     }

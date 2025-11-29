@@ -89,50 +89,46 @@ namespace IngameScript
                 }
             }
 
-            public bool TakeFireControl(MissileCoordinator coordinator)
+            public void TakeFireControl(MissileCoordinator coordinator)
             {
                 if (!coordinator.GiveFireControl(this))
                 {
-                    return false;
+                    return;
                 }
                 HasFireControl = true;
-                return true;
             }
 
-            public bool ReleaseFireControl(MissileCoordinator coordinator)
+            public void ReleaseFireControl(MissileCoordinator coordinator)
             {
-                bool success = coordinator.RevokeFireControl(this);
+                coordinator.RevokeFireControl(this);
                 HasFireControl = false;
-                return success;
             }
 
-            public bool TakeControl(IControllable controllable)
+            public void TakeControl(IControllable controllable)
             {
                 if (IsControlling)
                 {
                     ReleaseControl(Controllable);
                 }
-                if (controllable == null || !controllable.GiveControl(this))
+                if (controllable == null)
                 {
-                    return false;
+                    return;
                 }
                 controllable.RequestRelease += ReleaseControl;
                 Controllable = controllable;
 
                 _ui.OpenModal(new InfoModal(_ui.Bounds.Center - _ui.Bounds.Size * 0.75f * 0.5f, _ui.Bounds.Size * 0.75f, 10f, 10f, () => !IsControlling, $"UI Navigation Disabled\nReason: Controlling Object", PrimaryDisplay));
-                return true;
             }
 
-            public bool ReleaseControl(IControllable controllable)
+            public void ReleaseControl(IControllable controllable)
             {
                 if (controllable == null || !ReferenceEquals(Controllable, controllable))
                 {
-                    return false;
+                    return;
                 }
                 controllable.RevokeControl(this);
                 controllable.RequestRelease -= ReleaseControl;
                 Controllable = null;
-                return true;
             }
         }
     }

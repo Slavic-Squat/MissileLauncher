@@ -67,8 +67,8 @@ namespace IngameScript
             public float Sensitivity { get; set; }
             public bool ManualOverride { get; set; }
             public EntityInfoExt Target {  get; private set; }
-            public event Func<TargetingLaser, bool> SyncRequested;
-            public event Func<IControllable, bool> RequestRelease;
+            public event Action<TargetingLaser> SyncRequested;
+            public event Action<IControllable> RequestRelease;
             #endregion
 
             public TargetingLaser(int id, float sensitivity = 0.05f, float maxRaycastDistance = 5000, bool manualOverride = false)
@@ -162,10 +162,10 @@ namespace IngameScript
                 _matchingDetectionCounter = 0;
             }
 
-            private bool FireLaser(Vector3 raycastTarget, float overshoot)
+            private void FireLaser(Vector3 raycastTarget, float overshoot)
             {
                 if (!_cameraArray.CanScan(raycastTarget, 0.1f))
-                    return false;
+                    return;
 
                 var raycastResult = _cameraArray.Raycast(raycastTarget, 0.1f);
 
@@ -198,13 +198,12 @@ namespace IngameScript
                         }
                     }
                 }
-                return true;
             }
 
-            public bool Control(UserInput input, object caller)
+            public void Control(UserInput input, object caller)
             {
                 if (!IsUnderControl || IsControlPaused || !ReferenceEquals(Controller, caller))
-                    return false;
+                    return;
 
                 if (input.QRelease)
                 {
@@ -224,53 +223,48 @@ namespace IngameScript
                 if (input.CHeldAndReleased)
                 {
                     RevokeControl();
-                    return false;
+                    return;
                 }
                 else if (input.CRelease)
                 {
                     ForgetTarget();
                 }
-                return true;
             }
 
-            public bool GiveControl(IController controller)
+            public void GiveControl(IController controller)
             {
                 if (controller == null || IsUnderControl || ReferenceEquals(Controller, controller))
                 {
-                    return false;
+                    return;
                 }
                 Controller = controller;
                 ResumeControl();
-                return true;
             }
 
-            public bool RevokeControl(IController controller)
+            public void RevokeControl(IController controller)
             {
                 if (controller == null || !IsUnderControl || !ReferenceEquals(Controller, controller))
                 {
-                    return false;
+                    return;
                 }
                 Controller = null;
                 PauseControl();
                 MoveLaser(0, 0);
-                return true;
             }
 
-            private bool RevokeControl()
+            private void RevokeControl()
             {
-                return RequestRelease?.Invoke(this) ?? false;
+                RequestRelease?.Invoke(this);
             }
 
-            public bool PauseControl()
+            public void PauseControl()
             {
                 IsControlPaused = true;
-                return true;
             }
 
-            public bool ResumeControl()
+            public void ResumeControl()
             {
                 IsControlPaused = false;
-                return true;
             }
 
             public override string ToString()

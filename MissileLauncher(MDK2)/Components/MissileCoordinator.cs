@@ -50,7 +50,7 @@ namespace IngameScript
 
             private Dictionary<long, EntityInfoExt> _targetInfo = new Dictionary<long, EntityInfoExt>();
 
-            private IEnumerator<bool> _launchCoroutine;
+            private IEnumerator<int> _launchCoroutine;
 
             private double _lastClockSync;
             private double _lastLaunch;
@@ -96,11 +96,9 @@ namespace IngameScript
                         {
                             continue;
                         }
-                        object messageObject = Deserializer.Deserialize(message.Data as string);
-                        if (messageObject is EntityInfo)
-                        {
-                            AddMissile((EntityInfo)messageObject);
-                        }
+                        byte[] data = Convert.FromBase64String(message.Data as string);
+                        EntityInfo missile = EntityInfo.Deserialize(data, 0);
+                        AddMissile(missile);
                     }
                 }
 
@@ -136,9 +134,9 @@ namespace IngameScript
                 }
             }
 
-            private bool AddMissile(EntityInfo entityInfo)
+            private void AddMissile(EntityInfo entityInfo)
             {
-                if (entityInfo.SubType != EntityInfoSubType.MissileInfo) return false;
+                if (entityInfo.SubType != EntityInfoSubType.MissileInfo) return;
 
                 long key = entityInfo.EntityID;
                 long relationID = entityInfo.MissileInfo.Value.LauncherID;
@@ -154,24 +152,21 @@ namespace IngameScript
                     var original = MyMissilesExt[key];
                     MyMissilesExt[key] = original.Merge(entityInfoExt);
                 }
-                return true;
             }
 
-            private bool RemoveMissile(long entityID)
+            private void RemoveMissile(long entityID)
             {
                 MyMissilesExt.Remove(entityID);
-                return true;
             }
 
-            private bool RegisterMissileAddress(long address, long missileID, long targetID)
+            private void RegisterMissileAddress(long address, long missileID, long targetID)
             {
                 _addressMissileIDMap[address] = missileID;
                 _addressTargetIDMap[address] = targetID;
                 _missileIDAddressMap[missileID] = address;
-                return true;
             }
 
-            private bool UnregisterMissileAddress(long address)
+            private void UnregisterMissileAddress(long address)
             {
                 long missileID;
                 if (_addressMissileIDMap.TryGetValue(address, out missileID))
@@ -180,216 +175,191 @@ namespace IngameScript
                 }
                 _addressMissileIDMap.Remove(address);
                 _addressTargetIDMap.Remove(address);
-                return true;
             }
 
-            public bool SelectBay(MissileBay bay, object caller)
+            public void SelectBay(MissileBay bay, object caller)
             {
                 if (caller == null || FireControlAvail || !ReferenceEquals(Station, caller) || bay == null)
                 {
-                    return false;
+                    return;
                 }
-                return SelectBay(bay);
+                SelectBay(bay);
             }
 
-            private bool SelectBay(MissileBay bay)
+            private void SelectBay(MissileBay bay)
             {
-                if (!bay.IsSelectable) return false;
+                if (!bay.IsSelectable) return;
                 _selectedBays.Add(bay);
                 bay.IsSelected = true;
-                return true;
             }
 
-            public bool DeselectBay(MissileBay bay, object caller)
+            public void DeselectBay(MissileBay bay, object caller)
             {
                 if (caller == null || FireControlAvail || !ReferenceEquals(Station, caller) || bay == null)
                 {
-                    return false;
+                    return;
                 }
-                return DeselectBay(bay);
+                DeselectBay(bay);
             }
 
-            private bool DeselectBay(MissileBay bay)
+            private void DeselectBay(MissileBay bay)
             {
                 bay.IsSelected = false;
                 _selectedBays.Remove(bay);
-                return true;
             }
 
-            public bool ToggleBaySelection(MissileBay bay, object caller)
+            public void ToggleBaySelection(MissileBay bay, object caller)
             {
                 if (caller == null || FireControlAvail || !ReferenceEquals(Station, caller) || bay == null)
                 {
-                    return false;
+                    return;
                 }
-                return ToggleBaySelection(bay);
+                ToggleBaySelection(bay);
             }
 
-            private bool ToggleBaySelection(MissileBay bay)
+            private void ToggleBaySelection(MissileBay bay)
             {
                 if (_selectedBays.Contains(bay))
                 {
-                    return DeselectBay(bay);
+                    DeselectBay(bay);
                 }
                 else
                 {
-                    return SelectBay(bay);
+                    SelectBay(bay);
                 }
             }
 
-            public bool ClearSelectedBays(object caller)
+            public void ClearSelectedBays(object caller)
             {
                 if (caller == null || FireControlAvail || !ReferenceEquals(Station, caller))
                 {
-                    return false;
+                    return;
                 }
-                return ClearSelectedBays();
+                ClearSelectedBays();
             }
 
-            private bool ClearSelectedBays()
+            private void ClearSelectedBays()
             {
                 foreach (var bay in _selectedBays.ToList())
                 {
                     DeselectBay(bay);
                 }
-                return true;
             }
 
-            public bool SelectAllBays(object caller)
+            public void SelectAllBays(object caller)
             {
                 if (caller == null || FireControlAvail || !ReferenceEquals(Station, caller))
                 {
-                    return false;
+                    return;
                 }
-                return SelectAllBays();
+                SelectAllBays();
             }
 
-            private bool SelectAllBays()
+            private void SelectAllBays()
             {
                 MissileBays.ForEach(bay => SelectBay(bay));
-                return true;
             }
 
-            public bool LaunchMissile(long targetID, object caller)
+            public void LaunchMissile(long targetID, object caller)
             {
                 if (caller == null || FireControlAvail || !ReferenceEquals(Station, caller) || IsLaunching)
                 {
-                    return false;
+                    return;
                 }
-                if (_selectedBays.Count == 0) return false;
+                if (_selectedBays.Count == 0) return;
                 var bay = _selectedBays.First();
-                return LaunchMissile(bay, targetID);
+                LaunchMissile(bay, targetID);
             }
 
-            private bool LaunchMissile(MissileBay bay, long targetID)
+            private void LaunchMissile(MissileBay bay, long targetID)
             {
-                if ((Time - _lastLaunch) < 1f || !_selectedBays.Contains(bay)) return false;
+                if ((Time - _lastLaunch) < 1f || !_selectedBays.Contains(bay)) return;
 
                 long missileID = bay.MissileID;
                 long missileAddress = bay.MissileAddress;
-                if (!bay.Launch())
-                {
-                    return false;
-                }
+                bay.Launch();
                 RegisterMissileAddress(missileAddress, missileID, targetID);
                 _lastLaunch = Time;
                 DeselectBay(bay);
-                return true;
             }
 
-            public bool LaunchMissiles(long targetID, object caller)
+            public void LaunchMissiles(long targetID, object caller)
             {
                 if (caller == null || FireControlAvail || !ReferenceEquals(Station, caller))
                 {
-                    return false;
+                    return;
                 }
-                return LaunchMissiles(targetID);
+                LaunchMissiles(targetID);
             }
 
-            private bool LaunchMissiles(long targetID)
+            private void LaunchMissiles(long targetID)
             {
-                if (IsLaunching) return false;
+                if (IsLaunching) return;
                 _launchCoroutine = HandleLaunch(targetID);
-                return true;
             }
 
-            private IEnumerator<bool> HandleLaunch(long targetID)
+            private IEnumerator<int> HandleLaunch(long targetID)
             {
-                foreach (var bayID in _selectedBays.ToList())
+                int loopCounter = 0;
+                foreach (var bay in _selectedBays.ToList())
                 {
-                    while (!LaunchMissile(bayID, targetID))
+                    LaunchMissile(bay, targetID);
+                    while ((Time - _lastLaunch) < 1f)
                     {
-                        yield return false;
+                        yield return loopCounter++;
                     }
                 }
-                yield return true;
+                yield return loopCounter;
             }
 
-            private bool SyncClocks()
+            private void SyncClocks()
             {
                 _lastClockSync = Time;
 
                 foreach (long address in _addressMissileIDMap.Keys.ToList())
                 {
                     string command = $"SYNC_CLOCK {Time}";
-                    List<byte> commandData = new List<byte>()
-                    {
-                        (byte)SerializedTypes.Command,
-                    };
-                    commandData.AddRange(Encoding.ASCII.GetBytes(command));
-                    byte[] commandBytes = commandData.ToArray();
-                    _communicationHandler.SendUnicast(commandBytes, address, "MyMissileCommands", true);
+                    _communicationHandler.SendUnicast(command, address, "MyMissileCommands", true);
                 }
-                return true;
             }
 
-            public bool AbortMissile(long missileID, object caller)
+            public void AbortMissile(long missileID, object caller)
             {
                 if (caller == null || FireControlAvail || !ReferenceEquals(Station, caller))
                 {
-                    return false;
+                    return;
                 }
-                return AbortMissile(missileID);
+                AbortMissile(missileID);
             }
 
-            private bool AbortMissile(long missileID)
+            private void AbortMissile(long missileID)
             {
-                if (!_missileIDAddressMap.ContainsKey(missileID)) return false;
+                if (!_missileIDAddressMap.ContainsKey(missileID)) return;
                 long address = _missileIDAddressMap[missileID];
                 if (_communicationHandler.CanReach(address))
                 {
                     string command = "ABORT";
-                    List<byte> commandData = new List<byte>()
-                    {
-                        (byte)SerializedTypes.Command,
-                    };
-                    commandData.AddRange(Encoding.ASCII.GetBytes(command));
-                    byte[] commandBytes = commandData.ToArray();
-                    _communicationHandler.SendUnicast(commandBytes, address, "MyMissileCommands", true);
-                    return true;
+                    _communicationHandler.SendUnicast(command, address, "MyMissileCommands", true);
                 }
-                return false;
             }
 
-            public bool GiveFireControl(ControlStation station)
+            public void GiveFireControl(ControlStation station)
             {
                 if (station == null || !FireControlAvail || ReferenceEquals(Station, station))
                 {
-                    return false;
+                    return;
                 }
                 Station = station;
-                return true;
             }
 
-            public bool RevokeFireControl(ControlStation station)
+            public void RevokeFireControl(ControlStation station)
             {
                 if (station == null || FireControlAvail || !ReferenceEquals(Station, station))
                 {
-                    return false;
+                    return;
                 }
                 Station = null;
                 ClearSelectedBays();
-                return true;
             }
 
             public override string ToString()

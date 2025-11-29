@@ -139,25 +139,22 @@ namespace IngameScript
                     MissileGuidanceType = MissileGuidanceType.Unknown;
                     MissilePayload = MissilePayload.Unknown;
                     _missileComputer = null;
-                    return;
                 }
             }
 
-            public bool Launch()
+            public void Launch()
             {
                 if (Status == BayStatus.Ready)
                 {
                     _missileComputer.Enabled = true;
                     if (!_missileComputer.TryRun("ON"))
                     {
-                        return false;
+                        return;
                     }
                     _missileComputer.CustomData += $"\nACTIVATE {IGCS.Me} {Time}";
                     _missileComputer.CustomData += $"\nLAUNCH";
                     Status = BayStatus.Launching;
-                    return true;
                 }
-                return false;
             }
 
             public void ResetMissile()

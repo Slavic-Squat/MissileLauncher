@@ -60,7 +60,7 @@ namespace IngameScript
                 }
             }
 
-            public bool Update(double time)
+            public void Update(double time)
             {
                 Time = time;
                 if (_lastUpdateTime == 0)
@@ -68,8 +68,6 @@ namespace IngameScript
 
                 _totalAvailableRaycastDistance += (float)(time - _lastUpdateTime) * 2000f * _cameras.Count;
                 _lastUpdateTime = time;
-
-                return true;
             }
 
             public MyDetectedEntityInfo Raycast(Vector3 raycastTarget)

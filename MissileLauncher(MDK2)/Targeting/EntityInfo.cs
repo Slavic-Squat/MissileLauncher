@@ -126,13 +126,10 @@ namespace IngameScript
 
             public byte[] Serialize()
             {
-                List<byte> bytes = new List<byte>
-                {
-                    (byte)SerializedTypes.EntityInfo,
-                    (byte)Type,
-                    (byte)SubType,
-                };
+                List<byte> bytes = new List<byte>();
 
+                bytes.Add((byte)Type);
+                bytes.Add((byte)SubType);
                 bytes.AddRange(BitConverter.GetBytes(EntityID));
 
                 bytes.AddRange(BitConverter.GetBytes(Position.X));

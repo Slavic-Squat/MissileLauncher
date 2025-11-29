@@ -162,13 +162,7 @@ namespace IngameScript
                 if (IsMainClock && (SystemTime - _lastClockSync) > 10f)
                 {
                     string command = $"SYNC_CLOCK {SystemTime}";
-                    List<byte> commandData = new List<byte>()
-                    {
-                        (byte)SerializedTypes.Command,
-                    };
-                    commandData.AddRange(Encoding.ASCII.GetBytes(command));
-                    byte[] commandBytes = commandData.ToArray();
-                    CommunicationHandler.SendBroadcast(commandBytes, "FriendlyCommands", true);
+                    CommunicationHandler.SendBroadcast(command, "FriendlyCommands", true);
                     _lastClockSync = SystemTime;
                 }
 
@@ -177,11 +171,8 @@ namespace IngameScript
                     MyIGCMessage msg;
                     if (CommunicationHandler.TryRetrieveMessage("FriendlyCommands", true, out msg))
                     {
-                        object msgObject = Deserializer.Deserialize(msg.Data as string);
-                        if (msgObject is string)
-                        {
-                            Command((string)msgObject);
-                        }
+                        string command = msg.Data as string;
+                        Command(command);
                     }
                 }
             }

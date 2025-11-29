@@ -25,7 +25,7 @@ namespace IngameScript
         public interface IButton : IHighlightable, IUpdatable
         {
             bool CanPress { get; }
-            bool Press();
+            void Press();
         }
     }
 }
