@@ -50,7 +50,7 @@ namespace IngameScript
                 Vector2 buttonPos = panel.Pos + new Vector2(padding, padding);
 
                 Func<string> getText = () => "SCALE: " + GetName(window.ScopeScale);
-                Func<bool> action = () => window.CycleScopeScale();
+                Action action = () => window.CycleScopeScale();
 
                 Button button = new Button(buttonPos, buttonSize, 5f, 3f, 2f, getText, action, window.Display);
                 panel.AddButton(button, -1);
@@ -58,8 +58,8 @@ namespace IngameScript
                 buttonPos.X += buttonSize.X + spacing;
 
                 getText = () => "FIRE CTRL";
-                Func<bool> onPress = () => station.TakeFireControl(coordinator);
-                Func<bool> onRelease = () => station.ReleaseFireControl(coordinator);
+                Action onPress = () => station.TakeFireControl(coordinator);
+                Action onRelease = () => station.ReleaseFireControl(coordinator);
                 Func<bool> isPressed = () => station.HasFireControl;
                 Func<bool> canPress = () => coordinator.FireControlAvail;
                 Func<bool> canRelease = () => station.HasFireControl;
@@ -69,12 +69,12 @@ namespace IngameScript
 
                 buttonPos.X += buttonSize.X + spacing;
 
-                getText = () => "SELECT BAYS";
+                getText = () => "LASER CTRL";
                 action = () =>
                 {
-                    Vector2 bayMenuPos = window.Center;
-                    Menu bayMenu = CreateBayMenu(bayMenuPos, window, true, true);
-                    return window.OpenMenu(bayMenu);
+                    Vector2 laserMenuPos = window.Center;
+                    Menu laserMenu = CreateLaserControlMenu(laserMenuPos, window, true, true);
+                    window.OpenMenu(laserMenu);
                 };
                 canPress = () => station.HasFireControl;
                 button = new Button(buttonPos, buttonSize, 5f, 3f, 2f, getText, action, surface, canPress: canPress);
@@ -110,7 +110,7 @@ namespace IngameScript
                 Vector2 buttonPos = panel.Pos + new Vector2(panel.Size.X / 2f - buttonSize.X / 2f, padding + labelSize.Y);
 
                 Func<string> getText = () => "TYPE: " + GetName(window.NavTypeFilter);
-                Func<bool> action = () => window.CycleTypeFilter();
+                Action action = () => window.CycleTypeFilter();
 
                 Button button = new Button(buttonPos, buttonSize, 5f, 3f, 2f, getText, action, window.Display);
                 panel.AddButton(button, -1);
@@ -172,7 +172,7 @@ namespace IngameScript
 
                     Vector2 buttonPos = menu.Pos + padding;
                     Func<string> getText = () => "ABORT";
-                    Func<bool> action = () => wireManager.AbortMissile(targetID, station);
+                    Action action = () => wireManager.AbortMissile(targetID, station);
                     Button button = new Button(buttonPos, buttonSize, 5f, 3f, 1f, getText, action, surface);
                     menu.AddButton(button, -1);
 
@@ -193,7 +193,7 @@ namespace IngameScript
                     Menu menu = new Menu(window, menuPos, menuSize, 5f, autoClose: autoClose);
                     Vector2 buttonPos = menu.Pos + padding;
                     Func<string> getText = () => "VIEW";
-                    Func<bool> action = () => true;
+                    Action action = () => { };
                     Button button = new Button(buttonPos, buttonSize, 5f, 3f, 1f, getText, action, surface);
                     menu.AddButton(button, -1);
 
@@ -204,11 +204,11 @@ namespace IngameScript
                         if (coordinator.NumSelectedBays == 0)
                         {
                             Menu missileMenu = CreateBayMenu(window.Center, window, true, true);
-                            return window.OpenMenu(missileMenu);
+                            window.OpenMenu(missileMenu);
                         }
                         else
                         {
-                            return wireManager.LaunchMissile(targetID, station);
+                            wireManager.LaunchMissile(targetID, station);
                         }
                     };
                     Func<bool> canPress = () => station.HasFireControl;
@@ -222,11 +222,11 @@ namespace IngameScript
                         if (coordinator.NumSelectedBays == 0)
                         {
                             Menu missileMenu = CreateBayMenu(window.Center, window, true, true);
-                            return window.OpenMenu(missileMenu);
+                            window.OpenMenu(missileMenu);
                         }
                         else
                         {
-                            return wireManager.LaunchMissiles(targetID, station);
+                            wireManager.LaunchMissiles(targetID, station);
                         }
                     };
                     canPress = () => station.HasFireControl;
@@ -240,7 +240,7 @@ namespace IngameScript
                     {
                         Vector2 relationMenuPos = window.Pos + new Vector2(window.Size.X * 0.5f, window.Size.Y - 100f);
                         Menu relationMenu = CreateRelationMenu(relationMenuPos, targetID, window, true, true);
-                        return window.OpenMenu(relationMenu);
+                        window.OpenMenu(relationMenu);
                     };
 
                     button = new Button(buttonPos, buttonSize, 5f, 3f, 1f, getText, action, surface);
@@ -264,7 +264,7 @@ namespace IngameScript
                     Menu menu = new Menu(window, menuPos, menuSize, 5f, autoClose: autoClose);
                     Vector2 buttonPos = menu.Pos + padding;
                     Func<string> getText = () => "VIEW";
-                    Func<bool> action = () => true;
+                    Action action = () => { };
                     Button button = new Button(buttonPos, buttonSize, 5f, 3f, 1f, getText, action, surface);
                     menu.AddButton(button, -1);
 
@@ -275,11 +275,11 @@ namespace IngameScript
                         if (coordinator.NumSelectedBays == 0)
                         {
                             Menu missileMenu = CreateBayMenu(window.Center, window, true, true);
-                            return window.OpenMenu(missileMenu);
+                            window.OpenMenu(missileMenu);
                         }
                         else
                         {
-                            return wireManager.LaunchMissile(targetID, station);
+                            wireManager.LaunchMissile(targetID, station);
                         }
                     };
                     Func<bool> canPress = () => station.HasFireControl;
@@ -293,11 +293,11 @@ namespace IngameScript
                         if (coordinator.NumSelectedBays == 0)
                         {
                             Menu missileMenu = CreateBayMenu(window.Center, window, true, true);
-                            return window.OpenMenu(missileMenu);
+                            window.OpenMenu(missileMenu);
                         }
                         else
                         {
-                            return wireManager.LaunchMissiles(targetID, station);
+                            wireManager.LaunchMissiles(targetID, station);
                         }
                     };
                     canPress = () => station.HasFireControl;
@@ -381,8 +381,8 @@ namespace IngameScript
 
                             Vector2 buttonPos = panel.Pos + new Vector2(panel.Size.X * 0.5f - selectButtonSize.X * 0.5f, panel.Size.Y - selectButtonSize.Y - 10f);
                             getText = () => bay.IsSelected ? "SELECTED" : "SELECT";
-                            Func<bool> onPress = () => wireManager.SelectBay(bay, station);
-                            Func<bool> onRelease = () => wireManager.DeselectBay(bay, station);
+                            Action onPress = () => wireManager.SelectBay(bay, station);
+                            Action onRelease = () => wireManager.DeselectBay(bay, station);
                             Func<bool> isPressed = () => bay.IsSelected;
                             Func<bool> canPress = () => bay.IsSelectable;
                             Func<bool> canRelease = canPress;
@@ -396,7 +396,7 @@ namespace IngameScript
                 Vector2 confirmButtonSize = new Vector2(150f, 50f);
                 Vector2 confirmButtonPos = menu.Pos + new Vector2(menu.Size.X * 0.5f - confirmButtonSize.X - 20f, menu.Size.Y - footerHeight * 0.5f - confirmButtonSize.Y * 0.5f);
                 Func<string> confirmText = () => "SELECT ALL";
-                Func<bool> action = () => wireManager.SelectAllBays(station);
+                Action action = () => wireManager.SelectAllBays(station);
                 Button confirmButton = new Button(confirmButtonPos, confirmButtonSize, 10f, 4f, 1f, confirmText, action, surface);
                 menu.AddButton(confirmButton, -1);
                 Vector2 cancelButtonSize = new Vector2(150f, 50f);
@@ -434,7 +434,7 @@ namespace IngameScript
 
                 Vector2 buttonPos = menu.Pos + padding;
                 Func<string> getText = () => "FRNDLY";
-                Func<bool> action = () => wireManager.SetRelation(targetID, EntityRelation.Friendly);
+                Action action = () => wireManager.SetRelation(targetID, EntityRelation.Friendly);
                 Button button = new Button(buttonPos, buttonSize, 5f, 3f, 1f, getText, action, surface);
                 menu.AddButton(button, -1);
 
@@ -516,8 +516,8 @@ namespace IngameScript
 
                             Vector2 buttonPos = panel.Pos + new Vector2(panel.Size.X * 0.5f - ctrlButtonSize.X * 0.5f, panel.Size.Y - ctrlButtonSize.Y - 10f);
                             getText = () => "CTRL";
-                            Func<bool> action = () => ctrlStation.TakeControl(laser);
-                            Func<bool> isPressed = () => ReferenceEquals(ctrlStation.Controllable, laser);
+                            Action action = () => ctrlStation.TakeControl(laser);
+                            Action isPressed = () => ReferenceEquals(ctrlStation.Controllable, laser);
                             Func<bool> canPress = () => !laser.IsUnderControl;
                             Func<bool> canRelease = canPress;
                             Button button = new Button(buttonPos, ctrlButtonSize, 7f, 3f, 1f, getText, action, surface, canPress);
@@ -527,59 +527,6 @@ namespace IngameScript
                     }
                 }
                 return menu;
-            }
-
-            public static Window CreateMainWindow(UI ui, float borderThickness)
-            {
-                Window window = new Window(ui, borderThickness);
-
-                Vector2 labelSize = new Vector2(250f, 100f);
-                Vector2 labelPos = window.Pos;
-                RectangleF labelBounds = new RectangleF(labelPos, labelSize);
-                MySprite labelFillSprite = new MySprite()
-                {
-                    Type = SpriteType.TEXTURE,
-                    Data = "SquareSimple",
-                    Position = labelBounds.Center,
-                    Size = labelBounds.Size - 2 * borderThickness,
-                    Color = UIConfig.WindowFillColor,
-                    Alignment = TextAlignment.CENTER
-                };
-                MySprite labelBorderSprite = new MySprite()
-                {
-                    Type = SpriteType.TEXTURE,
-                    Data = "SquareSimple",
-                    Position = labelBounds.Center,
-                    Size = labelBounds.Size,
-                    Color = UIConfig.WindowBorderColor,
-                    Alignment = TextAlignment.CENTER
-                };
-                MySprite labelTextSprite = SpriteHelper.CreateText(labelBounds, "-MAIN-", Color.White, ui.Display, TextAlignment.CENTER, true, borderThickness + 10f);
-                window.AddSprite(labelBorderSprite);
-                window.AddSprite(labelFillSprite);
-                window.AddSprite(labelTextSprite);
-
-                float padding = 50f;
-                float spacing = 35f;
-                float headerHeight = 150f;
-                Vector2 buttonSize = new Vector2(350f, 125f);
-                Vector2 buttonPos = window.Pos + new Vector2(padding, headerHeight);
-
-                Func<string> getText = () => "LASER CTRL";
-                Func<bool> action = () => window.OpenMenu(CreateLaserControlMenu(window.Center, window, true, true));
-                Button laserCtrlButton = new Button(buttonPos, buttonSize, 20f, 10f, 5f, getText, action, ui.Display);
-
-                window.AddButton(laserCtrlButton);
-
-                buttonPos.X += buttonSize.X + spacing;
-
-                getText = () => "TARGETING";
-                action = () => ui.OpenWindow(new TargetingWindow(ui, 5f));
-
-                Button targetingButton = new Button(buttonPos, buttonSize, 20f, 10f, 5f, getText, action, ui.Display);
-                window.AddButton(targetingButton);
-
-                return window;
             }
         }
     }

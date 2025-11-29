@@ -84,7 +84,7 @@ namespace IngameScript
                 IsMainClock = Config.Get("Config", "IsMainClock").ToBoolean(true);
                 Config.Set("Config", "IsMainClock", IsMainClock);
 
-                CommandHandler = new CommandHandler(MePb, _commands);
+                CommandHandler = new CommandHandler(_commands);
                 CommunicationHandler = new CommunicationHandler(0, secureBroadcastPIN);
 
                 ControlStations = new List<ControlStation>();
@@ -131,9 +131,11 @@ namespace IngameScript
             public void Run()
             {
                 SystemTime += RuntimeInfo.TimeSinceLastRun.TotalSeconds;
-                DebugEcho($"System Time: {SystemTime}");
+                DebugEcho($"System Time: {SystemTime}s\n");
+                DebugWrite($"System Time: {SystemTime}s\n", false);
+                DebugEcho($"Last Run Time: {RuntimeInfo.LastRunTimeMs}ms\n");
+                DebugWrite($"Last Run Time: {RuntimeInfo.LastRunTimeMs}ms\n", true);
                 CommunicationHandler.Recieve();
-                CommandHandler.RunCustomDataCommands();
 
                 SelfInfo = new EntityInfo(SelfID, ReferencePosition, ReferenceVelocity, SystemTime);
                 byte[] selfInfoData = SelfInfo.Serialize();
@@ -177,37 +179,34 @@ namespace IngameScript
                 }
             }
 
-            private bool SyncTarget(TargetingLaser laser)
+            private void SyncTarget(TargetingLaser laser)
             {
                 EntityInfoExt target = laser.Target;
 
-                if (!target.IsValid) return false;
+                if (!target.IsValid) return;
 
                 AWACS.AddTarget(target);
-                return true;
             }
 
-            public bool Command(string command)
+            public void Command(string command)
             {
-                return CommandHandler.RunCommands(command);
+                CommandHandler.RunCommands(command);
             }
 
-            private bool SetMainClock(string boolString)
+            private void SetMainClock(string boolString)
             {
                 bool parsedBool = boolString.ToUpper() == "TRUE" || boolString == "1";
                 IsMainClock = parsedBool;
-                return true;
             }
 
-            private bool SyncClock(string timeString)
+            private void SyncClock(string timeString)
             {
-                if (IsMainClock) return false;
+                if (IsMainClock) return;
                 double time;
                 if (double.TryParse(timeString, out time))
                 {
                     SystemTime = time;
                 }
-                return true;
             }
         }
     }

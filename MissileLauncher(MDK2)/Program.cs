@@ -24,6 +24,7 @@ namespace IngameScript
     {
         private SystemCoordinator _systemCoordinator;
         public static Action<string> DebugEcho { get; private set; }
+        public static Action<string, bool> DebugWrite { get; private set; }
         public static IMyProgrammableBlock MePb { get; private set; }
         public static IMyGridTerminalSystem GTS { get; private set; }
         public static IMyIntergridCommunicationSystem IGCS { get; private set; }
@@ -34,6 +35,7 @@ namespace IngameScript
         public Program()
         {
             DebugEcho = Echo;
+            DebugWrite = (s, b) => MePb.GetSurface(0).WriteText(s, b);
             GTS = GridTerminalSystem;
             IGCS = IGC;
             RuntimeInfo = Runtime;
@@ -55,7 +57,7 @@ namespace IngameScript
                 _systemCoordinator.Command(argument);
             }
             _systemCoordinator.Run();
-            Echo($"Debug Counter: {DebugCounter}");
+            Echo($"Debug Counter: {DebugCounter}\n");
         }
     }
 }
