@@ -50,8 +50,8 @@ namespace IngameScript
 
                 Bounds = new RectangleF(new Vector2(0, (TextureSize.Y - SurfaceSize.Y) * 0.5f), SurfaceSize);
 
-                Window mainWindow = UIFactory.CreateMainWindow(this, 5f);
-                OpenWindow(mainWindow);
+                TargetingWindow targetingWindow = new TargetingWindow(this, 5f);
+                OpenWindow(targetingWindow);
             }
 
             public void Run(double time)
@@ -107,8 +107,8 @@ namespace IngameScript
 
                 if (!HasActiveWindow)
                 {
-                    Window mainWindow = UIFactory.CreateMainWindow(this, 5f);
-                    OpenWindow(mainWindow);
+                    TargetingWindow targetingWindow = new TargetingWindow(this, 5f);
+                    OpenWindow(targetingWindow);
                 }
 
                 _activeWindow?.Update(time);

@@ -48,6 +48,8 @@ namespace IngameScript
             private float _minScale = 0.8f;
             private float _maxScale = 1.2f;
             private float _zoom = 1f;
+            private float _resScale = 1f;
+            private Vector3 _localCameraPos = new Vector3(31334, 30557, 63764);
 
             private List<MySpriteExt> _spritesPrePlane = new List<MySpriteExt>();
             private List<MySpriteExt> _planeSprites = new List<MySpriteExt>();
@@ -67,9 +69,8 @@ namespace IngameScript
 
             private void BuildStaticSprites()
             {
-                Matrix cameraTargetWorld = SystemCoordinator.ReferenceBasis;
-                Vector3 cameraPositionLocal = new Vector3(31334, 30557, 63764);
-                Vector3 cameraPositionWorld = Vector3.Transform(cameraPositionLocal, cameraTargetWorld);
+                Matrix cameraTargetWorld = SystemCoordinator.ReferenceWorldMatrix;
+                Vector3 cameraPositionWorld = Vector3.Transform(_localCameraPos, cameraTargetWorld);
 
                 Vector3 TargetToCamera = cameraPositionWorld - cameraTargetWorld.Translation;
                 float TargetToCameraDist = TargetToCamera.Length();
@@ -91,8 +92,8 @@ namespace IngameScript
                 {
                     Type = SpriteType.TEXTURE,
                     Data = "Self_0",
-                    Position = selfPosPixel,
-                    Size = new Vector2(128, 128),
+                    Position = selfPosPixel * _resScale,
+                    Size = new Vector2(128, 128) * _resScale,
                     Color = Color.White,
                     Alignment = TextAlignment.CENTER,
                     RotationOrScale = 0f
@@ -110,8 +111,8 @@ namespace IngameScript
                 {
                     Type = SpriteType.TEXTURE,
                     Data = "Base_0",
-                    Position = basePosPixel,
-                    Size = new Vector2(32, 32) * baseDepthScale,
+                    Position = basePosPixel * _resScale,
+                    Size = new Vector2(32, 32) * baseDepthScale * _resScale,
                     Color = Color.White,
                     Alignment = TextAlignment.CENTER,
                     RotationOrScale = 0f
@@ -131,8 +132,8 @@ namespace IngameScript
                 {
                     Type = SpriteType.TEXTURE,
                     Data = "SquareSimple",
-                    Position = stemPosPixel,
-                    Size = new Vector2(stemLength, 1),
+                    Position = stemPosPixel * _resScale,
+                    Size = new Vector2(stemLength * _resScale, 1),
                     Color = Color.White,
                     Alignment = TextAlignment.CENTER,
                     RotationOrScale = stemAngle,
@@ -146,8 +147,8 @@ namespace IngameScript
                 {
                     Type = SpriteType.TEXTURE,
                     Data = "Radial_Grid_0",
-                    Position = new Vector2(511, 511),
-                    Size = new Vector2(1024, 1024),
+                    Position = new Vector2(511, 511) * _resScale,
+                    Size = new Vector2(1024, 1024) * _resScale,
                     Color = new Color(128, 128, 128, 255),
                     Alignment = TextAlignment.CENTER,
                     RotationOrScale = 0f
@@ -159,8 +160,8 @@ namespace IngameScript
                 {
                     Type = SpriteType.TEXTURE,
                     Data = "Radial_Grad_0",
-                    Position = new Vector2(511, 511),
-                    Size = new Vector2(1024, 1024),
+                    Position = new Vector2(511, 511) * _resScale,
+                    Size = new Vector2(1024, 1024) * _resScale,
                     Color = new Color(1, 89, 68, 255),
                     Alignment = TextAlignment.CENTER,
                     RotationOrScale = 0f
@@ -172,8 +173,8 @@ namespace IngameScript
                 {
                     Type = SpriteType.TEXTURE,
                     Data = "StarryBackground",
-                    Position = new Vector2(511, 511),
-                    Size = new Vector2(1024, 1024),
+                    Position = new Vector2(511, 511) * _resScale,
+                    Size = new Vector2(1024, 1024) * _resScale,
                     Color = new Color(200, 200, 200, 255),
                     Alignment = TextAlignment.CENTER,
                     RotationOrScale = 0f
@@ -185,8 +186,8 @@ namespace IngameScript
                 {
                     Type = SpriteType.TEXTURE,
                     Data = "SquareSimple",
-                    Position = new Vector2(511, 511),
-                    Size = new Vector2(1024, 1024),
+                    Position = new Vector2(511, 511) * _resScale,
+                    Size = new Vector2(1024, 1024) * _resScale,
                     Color = Color.Black,
                     Alignment = TextAlignment.CENTER,
                     RotationOrScale = 0f
@@ -214,9 +215,8 @@ namespace IngameScript
                 _spritesPrePlane.Clear();
                 _spritesPostPlane.Clear();
 
-                Matrix cameraTargetWorld = SystemCoordinator.ReferenceBasis;
-                Vector3 cameraPositionLocal = new Vector3(31334, 30557, 63764);
-                Vector3 cameraPositionWorld = Vector3.Transform(cameraPositionLocal, cameraTargetWorld);
+                Matrix cameraTargetWorld = SystemCoordinator.ReferenceWorldMatrix;
+                Vector3 cameraPositionWorld = Vector3.Transform(_localCameraPos, cameraTargetWorld);
 
                 Vector3 TargetToCamera = cameraPositionWorld - cameraTargetWorld.Translation;
                 float TargetToCameraDist = TargetToCamera.Length();
@@ -305,8 +305,8 @@ namespace IngameScript
                     {
                         Type = SpriteType.TEXTURE,
                         Data = spriteName,
-                        Position = entityPosPixel,
-                        Size = spriteSize * entityDepthScale,
+                        Position = entityPosPixel * _resScale,
+                        Size = spriteSize * entityDepthScale * _resScale,
                         Color = spriteColor,
                         Alignment = TextAlignment.CENTER,
                         RotationOrScale = 0f,
@@ -325,8 +325,8 @@ namespace IngameScript
                         {
                             Type = SpriteType.TEXTURE,
                             Data = "Selector_0",
-                            Position = entityPosPixel,
-                            Size = MySpriteExtEntity.Sprite.Size * 1.5f,
+                            Position = entityPosPixel * _resScale,
+                            Size = MySpriteExtEntity.Sprite.Size * 1.5f * _resScale,
                             Color = UIConfig.SelectorColor,
                             Alignment = TextAlignment.CENTER,
                             RotationOrScale = 0f,
@@ -346,8 +346,8 @@ namespace IngameScript
                     {
                         Type = SpriteType.TEXTURE,
                         Data = "Base_0",
-                        Position = basePosPixel,
-                        Size = spriteSize * baseDepthScale,
+                        Position = basePosPixel * _resScale,
+                        Size = spriteSize * baseDepthScale * _resScale,
                         Color = Color.White,
                         Alignment = TextAlignment.CENTER,
                         RotationOrScale = 0f,
@@ -367,8 +367,8 @@ namespace IngameScript
                     {
                         Type = SpriteType.TEXTURE,
                         Data = "SquareSimple",
-                        Position = stemPosPixel,
-                        Size = new Vector2(stemLength, 1),
+                        Position = stemPosPixel * _resScale,
+                        Size = new Vector2(stemLength * _resScale, 1),
                         Color = Color.White,
                         Alignment = TextAlignment.CENTER,
                         RotationOrScale = stemAngle,
