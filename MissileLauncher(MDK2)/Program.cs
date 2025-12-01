@@ -35,7 +35,7 @@ namespace IngameScript
         public Program()
         {
             DebugEcho = Echo;
-            DebugWrite = (s, b) => MePb.GetSurface(0).WriteText(s, b);
+            DebugWrite = (s, b) => Me.GetSurface(0).WriteText(s, b);
             GTS = GridTerminalSystem;
             IGCS = IGC;
             RuntimeInfo = Runtime;
