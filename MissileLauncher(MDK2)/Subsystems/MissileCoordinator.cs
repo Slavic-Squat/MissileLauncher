@@ -96,8 +96,8 @@ namespace IngameScript
                         {
                             continue;
                         }
-                        byte[] data = Convert.FromBase64String(message.Data as string);
-                        EntityInfo missile = EntityInfo.Deserialize(data, 0);
+                        byte[] bytes = Convert.FromBase64String(message.Data as string);
+                        EntityInfo missile = EntityInfo.Deserialize(bytes, 0);
                         AddMissile(missile);
                     }
                 }
@@ -112,14 +112,14 @@ namespace IngameScript
                         continue;
                     }
 
-                    byte[] selfData = SystemCoordinator.SelfInfo.Serialize();
-                    _communicationHandler.SendUnicast(selfData, missileAddress, "MyMissileLauncherInfo", true);
+                    byte[] selfBytes = SystemCoordinator.SelfInfo.Serialize();
+                    _communicationHandler.SendUnicast(selfBytes, missileAddress, "MyMissileLauncherInfo", true);
 
                     long targetID = _addressTargetIDMap[missileAddress];
                     if (_targetInfo.ContainsKey(targetID))
                     {
-                        byte[] targetData = _targetInfo[targetID].Info.Serialize();
-                        _communicationHandler.SendUnicast(targetData, missileAddress, "MyMissileTargetInfo", true);
+                        byte[] targetBytes = _targetInfo[targetID].Info.Serialize();
+                        _communicationHandler.SendUnicast(targetBytes, missileAddress, "MyMissileTargetInfo", true);
                     }
                 }
 

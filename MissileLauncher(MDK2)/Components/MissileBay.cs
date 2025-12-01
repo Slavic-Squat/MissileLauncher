@@ -67,8 +67,8 @@ namespace IngameScript
                 _connector = AllGridBlocks.Find(b => b is IMyShipConnector && b.CustomName.Contains($"Missile Bay {ID}")) as IMyShipConnector;
                 if (_connector == null)
                 {
-                    DebugWrite($"Error: No connector found for Missile Bay {ID}!", true);
-                    throw new Exception($"No connector found for Missile Bay {ID}!");
+                    DebugWrite($"Error: No connector found for Missile Bay {ID}!\n", true);
+                    throw new Exception($"No connector found for Missile Bay {ID}!\n");
                 }
             }
 

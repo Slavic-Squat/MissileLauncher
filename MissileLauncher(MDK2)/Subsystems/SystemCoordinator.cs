@@ -59,7 +59,7 @@ namespace IngameScript
                 if (ReferenceController == null)
                 {
                     DebugWrite($"Error: main controller not found!\n", true);
-                    throw new Exception($"main controller not found!");
+                    throw new Exception($"main controller not found!\n");
                 }
             }
 

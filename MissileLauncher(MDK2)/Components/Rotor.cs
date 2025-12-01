@@ -119,8 +119,8 @@ namespace IngameScript
                 RotorBlock = AllGridBlocks.Find(b => b is IMyMotorStator && b.CustomName.Contains(blockName)) as IMyMotorStator;
                 if (RotorBlock == null)
                 {
-                    DebugWrite($"Error: Rotor block '{blockName}' not found!", true);
-                    throw new ArgumentException($"Rotor block '{blockName}' not found!");
+                    DebugWrite($"Error: Rotor block '{blockName}' not found!\n", true);
+                    throw new ArgumentException($"Rotor block '{blockName}' not found!\n");
                 }                    
 
                 IsInverted = RotorBlock.CustomData.Contains("-Inverted");
@@ -130,8 +130,8 @@ namespace IngameScript
             {
                 if (rotorBlock == null)
                 {
-                    DebugWrite($"Error: Rotor block is null!", true);
-                    throw new ArgumentException($"Rotor block is null!");
+                    DebugWrite($"Error: Rotor block is null!\n", true);
+                    throw new ArgumentException($"Rotor block is null!\n");
                 }
                     
                 RotorBlock = rotorBlock;

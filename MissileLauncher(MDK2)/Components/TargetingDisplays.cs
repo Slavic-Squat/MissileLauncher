@@ -50,8 +50,8 @@ namespace IngameScript
 
                     if (displayBlock == null)
                     {
-                        DebugWrite($"Error: Targeting Display {i} not found!", true);
-                        throw new Exception($"Targeting Display {i} not found!");
+                        DebugWrite($"Error: Targeting Display {i} not found!\n", true);
+                        throw new Exception($"Targeting Display {i} not found!\n");
                     }
                     if (displayBlock.CustomData.Contains("-Advanced"))
                     {

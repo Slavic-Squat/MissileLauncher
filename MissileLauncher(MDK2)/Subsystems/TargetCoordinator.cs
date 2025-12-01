@@ -68,8 +68,8 @@ namespace IngameScript
                     MyIGCMessage message;
                     if (_communicationHandler.TryRetrieveMessage("FriendlyTargetInfo", true, out message))
                     {
-                        byte[] data = Convert.FromBase64String(message.Data as string);
-                        EntityInfo entityInfo = EntityInfo.Deserialize(data, 0);
+                        byte[] bytes = Convert.FromBase64String(message.Data as string);
+                        EntityInfo entityInfo = EntityInfo.Deserialize(bytes, 0);
                         AddRemoteTarget(entityInfo, false);
                     }
                 }
@@ -79,8 +79,8 @@ namespace IngameScript
                     MyIGCMessage message;
                     if (_communicationHandler.TryRetrieveMessage("FriendlyInfo", true, out message))
                     {
-                        byte[] data = Convert.FromBase64String(message.Data as string);
-                        EntityInfo entityInfo = EntityInfo.Deserialize(data, 0);
+                        byte[] bytes = Convert.FromBase64String(message.Data as string);
+                        EntityInfo entityInfo = EntityInfo.Deserialize(bytes, 0);
                         AddRemoteTarget(entityInfo, true);
                     }
                 }
@@ -90,8 +90,8 @@ namespace IngameScript
                     MyIGCMessage message;
                     if (_communicationHandler.TryRetrieveMessage("AllMissiles", false, out message))
                     {
-                        byte[] data = Convert.FromBase64String(message.Data as string);
-                        EntityInfo entityInfo = EntityInfo.Deserialize(data, 0);
+                        byte[] bytes = Convert.FromBase64String(message.Data as string);
+                        EntityInfo entityInfo = EntityInfo.Deserialize(bytes, 0);
                         AddRemoteTarget(entityInfo, false);
                     }
                 }
@@ -107,8 +107,8 @@ namespace IngameScript
                     }
 
                     var targetInfo = _targetsLocal[targetKey].Info;
-                    byte[] data = targetInfo.Serialize();
-                    _communicationHandler.SendBroadcast(data, "FriendlyTargetInfo", true);
+                    byte[] bytes = targetInfo.Serialize();
+                    _communicationHandler.SendBroadcast(bytes, "FriendlyTargetInfo", true);
                 }
 
                 foreach (var targetKey in _targetsRemote.Keys.ToList())
