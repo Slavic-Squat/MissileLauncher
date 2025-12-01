@@ -52,7 +52,7 @@ namespace IngameScript
                 Func<string> getText = () => "SCALE: " + GetName(window.ScopeScale);
                 Action action = () => window.CycleScopeScale();
 
-                Button button = new Button(buttonPos, buttonSize, 5f, 3f, 2f, getText, action, window.Display);
+                Button button = new Button(buttonPos, buttonSize, 5f, 3f, 2f, getText, action, surface);
                 panel.AddButton(button, -1);
 
                 buttonPos.X += buttonSize.X + spacing;
@@ -76,8 +76,7 @@ namespace IngameScript
                     Menu laserMenu = CreateLaserControlMenu(laserMenuPos, window, true, true);
                     window.OpenMenu(laserMenu);
                 };
-                canPress = () => station.HasFireControl;
-                button = new Button(buttonPos, buttonSize, 5f, 3f, 2f, getText, action, surface, canPress: canPress);
+                button = new Button(buttonPos, buttonSize, 5f, 3f, 2f, getText, action, surface);
                 panel.AddButton(button, -1);
 
                 return panel;
@@ -112,7 +111,7 @@ namespace IngameScript
                 Func<string> getText = () => "TYPE: " + GetName(window.NavTypeFilter);
                 Action action = () => window.CycleTypeFilter();
 
-                Button button = new Button(buttonPos, buttonSize, 5f, 3f, 2f, getText, action, window.Display);
+                Button button = new Button(buttonPos, buttonSize, 5f, 3f, 2f, getText, action, surface);
                 panel.AddButton(button, -1);
 
                 buttonPos.Y += buttonSize.Y + spacing;
@@ -120,7 +119,7 @@ namespace IngameScript
                 getText = () => "REL: " + GetName(window.NavRelationFilter);
                 action = () => window.CycleRelationFilter();
 
-                button = new Button(buttonPos, buttonSize, 5f, 3f, 2f, getText, action, window.Display);
+                button = new Button(buttonPos, buttonSize, 5f, 3f, 2f, getText, action, surface);
                 panel.AddButton(button, -1);
 
                 buttonPos.Y += buttonSize.Y + spacing;
@@ -128,7 +127,7 @@ namespace IngameScript
                 getText = () => "SRC: " + GetName(window.NavSourceFilter);
                 action = () => window.CycleSourceFilter();
 
-                button = new Button(buttonPos, buttonSize, 5f, 3f, 2f, getText, action, window.Display);
+                button = new Button(buttonPos, buttonSize, 5f, 3f, 2f, getText, action, surface);
                 panel.AddButton(button, -1);
 
                 return panel;
@@ -350,7 +349,7 @@ namespace IngameScript
 
                 Vector2 labelPos = menu.Pos + new Vector2(menu.Size.X * 0.5f - labelSize.X * 0.5f, headerHeight * 0.5f - labelSize.Y * 0.5f);
                 RectangleF labelBounds = new RectangleF(labelPos, labelSize);
-                MySprite labelSprite = SpriteHelper.CreateText(labelBounds, "-MISSILE BAYS-\n------------------", Color.White, window.Display, TextAlignment.CENTER, true, 0);
+                MySprite labelSprite = SpriteHelper.CreateText(labelBounds, "-MISSILE BAYS-\n------------------", Color.White, surface, TextAlignment.CENTER, true, 0);
                 menu.AddSprite(labelSprite, -1);
                 
                 int bayIndex = 0;
@@ -486,7 +485,7 @@ namespace IngameScript
 
                 Vector2 labelPos = menu.Pos + new Vector2(menu.Size.X * 0.5f - labelSize.X * 0.5f, headerHeight * 0.5f - labelSize.Y * 0.5f);
                 RectangleF labelBounds = new RectangleF(labelPos, labelSize);
-                MySprite labelSprite = SpriteHelper.CreateText(labelBounds, "-TARGETING LASERS-\n------------------", Color.White, window.Display, TextAlignment.CENTER, true, 0);
+                MySprite labelSprite = SpriteHelper.CreateText(labelBounds, "-TARGETING LASERS-\n------------------", Color.White, surface, TextAlignment.CENTER, true, 0);
                 menu.AddSprite(labelSprite, -1);
 
                 int numPages = (int)Math.Ceiling((float)numLasers / (numRows * numColumns));

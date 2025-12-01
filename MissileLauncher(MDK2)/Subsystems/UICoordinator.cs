@@ -31,7 +31,7 @@ namespace IngameScript
             public HashSet<long> HostileIDs => _systemCoordinator.TargetCoordinator.HostileIDs;
             public Dictionary<long, EntityInfoExt> AllTargets => _systemCoordinator.TargetCoordinator.AllTargetsExt;
             public Dictionary<long, EntityInfoExt> AllMyMissiles => _systemCoordinator.MissileCoordinator.MyMissilesExt;
-            public Dictionary<long, EntityInfoExt> AllEntities = new Dictionary<long, EntityInfoExt>();
+            public Dictionary<long, EntityInfoExt> AllEntities { get; private set; } = new Dictionary<long, EntityInfoExt>();
 
             public List<TargetingLaser> TargetingLasers => _systemCoordinator.TargetingLasers;
             public List<ControlStation> ControlStations => _systemCoordinator.ControlStations;

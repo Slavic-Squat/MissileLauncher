@@ -116,6 +116,7 @@ namespace IngameScript
                 {
                     return;
                 }
+                controllable.GiveControl(this);
                 controllable.RequestRelease += ReleaseControl;
                 Controllable = controllable;
 

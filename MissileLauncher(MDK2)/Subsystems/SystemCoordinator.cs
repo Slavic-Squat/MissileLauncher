@@ -81,20 +81,8 @@ namespace IngameScript
 
                 CommandHandler = new CommandHandler();
                 CommunicationHandler = new CommunicationHandler(0, secureBroadcastPIN);
-
-                ControlStations = new List<ControlStation>();
+                
                 TargetingLasers = new List<TargetingLaser>();
-
-                UICoordinator = new UICoordinator(this);
-
-                int numControlStations = Config.Get("Config", "NumControlStations").ToInt32(1);
-                Config.Set("Config", "NumControlStations", numControlStations);
-                for (int i = 0; i < numControlStations; i++)
-                {
-                    ControlStation controlStation = new ControlStation(i, UICoordinator);
-                    ControlStations.Add(controlStation);
-                }
-
                 int numLasers = Config.Get("Targeting", "NumLasers").ToInt32(1);
                 Config.Set("Targeting", "NumLasers", numLasers);
                 for (int i = 0; i < numLasers; i++)
@@ -111,10 +99,23 @@ namespace IngameScript
                 float maxAWACSDist = Config.Get("AWACS", "MaxDistance").ToSingle(5000);
                 Config.Set("AWACS", "MaxDistance", maxAWACSDist);
                 AWACS = new AWACS(0, maxAWACSDist);
+
                 TargetCoordinator = new TargetCoordinator(0, CommunicationHandler);
+
                 int numBays = Config.Get("Missiles", "NumBays").ToInt32(1);
                 Config.Set("Missiles", "NumBays", numBays);
                 MissileCoordinator = new MissileCoordinator(0, numBays, CommunicationHandler, TargetCoordinator.AllTargetsExt);
+
+                UICoordinator = new UICoordinator(this);
+
+                ControlStations = new List<ControlStation>();
+                int numControlStations = Config.Get("Config", "NumControlStations").ToInt32(1);
+                Config.Set("Config", "NumControlStations", numControlStations);
+                for (int i = 0; i < numControlStations; i++)
+                {
+                    ControlStation controlStation = new ControlStation(i, UICoordinator);
+                    ControlStations.Add(controlStation);
+                }
 
                 CommunicationHandler.RegisterBroadcastListener("FriendlyCommands", true);
                 CommandHandler.RegisterCommand("SET_MAIN_CLOCK", (args) => SetMainClock(args[0]));
@@ -126,21 +127,16 @@ namespace IngameScript
             public void Run()
             {
                 SystemTime += RuntimeInfo.TimeSinceLastRun.TotalSeconds;
-                DebugEcho($"System Time: {SystemTime}s\n");
-                DebugWrite($"System Time: {SystemTime}s\n", false);
-                DebugEcho($"Last Run Time: {RuntimeInfo.LastRunTimeMs}ms\n");
-                DebugWrite($"Last Run Time: {RuntimeInfo.LastRunTimeMs}ms\n", true);
+                DebugEcho($"System Time: {SystemTime:F2}s\n");
+                DebugWrite($"System Time: {SystemTime:F2}s\n", false);
+                DebugEcho($"Last Run Time: {RuntimeInfo.LastRunTimeMs:F2}ms\n");
+                DebugWrite($"Last Run Time: {RuntimeInfo.LastRunTimeMs:F2}ms\n", true);
                 CommunicationHandler.Recieve();
 
                 SelfInfo = new EntityInfo(SelfID, ReferencePosition, ReferenceVelocity, SystemTime);
                 byte[] selfInfoData = SelfInfo.Serialize();
 
                 CommunicationHandler.SendBroadcast(selfInfoData, "FriendlyInfo", true);
-
-                foreach (var controlStation in ControlStations)
-                {
-                    controlStation.Run(SystemTime);
-                }
 
                 foreach (var targetingLaser in TargetingLasers)
                 {
@@ -154,6 +150,13 @@ namespace IngameScript
                 foreach (var target in AWACS.Targets.Values)
                 {
                     TargetCoordinator.AddLocalTarget(target);
+                }
+
+                UICoordinator.Run();
+
+                foreach (var controlStation in ControlStations)
+                {
+                    controlStation.Run(SystemTime);
                 }
 
                 if (IsMainClock && (SystemTime - _lastClockSync) > 10f)

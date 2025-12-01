@@ -40,6 +40,7 @@ namespace IngameScript
                 _entityInfo = entityInfo;
 
                 GetBlocks();
+                Init();
             }
 
             private void GetBlocks()
