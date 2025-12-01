@@ -26,52 +26,51 @@ namespace IngameScript
         {
             public double Time { get; private set; }
             private IMyShipController _inputBlock;
-            private double _lastRunTime;
 
             public bool WPress { get; private set; } = false;
-            private float _secondsWPressed;
+            private double _secondsWPressed;
             public bool WHeld { get; private set; } = false;
             public bool WRelease { get; private set; } = false;
             public bool WHeldAndReleased { get; private set; } = false;
 
             public bool APress { get; private set; } = false;
-            private float _secondsAPressed;
+            private double _secondsAPressed;
             public bool AHeld { get; private set; } = false;
             public bool ARelease { get; private set; } = false;
             public bool AHeldAndReleased { get; private set; } = false;
 
             public bool SPress { get; private set; } = false;
-            private float _secondsSPressed;
+            private double _secondsSPressed;
             public bool SHeld { get; private set; } = false;
             public bool SRelease { get; private set; } = false;
             public bool SHeldAndReleased { get; private set; } = false;
 
             public bool DPress { get; private set; } = false;
-            private float _secondsDPressed;
+            private double _secondsDPressed;
             public bool DHeld { get; private set; } = false;
             public bool DRelease { get; private set; } = false;
             public bool DHeldAndReleased { get; private set; } = false;
 
             public bool CPress { get; private set; } = false;
-            private float _secondsCPressed;
+            private double _secondsCPressed;
             public bool CHeld { get; private set; } = false;
             public bool CRelease { get; private set; } = false;
             public bool CHeldAndReleased { get; private set; } = false;
 
             public bool SpacePress { get; private set; } = false;
-            private float _secondsSpacePressed;
+            private double _secondsSpacePressed;
             public bool SpaceHeld { get; private set; } = false;
             public bool SpaceRelease { get; private set; } = false;
             public bool SpaceHeldAndReleased { get; private set; } = false;
 
             public bool QPress { get; private set; } = false;
-            private float _secondsQPressed;
+            private double _secondsQPressed;
             public bool QHeld { get; private set; } = false;
             public bool QRelease { get; private set; } = false;
             public bool QHeldAndReleased { get; private set; } = false;
 
             public bool EPress { get; private set; } = false;
-            private float _secondsEPressed;
+            private double _secondsEPressed;
             public bool EHeld { get; private set; } = false;
             public bool ERelease { get; private set; } = false;
             public bool EHeldAndReleased { get; private set; } = false;
@@ -85,19 +84,13 @@ namespace IngameScript
 
             public void Run(double time)
             {
+                ListenForInput(time);
                 Time = time;
-                if (_lastRunTime == 0)
-                {
-                    _lastRunTime = time;
-                }
-                ListenForInput();
-                _lastRunTime = time;
             }
 
-            private void ListenForInput()
+            private void ListenForInput(double time)
             {
-                float deltaSeconds = (float)(Time - _lastRunTime);
-
+                double deltaSeconds = time - Time;
 
                 if (_inputBlock.MoveIndicator.Z < 0)
                 {

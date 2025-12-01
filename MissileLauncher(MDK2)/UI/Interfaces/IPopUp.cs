@@ -22,7 +22,7 @@ namespace IngameScript
 {
     partial class Program
     {
-        public interface IModal : IUIElement
+        public interface IPopUp : IUIElement
         {
             bool CanClose { get; }
         }

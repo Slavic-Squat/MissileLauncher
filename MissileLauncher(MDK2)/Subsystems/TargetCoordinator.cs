@@ -62,7 +62,8 @@ namespace IngameScript
 
             public void Run(double time)
             {
-                Time = time;
+                double globalTime = SystemCoordinator.GlobalTime;
+
                 while (_communicationHandler.HasMessage("FriendlyTargetInfo", true))
                 {
                     MyIGCMessage message;
@@ -98,7 +99,7 @@ namespace IngameScript
 
                 foreach (var targetKey in _targetsLocal.Keys.ToList())
                 {
-                    float timeSinceLastDetection = (float)(time - _targetsLocal[targetKey].TimeRecorded);
+                    double timeSinceLastDetection = globalTime - _targetsLocal[targetKey].TimeRecorded;
 
                     if (timeSinceLastDetection > 5f)
                     {
@@ -113,13 +114,14 @@ namespace IngameScript
 
                 foreach (var targetKey in _targetsRemote.Keys.ToList())
                 {
-                    float timeSinceLastDetection = (float)(time - _targetsRemote[targetKey].TimeRecorded);
+                    double timeSinceLastDetection = globalTime - _targetsRemote[targetKey].TimeRecorded;
 
                     if (timeSinceLastDetection > 5f)
                     {
                         RemoveRemoteTarget(targetKey);
                     }
                 }
+                Time = time;
             }
 
             private void AddRemoteTarget(EntityInfo entityInfo, bool friendly)

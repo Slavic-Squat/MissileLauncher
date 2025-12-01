@@ -37,6 +37,7 @@ namespace IngameScript
             public event Action<IMenu> RequestClose;
             public event Action<INavigable> RequestStopNavigation;
 
+            protected bool _canUserClose;
             protected Func<bool> _autoClose;
             protected RectangleF _bounds;
             protected float _borderThickness;
@@ -56,7 +57,7 @@ namespace IngameScript
 
             protected List<MySprite> _commonSprites = new List<MySprite>();
 
-            public Menu(object parent, Vector2 pos, Vector2 size, float borderThickness, bool obscure = false, IMyTextSurface surface = null, Func<bool> autoClose = null)
+            public Menu(object parent, Vector2 pos, Vector2 size, float borderThickness, bool obscure = false, IMyTextSurface surface = null, Func<bool> autoClose = null, bool canUserClose = true)
             {
                 Parent = parent;
                 _bounds = new RectangleF(pos, size);
@@ -64,6 +65,8 @@ namespace IngameScript
                 _obscure = obscure;
                 _surface = surface;
                 _autoClose = autoClose;
+                _canUserClose = canUserClose;
+
                 if (_surface == null && obscure)
                 {
                     throw new ArgumentException("Surface must be provided if obscure is true");
@@ -130,6 +133,7 @@ namespace IngameScript
 
             protected virtual void Close()
             {
+                if (!_canUserClose) return;
                 RequestClose?.Invoke(this);
             }
 
@@ -274,7 +278,6 @@ namespace IngameScript
             {
                 if (!IsOpen) return;
 
-                Time = time;
                 if (_autoClose?.Invoke() ?? false)
                 {
                     Close();
@@ -289,6 +292,7 @@ namespace IngameScript
                 {
                     page.Updateables.ForEach(u => u.Update(time));
                 }
+                Time = time;
             }
 
             protected virtual void ActivateButton(IButton button)

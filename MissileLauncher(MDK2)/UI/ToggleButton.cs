@@ -189,7 +189,6 @@ namespace IngameScript
 
             public void Update(double time)
             {
-                Time = time;
                 if (_isPressed?.Invoke() == true)
                 {
                     _state |= ButtonState.Pressed;
@@ -207,6 +206,7 @@ namespace IngameScript
                 {
                     _state |= ButtonState.Disabled;
                 }
+                Time = time;
             }
 
             public void Draw(MySpriteDrawFrame frame)

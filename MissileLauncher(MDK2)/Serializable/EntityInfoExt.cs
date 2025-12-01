@@ -117,7 +117,7 @@ namespace IngameScript
                     sb.Append($"SPD: {speed:0} m/s\n");
                 }
 
-                float age = (float)(SystemCoordinator.SystemTime - Info.TimeRecorded) * 1000;
+                float age = (float)(SystemCoordinator.GlobalTime - Info.TimeRecorded) * 1000;
                 if (age > 1000f)
                 {
                     age /= 1000f;

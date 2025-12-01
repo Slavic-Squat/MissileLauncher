@@ -22,7 +22,7 @@ namespace IngameScript
 {
     partial class Program
     {
-        public class InfoModal : IModal
+        public class PopUp : IPopUp
         {
             public RectangleF Bounds => _bounds;
             public Vector2 Pos => Bounds.Position;
@@ -42,7 +42,7 @@ namespace IngameScript
 
             private IMyTextSurface _surface;
 
-            public InfoModal(Vector2 pos, Vector2 size, float borderThickness, float padding, Func<bool> condition, string text, IMyTextSurface surface)
+            public PopUp(Vector2 pos, Vector2 size, float borderThickness, float padding, Func<bool> condition, string text, IMyTextSurface surface)
             {
                 _bounds = new RectangleF(pos, size);
                 _borderThickness = borderThickness;

@@ -27,6 +27,7 @@ namespace IngameScript
         public class SystemCoordinator
         {
             public static double SystemTime { get; private set; }
+            public static double GlobalTime { get; private set; }
             public static IMyShipController ReferenceController { get; private set; }
             public static Matrix ReferenceWorldMatrix => ReferenceController.WorldMatrix;
             public static Vector3 ReferencePosition => ReferenceController.GetPosition();
@@ -69,8 +70,6 @@ namespace IngameScript
                 if (!Config.TryParse(MePb.CustomData))
                 {
                     Config.Clear();
-                    Config.Set("Config", "SecureBroadcastPIN", "123456");
-                    Config.Set("Config", "IsMainClock", "TRUE");
                 }
 
                 long secureBroadcastPIN = Config.Get("Config", "SecureBroadcastPIN").ToInt64(123456);
@@ -127,6 +126,7 @@ namespace IngameScript
             public void Run()
             {
                 SystemTime += RuntimeInfo.TimeSinceLastRun.TotalSeconds;
+                GlobalTime += RuntimeInfo.TimeSinceLastRun.TotalSeconds;
                 DebugEcho($"System Time: {SystemTime:F2}s\n");
                 DebugWrite($"System Time: {SystemTime:F2}s\n", false);
                 DebugEcho($"Last Run Time: {RuntimeInfo.LastRunTimeMs:F2}ms\n");
@@ -203,7 +203,7 @@ namespace IngameScript
                 double time;
                 if (double.TryParse(timeString, out time))
                 {
-                    SystemTime = time;
+                    GlobalTime = time;
                 }
             }
         }

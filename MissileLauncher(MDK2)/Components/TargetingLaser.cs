@@ -33,7 +33,6 @@ namespace IngameScript
 
             #region State Info
             private float _maxRaycastDistance;
-            private double _lastRunTime;
             private Matrix _referenceMatrix;
             private double _lastUniqueDetectionTime;
             private int _matchingDetectionCounter;
@@ -97,10 +96,6 @@ namespace IngameScript
 
             public void Run(double time)
             {
-                Time = time;
-                if (_lastRunTime == 0)
-                    _lastRunTime = time;
-
                 Matrix H0 = _azimuthRotor.RotorBlock.WorldMatrix;
                 Matrix H1 = Matrix.CreateRotationY(_azimuthRotor.CurrentAngle);
                 Matrix H2 = Matrix.CreateRotationX(_elevationRotor.CurrentAngle);
@@ -117,18 +112,18 @@ namespace IngameScript
 
                 if (HasTarget && !ManualOverride)
                 {
-                    AutoTrack();
+                    AutoTrack(time);
                 }
-
-                _lastRunTime = time;
+                Time = time;
             }
 
-            private void AutoTrack()
+            private void AutoTrack(double time)
             {
-                float timeDeltaSeconds = (float)(Time - _lastRunTime);
+                double timeDeltaSeconds = time - Time;
+                double globalTime = SystemCoordinator.GlobalTime;
 
-                float timeSinceLastDetection = (float)(Time - Target.TimeRecorded);
-                Vector3 estimatedTargetPosition = Target.Position + Target.Velocity * timeSinceLastDetection;
+                double timeSinceLastDetection = globalTime - Target.TimeRecorded;
+                Vector3 estimatedTargetPosition = Target.Position + Target.Velocity * (float)timeSinceLastDetection;
                 float estimatedTargetDistance = (estimatedTargetPosition - _referenceMatrix.Translation).Length();
 
                 if (estimatedTargetDistance > MaxRaycastDistance * 0.8f || timeSinceLastDetection > 5f)
@@ -142,8 +137,8 @@ namespace IngameScript
                     Vector3 estimatedTargetDirLocal = estimatedTargetDistance == 0 ? Vector3.Zero : estimatedTargetPosLocal / estimatedTargetDistance;
                     float azimuthError = (float)Math.Atan2(-estimatedTargetDirLocal.X, -estimatedTargetDirLocal.Z);
                     float elevationError = (float)Math.Asin(estimatedTargetDirLocal.Y);
-                    var azimuthInput = _azimuthPID.Run(azimuthError, timeDeltaSeconds) / Sensitivity;
-                    var elevationInput = _elevationPID.Run(elevationError, timeDeltaSeconds) / Sensitivity;
+                    var azimuthInput = _azimuthPID.Run(azimuthError, (float)timeDeltaSeconds) / Sensitivity;
+                    var elevationInput = _elevationPID.Run(elevationError, (float)timeDeltaSeconds) / Sensitivity;
 
                     MoveLaser(azimuthInput, elevationInput);
                     FireLaser(estimatedTargetPosition, 0.1f);
@@ -164,6 +159,8 @@ namespace IngameScript
 
             private void FireLaser(Vector3 raycastTarget, float overshoot)
             {
+                double globalTime = SystemCoordinator.GlobalTime;
+
                 if (!_cameraArray.CanScan(raycastTarget, 0.1f))
                     return;
 
@@ -173,7 +170,7 @@ namespace IngameScript
                 {
                     if (HasTarget && raycastResult.EntityId == Target.EntityID)
                     {
-                        var freshTarget = new EntityInfoExt(raycastResult, Time);
+                        var freshTarget = new EntityInfoExt(raycastResult, globalTime);
                         Target = Target.Merge(freshTarget);
                     }
 
@@ -194,7 +191,7 @@ namespace IngameScript
                         float timeSinceLastUniqueDetection = (float)(Time - _lastUniqueDetectionTime);
                         if (timeSinceLastUniqueDetection > 2f && _matchingDetectionCounter >= 3)
                         {
-                            Target = new EntityInfoExt(raycastResult, Time);
+                            Target = new EntityInfoExt(raycastResult, globalTime);
                         }
                     }
                 }

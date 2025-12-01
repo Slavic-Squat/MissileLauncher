@@ -244,7 +244,6 @@ namespace IngameScript
 
             public void Update(double time)
             {
-                Time = time;
                 foreach (var updatable in _commonUpdatables)
                 {
                     updatable.Update(time);
@@ -254,6 +253,7 @@ namespace IngameScript
                 {
                     page.Updateables.ForEach(u => u.Update(time));
                 }
+                Time = time;
             }
 
             private void ActivateButton(IButton button)

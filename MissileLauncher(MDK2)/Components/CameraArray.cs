@@ -27,7 +27,6 @@ namespace IngameScript
         {
             private List<IMyCameraBlock> _cameras = new List<IMyCameraBlock>();
             public double Time { get; private set; }
-            private double _lastUpdateTime;
             private int _cameraIndex;
             private float _totalAvailableRaycastDistance;
 
@@ -63,12 +62,8 @@ namespace IngameScript
 
             public void Update(double time)
             {
+                _totalAvailableRaycastDistance += (float)(time - Time) * 2000f * _cameras.Count;
                 Time = time;
-                if (_lastUpdateTime == 0)
-                    _lastUpdateTime = time;
-
-                _totalAvailableRaycastDistance += (float)(time - _lastUpdateTime) * 2000f * _cameras.Count;
-                _lastUpdateTime = time;
             }
 
             public MyDetectedEntityInfo Raycast(Vector3 raycastTarget)

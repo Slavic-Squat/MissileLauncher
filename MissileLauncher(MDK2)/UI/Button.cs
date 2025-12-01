@@ -162,7 +162,6 @@ namespace IngameScript
 
             public void Update(double time)
             {
-                Time = time;
                 if ((time - _timePressed) > 1f && _state.HasFlag(ButtonState.Pressed))
                 {
                     _state &= ~ButtonState.Pressed;
@@ -176,6 +175,7 @@ namespace IngameScript
                 {
                     _state |= ButtonState.Disabled;
                 }
+                Time = time;
             }
 
             public void Draw(MySpriteDrawFrame frame)

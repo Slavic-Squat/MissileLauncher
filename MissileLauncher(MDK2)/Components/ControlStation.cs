@@ -76,7 +76,6 @@ namespace IngameScript
 
             public void Run(double time)
             {
-                Time = time;
                 UserInput.Run(time);
                 _ui.Run(time);
 
@@ -88,6 +87,7 @@ namespace IngameScript
                 {
                     Controllable.Control(UserInput, this);
                 }
+                Time = time;
             }
 
             public void TakeFireControl(MissileCoordinator coordinator)

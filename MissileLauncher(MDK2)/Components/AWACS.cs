@@ -34,8 +34,6 @@ namespace IngameScript
 
             #region State Info
             private Matrix _referenceMatrix;
-
-            private double _lastRunTime;
             #endregion
 
             #region Properties
@@ -89,9 +87,7 @@ namespace IngameScript
 
             public void Run(double time)
             {
-                Time = time;
-                if (_lastRunTime == 0)
-                    _lastRunTime = time;
+                double globalTime = SystemCoordinator.GlobalTime;
 
                 _cameraArray0.Update(time);
                 _cameraArray1.Update(time);
@@ -108,8 +104,8 @@ namespace IngameScript
 
                     foreach (var targetID in Targets.Keys.ToList())
                     {
-                        float timeSinceLastDetection = (float)(time - Targets[targetID].TimeRecorded);
-                        Vector3 estimatedTargetPos = Targets[targetID].Position + Targets[targetID].Velocity * timeSinceLastDetection;
+                        double timeSinceLastDetection = globalTime - Targets[targetID].TimeRecorded;
+                        Vector3 estimatedTargetPos = Targets[targetID].Position + Targets[targetID].Velocity * (float)timeSinceLastDetection;
                         Vector3 estimatedTargetPosLocal = Vector3.TransformNormal(estimatedTargetPos - _referenceMatrix.Translation, Matrix.Transpose(_referenceMatrix));
                         float estimatedTargetDistance = estimatedTargetPosLocal.Length();
                         Vector3 estimatedTargetDirLocal = estimatedTargetDistance == 0 ? Vector3.Zero : estimatedTargetPosLocal / estimatedTargetDistance;
@@ -132,8 +128,8 @@ namespace IngameScript
 
                         EntityInfoExt target = Targets[targetID];
                         MyDetectedEntityInfo raycastResult = default(MyDetectedEntityInfo);
-                        float timeSinceLastDetection = (float)(time - Targets[targetID].TimeRecorded);
-                        Vector3 estimatedTargetPos = Targets[targetID].Position + Targets[targetID].Velocity * timeSinceLastDetection;
+                        double timeSinceLastDetection = globalTime - Targets[targetID].TimeRecorded;
+                        Vector3 estimatedTargetPos = Targets[targetID].Position + Targets[targetID].Velocity * (float)timeSinceLastDetection;
                         Vector3 estimatedTargetPosLocal = Vector3.TransformNormal(estimatedTargetPos - _referenceMatrix.Translation, Matrix.Transpose(_referenceMatrix));
                         Vector3 estimatedTargetDirLocal = estimatedTargetPosLocal == Vector3.Zero ? Vector3.Zero : Vector3.Normalize(estimatedTargetPosLocal);
                         float targetAzimuth = MathHelper.ToDegrees((float)Math.Atan2(-estimatedTargetDirLocal.X, -estimatedTargetDirLocal.Z));
@@ -157,14 +153,14 @@ namespace IngameScript
 
                         if (raycastResult.EntityId == targetID)
                         {
-                            var freshTarget = new EntityInfoExt(raycastResult, time);
+                            var freshTarget = new EntityInfoExt(raycastResult, globalTime);
                             var originalTarget = Targets[targetID];
                             Targets[targetID] = originalTarget.Merge(freshTarget);
                             TargetsSyncInfo[targetID] = true;
                         }
                     }
                 }
-                _lastRunTime = time;
+                Time = time;
             }
 
             public void AddTarget(EntityInfoExt target)

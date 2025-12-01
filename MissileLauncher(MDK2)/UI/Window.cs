@@ -39,6 +39,8 @@ namespace IngameScript
 
             public IMyTextSurface Display => UI.Display;
 
+            protected bool _canUserClose;
+
             protected RectangleF _bounds;
             protected float _borderThickness;
 
@@ -54,24 +56,26 @@ namespace IngameScript
             protected INavigable _navigatedElement;
 
 
-            public Window(UI ui, Vector2 pos, Vector2 size, float borderThickness)
+            public Window(UI ui, Vector2 pos, Vector2 size, float borderThickness, bool canUserClose = true)
             {
                 UI = ui;
                 Parent = ui;
 
                 _bounds = new RectangleF(pos, size);
                 _borderThickness = borderThickness;
+                _canUserClose = canUserClose;
 
                 Init();
             }
 
-            public Window(UI ui, float borderThickness)
+            public Window(UI ui, float borderThickness, bool canUserClose = true)
             {
                 UI = ui;
                 Parent = ui;
 
                 _bounds = ui.Bounds;
                 _borderThickness = borderThickness;
+                _canUserClose = canUserClose;
 
                 Init();
             }
@@ -115,6 +119,7 @@ namespace IngameScript
 
             protected virtual void Close()
             {
+                if (!_canUserClose) return;
                 RequestClose?.Invoke(this);
             }
 
@@ -291,11 +296,11 @@ namespace IngameScript
             public virtual void Update(double time)
             {
                 if (!IsOpen) return;
-                Time = time;
                 foreach (var updatable in _updatables.ToList())
                 {
                     updatable.Update(time);
                 }
+                Time = time;
             }
 
             public virtual void Draw(MySpriteDrawFrame frame)

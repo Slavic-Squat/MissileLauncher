@@ -37,7 +37,7 @@ namespace IngameScript
             public Vector2 Pos => Bounds.Position;
 
             private IWindow _activeWindow = null;
-            private IModal _activeModal = null;
+            private IPopUp _activePopUp = null;
             public UI (ControlStation station, IMyTextSurface display, UICoordinator uiCoordinator)
             {
                 Station = station;
@@ -56,9 +56,9 @@ namespace IngameScript
 
             public void Run(double time)
             {
-                Time = time;
                 Update(time);
                 Draw();
+                Time = time;
             }
 
             public void OpenWindow(IWindow window)
@@ -89,20 +89,20 @@ namespace IngameScript
                 window.RequestClose -= CloseWindow;
             }
 
-            public void OpenModal(IModal modal)
+            public void OpenPopUp(IPopUp popUp)
             {
-                if (modal == null || ReferenceEquals(_activeModal, modal))
+                if (popUp == null || ReferenceEquals(_activePopUp, popUp))
                 {
                     return;
                 }
-                _activeModal = modal;
+                _activePopUp = popUp;
             }
 
             public void Update(double time)
             {
-                if (_activeModal?.CanClose ?? false)
+                if (_activePopUp?.CanClose ?? false)
                 {
-                    _activeModal = null;
+                    _activePopUp = null;
                 }
 
                 if (!HasActiveWindow)
@@ -120,7 +120,7 @@ namespace IngameScript
                 {
                     return;
                 }
-                if (_activeModal != null)
+                if (_activePopUp != null)
                 {
                     return;
                 }
@@ -131,7 +131,7 @@ namespace IngameScript
             {
                 var frame = Display.DrawFrame();
                 _activeWindow?.Draw(frame);
-                _activeModal?.Draw(frame);
+                _activePopUp?.Draw(frame);
                 frame.Dispose();
             }
         }

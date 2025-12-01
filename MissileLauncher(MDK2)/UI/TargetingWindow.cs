@@ -38,12 +38,12 @@ namespace IngameScript
             private TargetingSpriteBuilder _targetingSpriteBuilder;
 
 
-            public TargetingWindow(UI ui, Vector2 pos, Vector2 size, float borderThickness) : base(ui, pos, size, borderThickness)
+            public TargetingWindow(UI ui, Vector2 pos, Vector2 size, float borderThickness) : base(ui, pos, size, borderThickness, canUserClose: false)
             {
                 Init();
             }
 
-            public TargetingWindow(UI ui, float borderThickness) : base(ui, borderThickness)
+            public TargetingWindow(UI ui, float borderThickness) : base(ui, borderThickness, canUserClose: false)
             {
                 Init();
             }

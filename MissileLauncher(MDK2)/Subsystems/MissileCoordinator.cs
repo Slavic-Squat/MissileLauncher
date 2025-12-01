@@ -78,8 +78,6 @@ namespace IngameScript
 
             public void Run(double time)
             {
-                Time = time;
-
                 NumReadyBays = 0;
                 foreach (var bay in MissileBays)
                 {
@@ -132,6 +130,7 @@ namespace IngameScript
                 {
                     _launchCoroutine = null;
                 }
+                Time = time;
             }
 
             private void AddMissile(EntityInfo entityInfo)
@@ -315,10 +314,11 @@ namespace IngameScript
             private void SyncClocks()
             {
                 _lastClockSync = Time;
+                double globalTime = SystemCoordinator.GlobalTime;
 
                 foreach (long address in _addressMissileIDMap.Keys.ToList())
                 {
-                    string command = $"SYNC_CLOCK {Time}";
+                    string command = $"SYNC_CLOCK {globalTime}";
                     _communicationHandler.SendUnicast(command, address, "MyMissileCommands", true);
                 }
             }

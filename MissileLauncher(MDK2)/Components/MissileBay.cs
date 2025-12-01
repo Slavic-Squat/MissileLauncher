@@ -117,7 +117,6 @@ namespace IngameScript
 
             public void Run(double time)
             {
-                Time = time;
                 if (Status == BayStatus.Empty && (time - _timeLastRegister) > 10f)
                 {
                     RegisterMissile();
@@ -133,14 +132,16 @@ namespace IngameScript
                     MissilePayload = MissilePayload.Unknown;
                     _missileComputer = null;
                 }
+                Time = time;
             }
 
             public void Launch()
             {
                 if (Status == BayStatus.Ready)
                 {
+                    double globalTime = SystemCoordinator.GlobalTime;
                     _missileComputer.Enabled = true;
-                    if (!_missileComputer.TryRun($"ON | ACTIVATE {IGCS.Me} {Time} | LAUNCH"))
+                    if (!_missileComputer.TryRun($"ON | ACTIVATE {IGCS.Me} {globalTime} | LAUNCH"))
                     {
                         return;
                     }
