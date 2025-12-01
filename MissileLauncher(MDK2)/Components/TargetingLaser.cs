@@ -84,9 +84,8 @@ namespace IngameScript
 
             private void GetBlocks()
             {
-                string prefix = SystemCoordinator.GridName;
-                _azimuthRotor = new Rotor($"{prefix} Laser {ID} Azimuth Rotor");
-                _elevationRotor = new Rotor($"{prefix} Laser {ID} Elevation Rotor");
+                _azimuthRotor = new Rotor($"Laser {ID} Azimuth Rotor");
+                _elevationRotor = new Rotor($"Laser {ID} Elevation Rotor");
             }
 
             private void Init()

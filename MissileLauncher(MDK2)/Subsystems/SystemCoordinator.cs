@@ -27,7 +27,6 @@ namespace IngameScript
         public class SystemCoordinator
         {
             public static double SystemTime { get; private set; }
-            public static string GridName => MePb.CubeGrid.CustomName;
             public static IMyShipController ReferenceController { get; private set; }
             public static Matrix ReferenceWorldMatrix => ReferenceController.WorldMatrix;
             public static Vector3 ReferencePosition => ReferenceController.GetPosition();
@@ -56,12 +55,11 @@ namespace IngameScript
 
             private void GetBlocks()
             {
-                string prefix = GridName;
-                ReferenceController = GTS.GetBlockWithName($"{prefix} Main Controller") as IMyShipController;
+                ReferenceController = AllGridBlocks.Find(b => b is IMyShipController && b.CustomName.Contains("Main Controller")) as IMyShipController;
                 if (ReferenceController == null)
                 {
-                    DebugWrite($"Error: Main Controller not found on grid {prefix}!\n", true);
-                    throw new Exception($"Main Controller not found on grid {prefix}!");
+                    DebugWrite($"Error: main controller not found!\n", true);
+                    throw new Exception($"main controller not found!");
                 }
             }
 

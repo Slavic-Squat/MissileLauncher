@@ -116,7 +116,7 @@ namespace IngameScript
             public IMyMotorStator RotorBlock { get; private set; }
             public Rotor(string blockName)
             {
-                RotorBlock = GTS.GetBlockWithName(blockName) as IMyMotorStator;
+                RotorBlock = AllGridBlocks.Find(b => b is IMyMotorStator && b.CustomName.Contains(blockName)) as IMyMotorStator;
                 if (RotorBlock == null)
                 {
                     DebugWrite($"Error: Rotor block '{blockName}' not found!", true);

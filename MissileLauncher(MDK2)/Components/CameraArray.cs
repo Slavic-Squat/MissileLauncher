@@ -45,17 +45,11 @@ namespace IngameScript
 
             private void GetBLocks()
             {
-                string prefix = SystemCoordinator.GridName;
-                GTS.GetBlockGroupWithName($"{prefix} Camera Array {ID}")?.GetBlocksOfType(_cameras);
-                if (_cameras == null)
-                {
-                    DebugWrite($"Error: Camera Array {ID} on {prefix} not found!", true);
-                    throw new Exception($"Camera Array {ID} on {prefix} not found!");
-                }
+                _cameras = AllGridBlocks.Where(b => b is IMyCameraBlock && b.CustomName.Contains($"Camera Array {ID}")).Cast<IMyCameraBlock>().ToList();
                 if (_cameras.Count == 0)
                 {
-                    DebugWrite($"Error: Camera Array {ID} on {prefix} has no cameras!", true);
-                    throw new Exception($"Camera Array {ID} on {prefix} has no cameras!");
+                    DebugWrite($"Error: Camera Array {ID} on has no cameras!", true);
+                    throw new Exception($"Camera Array {ID} on has no cameras!");
                 }
             }
 

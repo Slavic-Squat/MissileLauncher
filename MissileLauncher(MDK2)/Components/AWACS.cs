@@ -73,8 +73,7 @@ namespace IngameScript
 
             private void GetBlocks()
             {
-                string prefix = SystemCoordinator.GridName;
-                _spinRotor = new Rotor($"{prefix} AWACS {ID} Spin Rotor");
+                _spinRotor = new Rotor($"AWACS {ID} Spin Rotor");
             }
 
             private void Init()

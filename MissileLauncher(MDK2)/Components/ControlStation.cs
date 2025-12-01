@@ -47,25 +47,23 @@ namespace IngameScript
 
             private void GetBlocks()
             {
-                string prefix = SystemCoordinator.GridName;
-                _controllerReference = GTS.GetBlockWithName($"{prefix} Control Station {ID}") as IMyShipController;
+                _controllerReference = AllGridBlocks.Find(b => b is IMyShipController && b.CustomName.Contains($"Control Station {ID}")) as IMyShipController;
                 if (_controllerReference == null)
                 {
-                    DebugWrite($"Error: No controller found for Control Station {ID} on {prefix}!", true);
-                    throw new Exception($"No controller found for Control Station {ID} on {prefix}!");
+                    DebugWrite($"Error: No controller found for Control Station {ID}!", true);
+                    throw new Exception($"No controller found for Control Station {ID}!");
                 }
                 float internalSurfaceCount = (_controllerReference as IMyTextSurfaceProvider)?.SurfaceCount ?? 0;
                 for (int i = 0; i < internalSurfaceCount; i++)
                 {
                     _displays.Add((_controllerReference as IMyTextSurfaceProvider).GetSurface(i));
                 }
-                List<IMyTextSurface> additionalDisplays = new List<IMyTextSurface>();
-                GTS.GetBlockGroupWithName($"{prefix} Control Station {ID} Displays")?.GetBlocksOfType(additionalDisplays);
+                IEnumerable<IMyTextPanel> additionalDisplays = AllGridBlocks.Where(b => b is IMyTextPanel && b.CustomName.Contains($"Control Station {ID} Display")).Cast<IMyTextPanel>();
                 _displays.AddRange(additionalDisplays);
                 if (_displays.Count == 0)
                 {
-                    DebugWrite($"Error: No displays found for Control Station {ID} on {prefix}!", true);
-                    throw new Exception($"No displays found for Control Station {ID} on {prefix}!");
+                    DebugWrite($"Error: No displays found for Control Station {ID}!", true);
+                    throw new Exception($"No displays found for Control Station {ID}!");
                 }
             }
 

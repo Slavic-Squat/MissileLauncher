@@ -44,15 +44,14 @@ namespace IngameScript
 
             private void GetBlocks()
             {
-                string prefix = SystemCoordinator.GridName;
                 for (int i = 0; i < _numDisplays; i++)
                 {
-                    IMyTextPanel displayBlock = GTS.GetBlockWithName($"{prefix} Targeting Display {i}") as IMyTextPanel;
+                    IMyTextPanel displayBlock = AllGridBlocks.Find(b => b.CustomName.Contains($"Targeting Display {i}")) as IMyTextPanel;
 
                     if (displayBlock == null)
                     {
-                        DebugWrite($"Error: Targeting Display {i} not found on {prefix}!", true);
-                        throw new Exception($"Targeting Display {i} not found on {prefix}!");
+                        DebugWrite($"Error: Targeting Display {i} not found!", true);
+                        throw new Exception($"Targeting Display {i} not found!");
                     }
                     if (displayBlock.CustomData.Contains("-Advanced"))
                     {
