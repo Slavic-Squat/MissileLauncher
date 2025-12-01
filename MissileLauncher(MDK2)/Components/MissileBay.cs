@@ -64,10 +64,12 @@ namespace IngameScript
 
             private void GetBlocks()
             {
-                _connector = GTS.GetBlockWithName($"Missile Bay Connector [{ID}]") as IMyShipConnector;
+                string prefix = SystemCoordinator.GridName;
+                _connector = GTS.GetBlockWithName($"{prefix} Missile Bay {ID} Connector") as IMyShipConnector;
                 if (_connector == null)
                 {
-                    throw new Exception($"No Connector Found For Missile Bay Connector [{ID}]");
+                    DebugWrite($"Error: No connector found for Missile Bay {ID} on {prefix}!", true);
+                    throw new Exception($"No connector found for Missile Bay {ID} on {prefix}!");
                 }
             }
 
@@ -81,29 +83,21 @@ namespace IngameScript
                 Status = BayStatus.Empty;
                 _missileComputer = null;
 
-                IMyShipConnector missileConnector = _connector.OtherConnector;
-                if (missileConnector == null)
+                if (_connector.Status != MyShipConnectorStatus.Connected)
                 {
                     return;
                 }
+                IMyShipConnector missileConnector = _connector.OtherConnector;
                 List<IMyProgrammableBlock> pbBlocks = new List<IMyProgrammableBlock>();
-                GTS.GetBlocksOfType(pbBlocks, pb => pb.IsSameConstructAs(missileConnector));
+                GTS.GetBlocksOfType(pbBlocks, pb => pb.IsSameConstructAs(missileConnector) && pb.CustomName.Contains("Missile Computer"));
                 if (pbBlocks.Count == 0)
                 {
                     return;
                 }
                 _missileComputer = pbBlocks[0];
 
-                List<IMyTerminalBlock> tBlocks = new List<IMyTerminalBlock>();
-                GTS.GetBlocksOfType(tBlocks, b => b.IsSameConstructAs(missileConnector) && b.CustomData.Contains("[Config]"));
-                if (tBlocks.Count == 0)
-                {
-                    return;
-                }
-                IMyTerminalBlock storageBlock = tBlocks[0];
-
                 MyIni missileConfig = new MyIni();
-                if (missileConfig.TryParse(storageBlock.CustomData))
+                if (missileConfig.TryParse(_missileComputer.CustomData))
                 {
                     MissileID = missileConfig.Get("Config", "MissileID").ToInt64(-1);
                     MissileAddress = missileConfig.Get("Config", "MissileAddress").ToInt64(-1);
@@ -147,12 +141,10 @@ namespace IngameScript
                 if (Status == BayStatus.Ready)
                 {
                     _missileComputer.Enabled = true;
-                    if (!_missileComputer.TryRun("ON"))
+                    if (!_missileComputer.TryRun($"ON | ACTIVATE {IGCS.Me} {Time} | LAUNCH"))
                     {
                         return;
                     }
-                    _missileComputer.CustomData += $"\nACTIVATE {IGCS.Me} {Time}";
-                    _missileComputer.CustomData += $"\nLAUNCH";
                     Status = BayStatus.Launching;
                 }
             }
@@ -161,7 +153,7 @@ namespace IngameScript
             {
                 if (Status == BayStatus.Ready)
                 {
-                    _missileComputer.CustomData += $"\nRESET";
+                    _missileComputer.TryRun("RESET");
                     Status = BayStatus.Loaded;
                     _missileComputer.Enabled = false;
                 }

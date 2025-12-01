@@ -28,18 +28,18 @@ namespace IngameScript
             public double Time { get; private set; }
             public bool HasFireControl { get; private set; }
             public IControllable Controllable { get; private set; }
-            public UserInput Input { get; private set; }
+            public UserInput UserInput { get; private set; }
             public bool IsControlling => Controllable != null;
             public IMyTextSurface PrimaryDisplay { get; private set; }
 
             private List<IMyTextSurface> _displays = new List<IMyTextSurface>();
             private IMyShipController _controllerReference;
             private UI _ui;
-            private UIWireManager _uiWireManager;
-            public ControlStation(int iD, UIWireManager uiWireManager)
+            private UICoordinator _uiCoordinator;
+            public ControlStation(int iD, UICoordinator uiCoordinator)
             {
                 ID = iD;
-                _uiWireManager = uiWireManager;
+                _uiCoordinator = uiCoordinator;
 
                 GetBlocks();
                 Init();
@@ -47,10 +47,12 @@ namespace IngameScript
 
             private void GetBlocks()
             {
-                _controllerReference = GTS.GetBlockWithName($"Control Station [{ID}]") as IMyShipController;
+                string prefix = SystemCoordinator.GridName;
+                _controllerReference = GTS.GetBlockWithName($"{prefix} Control Station {ID}") as IMyShipController;
                 if (_controllerReference == null)
                 {
-                    throw new Exception($"No Controller Found For Control Station [{ID}]");
+                    DebugWrite($"Error: No controller found for Control Station {ID} on {prefix}!", true);
+                    throw new Exception($"No controller found for Control Station {ID} on {prefix}!");
                 }
                 float internalSurfaceCount = (_controllerReference as IMyTextSurfaceProvider)?.SurfaceCount ?? 0;
                 for (int i = 0; i < internalSurfaceCount; i++)
@@ -58,43 +60,45 @@ namespace IngameScript
                     _displays.Add((_controllerReference as IMyTextSurfaceProvider).GetSurface(i));
                 }
                 List<IMyTextSurface> additionalDisplays = new List<IMyTextSurface>();
-                GTS.GetBlockGroupWithName($"Control Station [{ID}] Displays")?.GetBlocksOfType(additionalDisplays);
+                GTS.GetBlockGroupWithName($"{prefix} Control Station {ID} Displays")?.GetBlocksOfType(additionalDisplays);
                 _displays.AddRange(additionalDisplays);
                 if (_displays.Count == 0)
                 {
-                    throw new Exception($"No Displays Found For Control Station [{ID}]");
+                    DebugWrite($"Error: No displays found for Control Station {ID} on {prefix}!", true);
+                    throw new Exception($"No displays found for Control Station {ID} on {prefix}!");
                 }
             }
 
             private void Init()
             {
                 PrimaryDisplay = _displays[0];
-                Input = new UserInput(_controllerReference);
-                _ui = new UI(this, PrimaryDisplay, _uiWireManager);
+                UserInput = new UserInput(_controllerReference);
+                _ui = new UI(this, PrimaryDisplay, _uiCoordinator);
             }
 
             public void Run(double time)
             {
                 Time = time;
-                Input.Run(time);
+                UserInput.Run(time);
                 _ui.Run(time);
 
                 if (!IsControlling)
                 {
-                    _ui.Navigate(Input, this);
+                    _ui.Navigate(UserInput, this);
                 }
                 else
                 {
-                    Controllable.Control(Input, this);
+                    Controllable.Control(UserInput, this);
                 }
             }
 
             public void TakeFireControl(MissileCoordinator coordinator)
             {
-                if (!coordinator.GiveFireControl(this))
+                if (!coordinator.FireControlAvail)
                 {
                     return;
                 }
+                coordinator.GiveFireControl(this);
                 HasFireControl = true;
             }
 
@@ -110,7 +114,7 @@ namespace IngameScript
                 {
                     ReleaseControl(Controllable);
                 }
-                if (controllable == null)
+                if (controllable == null || controllable.IsUnderControl)
                 {
                     return;
                 }

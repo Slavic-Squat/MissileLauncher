@@ -79,6 +79,7 @@ namespace IngameScript
                     }
                 }
             }
+            public float Range => MaxAngle - MinAngle;
             public float CurrentAngle => IsInverted ? RotorBlock.Angle : -RotorBlock.Angle;
             public float Velocity
             {
@@ -92,8 +93,8 @@ namespace IngameScript
                 }
             }
 
-            public bool IsMaxed => CurrentAngle >= MaxAngle - 0.01f;
-            public bool IsMinned => CurrentAngle <= MinAngle + 0.01f;
+            public bool IsMaxed => CurrentAngle >= MaxAngle - 0.05f;
+            public bool IsMinned => CurrentAngle <= MinAngle + 0.05f;
             public bool IsSaturated
             {
                 get
@@ -117,7 +118,10 @@ namespace IngameScript
             {
                 RotorBlock = GTS.GetBlockWithName(blockName) as IMyMotorStator;
                 if (RotorBlock == null)
-                    throw new ArgumentException($"Rotor block '{blockName}' not found");
+                {
+                    DebugWrite($"Error: Rotor block '{blockName}' not found!", true);
+                    throw new ArgumentException($"Rotor block '{blockName}' not found!");
+                }                    
 
                 IsInverted = RotorBlock.CustomData.Contains("-Inverted");
             }
@@ -125,7 +129,11 @@ namespace IngameScript
             public Rotor(IMyMotorStator rotorBlock)
             {
                 if (rotorBlock == null)
-                    throw new ArgumentNullException("rotorBlock");
+                {
+                    DebugWrite($"Error: Rotor block is null!", true);
+                    throw new ArgumentException($"Rotor block is null!");
+                }
+                    
                 RotorBlock = rotorBlock;
                 IsInverted = RotorBlock.CustomData.Contains("-Inverted");
             }

@@ -138,7 +138,7 @@ namespace IngameScript
 
             private void Init()
             {
-                _allEntities = UI.UIWireManager.GetAllEntities();
+                _allEntities = UI.UICoordinator.AllEntities;
 
                 _targetingSpriteBuilder = new TargetingSpriteBuilder();
                 _targetingSpriteBuilder.Zoom = GetValue(ScopeScale);
@@ -171,8 +171,8 @@ namespace IngameScript
                 Vector2 targetingInfoPanelSize = new Vector2(200, 130f);
                 Vector2 targetingInfoPanelPos = Pos + new Vector2(Size.X - targetingInfoPanelSize.X, 0);
 
-                MissileCoordinator coordinator = UI.UIWireManager.MissileCoordinator;
-                AWACS awacs = UI.UIWireManager.AWACS;
+                MissileCoordinator coordinator = UI.UICoordinator.MissileCoordinator;
+                AWACS awacs = UI.UICoordinator.AWACS;
                 Func<string> targetingInfoGetter = () => coordinator.ToString() + $"\nAWACS TRGTS: {awacs.TargetCount}";
                 InfoPanel targetingInfoPanel = new InfoPanel(targetingInfoPanelPos, targetingInfoPanelSize, 5f, 10f, targetingInfoGetter, Display);
                 AddInfoPanel(targetingInfoPanel);
@@ -209,8 +209,6 @@ namespace IngameScript
                 if (!IsOpen) return;
                 base.Update(time);
 
-                _allEntities = UI.UIWireManager.GetAllEntities();
-
                 if (!_allEntities.ContainsKey(SelectedEntityID))
                 {
                     UnselectEntity();
@@ -224,7 +222,7 @@ namespace IngameScript
                 frame.Add(_borderSprite);
                 frame.Add(_fillSprite);
 
-                _targetingSprites = _targetingSpriteBuilder.BuildSprites(_allEntities, SelectedEntityID, out _entitySprites);
+                _targetingSprites = _targetingSpriteBuilder.BuildSprites(_allEntities, out _entitySprites, targetedID: SelectedEntityID);
                 foreach (var sprite in _targetingSprites)
                 {
                     sprite.Draw(frame);

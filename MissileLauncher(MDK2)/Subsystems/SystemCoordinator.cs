@@ -27,6 +27,7 @@ namespace IngameScript
         public class SystemCoordinator
         {
             public static double SystemTime { get; private set; }
+            public static string GridName => MePb.CubeGrid.CustomName;
             public static IMyShipController ReferenceController { get; private set; }
             public static Matrix ReferenceWorldMatrix => ReferenceController.WorldMatrix;
             public static Vector3 ReferencePosition => ReferenceController.GetPosition();
@@ -43,10 +44,7 @@ namespace IngameScript
             public AWACS AWACS { get; private set; }
             public TargetCoordinator TargetCoordinator { get; private set; }
             public MissileCoordinator MissileCoordinator { get; private set; }
-            public UIWireManager UIWireManager { get; private set; }
-
-            private Dictionary<string, Action<string[]>> _commands = new Dictionary<string, Action<string[]>>();
-            private IMyTerminalBlock _storageBlock;
+            public UICoordinator UICoordinator { get; private set; }
 
             private double _lastClockSync;
 
@@ -58,20 +56,19 @@ namespace IngameScript
 
             private void GetBlocks()
             {
-                List<IMyShipController> ctrlBlocks = new List<IMyShipController>();
-                GTS.GetBlocksOfType(ctrlBlocks, ctrl => ctrl.IsMainCockpit);
-                if (ctrlBlocks.Count == 0)
+                string prefix = GridName;
+                ReferenceController = GTS.GetBlockWithName($"{prefix} Main Controller") as IMyShipController;
+                if (ReferenceController == null)
                 {
-                    throw new Exception("No Main Cockpit Found");
+                    DebugWrite($"Error: Main Controller not found on grid {prefix}!\n", true);
+                    throw new Exception($"Main Controller not found on grid {prefix}!");
                 }
-                ReferenceController = ctrlBlocks[0];
-                _storageBlock = ReferenceController;
             }
 
             private void Init()
             {
                 Config = new MyIni();
-                if (!Config.TryParse(_storageBlock.CustomData))
+                if (!Config.TryParse(MePb.CustomData))
                 {
                     Config.Clear();
                     Config.Set("Config", "SecureBroadcastPIN", "123456");
@@ -84,19 +81,19 @@ namespace IngameScript
                 IsMainClock = Config.Get("Config", "IsMainClock").ToBoolean(true);
                 Config.Set("Config", "IsMainClock", IsMainClock);
 
-                CommandHandler = new CommandHandler(_commands);
+                CommandHandler = new CommandHandler();
                 CommunicationHandler = new CommunicationHandler(0, secureBroadcastPIN);
 
                 ControlStations = new List<ControlStation>();
                 TargetingLasers = new List<TargetingLaser>();
 
-                UIWireManager = new UIWireManager(this);
+                UICoordinator = new UICoordinator(this);
 
                 int numControlStations = Config.Get("Config", "NumControlStations").ToInt32(1);
                 Config.Set("Config", "NumControlStations", numControlStations);
                 for (int i = 0; i < numControlStations; i++)
                 {
-                    ControlStation controlStation = new ControlStation(i, UIWireManager);
+                    ControlStation controlStation = new ControlStation(i, UICoordinator);
                     ControlStations.Add(controlStation);
                 }
 
@@ -122,10 +119,10 @@ namespace IngameScript
                 MissileCoordinator = new MissileCoordinator(0, numBays, CommunicationHandler, TargetCoordinator.AllTargetsExt);
 
                 CommunicationHandler.RegisterBroadcastListener("FriendlyCommands", true);
-                _commands["SET_MAIN_CLOCK"] = (args) => SetMainClock(args[0]);
-                _commands["SYNC_CLOCK"] = (args) => SyncClock(args[0]);
+                CommandHandler.RegisterCommand("SET_MAIN_CLOCK", (args) => SetMainClock(args[0]));
+                CommandHandler.RegisterCommand("SYNC_CLOCK", (args) => SyncClock(args[0]));
 
-                _storageBlock.CustomData = Config.ToString();
+                MePb.CustomData = Config.ToString();
             }
 
             public void Run()

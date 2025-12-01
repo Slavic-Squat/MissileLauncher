@@ -30,7 +30,7 @@ namespace IngameScript
             public IMyTextSurface Display { get; private set; }
             public Vector2 SurfaceSize => Display.SurfaceSize;
             public Vector2 TextureSize => Display.TextureSize;
-            public UIWireManager UIWireManager { get; private set; }
+            public UICoordinator UICoordinator { get; private set; }
             public RectangleF Bounds { get; private set; }
             public Vector2 Center => Bounds.Center;
             public Vector2 Size => Bounds.Size;
@@ -38,11 +38,11 @@ namespace IngameScript
 
             private IWindow _activeWindow = null;
             private IModal _activeModal = null;
-            public UI (ControlStation station, IMyTextSurface display, UIWireManager uiWireManager)
+            public UI (ControlStation station, IMyTextSurface display, UICoordinator uiCoordinator)
             {
                 Station = station;
                 Display = display;
-                UIWireManager = uiWireManager;
+                UICoordinator = uiCoordinator;
 
                 display.ContentType = ContentType.SCRIPT;
                 display.Script = "";

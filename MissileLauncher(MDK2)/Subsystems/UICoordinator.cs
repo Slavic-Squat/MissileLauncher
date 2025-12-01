@@ -22,15 +22,16 @@ namespace IngameScript
 {
     partial class Program
     {
-        public class UIWireManager
+        public class UICoordinator
         {
             private SystemCoordinator _systemCoordinator;
 
             public HashSet<long> NeutralIDs => _systemCoordinator.TargetCoordinator.NeutralIDs;
             public HashSet<long> FriendlyIDs => _systemCoordinator.TargetCoordinator.FriendlyIDs;
             public HashSet<long> HostileIDs => _systemCoordinator.TargetCoordinator.HostileIDs;
-            public Dictionary<long, EntityInfoExt> AllTargetsExt => _systemCoordinator.TargetCoordinator.AllTargetsExt;
-            public Dictionary<long, EntityInfoExt> AllMyMissilesExt => _systemCoordinator.MissileCoordinator.MyMissilesExt;
+            public Dictionary<long, EntityInfoExt> AllTargets => _systemCoordinator.TargetCoordinator.AllTargetsExt;
+            public Dictionary<long, EntityInfoExt> AllMyMissiles => _systemCoordinator.MissileCoordinator.MyMissilesExt;
+            public Dictionary<long, EntityInfoExt> AllEntities = new Dictionary<long, EntityInfoExt>();
 
             public List<TargetingLaser> TargetingLasers => _systemCoordinator.TargetingLasers;
             public List<ControlStation> ControlStations => _systemCoordinator.ControlStations;
@@ -38,21 +39,27 @@ namespace IngameScript
             public TargetCoordinator TargetCoordinator => _systemCoordinator.TargetCoordinator;
             public List<MissileBay> MissileBays => _systemCoordinator.MissileCoordinator.MissileBays;
             public AWACS AWACS => _systemCoordinator.AWACS;
+            public TargetingDisplays TargetingDisplays { get; private set; }
 
-            public UIWireManager(SystemCoordinator systemCoordinator)
+            public UICoordinator(SystemCoordinator systemCoordinator)
             {
                 _systemCoordinator = systemCoordinator;
+                TargetingDisplays = new TargetingDisplays(2, AllEntities);
             }
 
-            public Dictionary<long, EntityInfoExt> GetAllEntities()
+            public void Run()
             {
-                var allEntities = new Dictionary<long, EntityInfoExt>(AllTargetsExt);
-                foreach (var missile in AllMyMissilesExt)
+                AllEntities.Clear();
+                foreach (var target in AllTargets)
                 {
-                    allEntities[missile.Key] = missile.Value;
+                    AllEntities[target.Key] = target.Value;
+                }
+                foreach (var missile in AllMyMissiles)
+                {
+                    AllEntities[missile.Key] = missile.Value;
                 }
 
-                return allEntities;
+                TargetingDisplays.Run();
             }
 
             public void SelectBay(MissileBay bay, object caller) => _systemCoordinator.MissileCoordinator.SelectBay(bay, caller);

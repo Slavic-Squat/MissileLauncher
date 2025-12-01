@@ -40,8 +40,9 @@ namespace IngameScript
             private List<MySpriteExt> _staticSprites = new List<MySpriteExt>();
             #endregion
 
-            public TargetingSpriteBuilderSimple()
+            public TargetingSpriteBuilderSimple(float resScale = 1f)
             {
+                _resScale = resScale;
                 BuildStaticSprites();
             }
 

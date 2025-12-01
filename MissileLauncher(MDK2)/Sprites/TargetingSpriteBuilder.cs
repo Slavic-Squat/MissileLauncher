@@ -60,8 +60,9 @@ namespace IngameScript
             private Matrix _projectionMatrix = Matrix.Identity;
             #endregion
 
-            public TargetingSpriteBuilder()
+            public TargetingSpriteBuilder(float resScale = 1f)
             {
+                _resScale = resScale;
                 _projectionMatrix = Matrix.CreatePerspectiveFieldOfView(MathHelper.ToRadians(_FOV), _AR, _n, _f);
 
                 BuildStaticSprites();
@@ -207,7 +208,7 @@ namespace IngameScript
                 _staticSpritesPostPlane.Add(stemSpriteExt);
             }
 
-            public List<MySpriteExt> BuildSprites(Dictionary<long, EntityInfoExt> entityInfoExts, long targetedID, out Dictionary<long, MyEntitySprite> entitySprites)
+            public List<MySpriteExt> BuildSprites(Dictionary<long, EntityInfoExt> entityInfoExts, out Dictionary<long, MyEntitySprite> entitySprites, long targetedID = -1)
             {
                 List<MySpriteExt> finalSprites = new List<MySpriteExt>();
                 entitySprites = new Dictionary<long, MyEntitySprite>();

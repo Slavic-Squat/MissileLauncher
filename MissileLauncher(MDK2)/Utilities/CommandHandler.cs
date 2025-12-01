@@ -27,9 +27,9 @@ namespace IngameScript
             private MyCommandLine _commandLine = new MyCommandLine();
             private Dictionary<string, Action<string[]>> _commands = new Dictionary<string, Action<string[]>>();
 
-            public CommandHandler(Dictionary<string, Action<string[]>> commands)
+            public CommandHandler()
             {
-                _commands = commands;
+
             }
 
             public void RunCommands(string commandsString)

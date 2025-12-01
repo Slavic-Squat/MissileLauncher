@@ -25,7 +25,7 @@ namespace IngameScript
         public interface IController
         {
             IControllable Controllable { get; }
-            UserInput Input { get; }
+            UserInput UserInput { get; }
             bool IsControlling { get; }
 
             void TakeControl(IControllable controllable);
