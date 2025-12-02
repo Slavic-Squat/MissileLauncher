@@ -133,8 +133,8 @@ namespace IngameScript
 
                         EntityInfoExt target = Targets[targetID];
                         MyDetectedEntityInfo raycastResult = default(MyDetectedEntityInfo);
-                        double timeSinceLastDetection = globalTime - Targets[targetID].TimeRecorded;
-                        Vector3 estimatedTargetPos = Targets[targetID].Position + Targets[targetID].Velocity * (float)timeSinceLastDetection;
+                        double timeSinceLastDetection = globalTime - target.TimeRecorded;
+                        Vector3 estimatedTargetPos = target.Position + target.Velocity * (float)timeSinceLastDetection;
                         Vector3 estimatedTargetPosLocal = Vector3.TransformNormal(estimatedTargetPos - _referenceMatrix.Translation, Matrix.Transpose(_referenceMatrix));
                         Vector3 estimatedTargetDirLocal = estimatedTargetPosLocal == Vector3.Zero ? Vector3.Zero : Vector3.Normalize(estimatedTargetPosLocal);
                         float targetAzimuth = MathHelper.ToDegrees((float)Math.Atan2(-estimatedTargetDirLocal.X, -estimatedTargetDirLocal.Z));
@@ -159,8 +159,7 @@ namespace IngameScript
                         if (raycastResult.EntityId == targetID)
                         {
                             var freshTarget = new EntityInfoExt(raycastResult, globalTime);
-                            var originalTarget = Targets[targetID];
-                            Targets[targetID] = originalTarget.Merge(freshTarget);
+                            Targets[targetID] = target.Merge(freshTarget);
                             TargetsSyncInfo[targetID] = true;
                         }
                     }

@@ -126,7 +126,7 @@ namespace IngameScript
                 controllable.RequestRelease += ReleaseControl;
                 Controllable = controllable;
 
-                _ui.OpenModal(new InfoModal(_ui.Bounds.Center - _ui.Bounds.Size * 0.75f * 0.5f, _ui.Bounds.Size * 0.75f, 10f, 10f, () => !IsControlling, $"UI Navigation Disabled\nReason: Controlling Object", PrimaryDisplay));
+                _ui.OpenPopUp(new PopUp(_ui.Bounds.Center - _ui.Bounds.Size * 0.75f * 0.5f, _ui.Bounds.Size * 0.75f, 10f, 10f, () => !IsControlling, $"UI Navigation Disabled\nReason: Controlling Object", PrimaryDisplay));
             }
 
             public void ReleaseControl(IControllable controllable)

@@ -63,6 +63,12 @@ namespace IngameScript
                         AddSimpleDisplay(displayBlock);
                     }
                 }
+
+                IMyTextSurfaceProvider consoleBlock = AllGridBlocks.Find(b => b is IMyTextSurfaceProvider && b.CustomName.Contains("Targeting Console")) as IMyTextSurfaceProvider;
+                if (consoleBlock != null)
+                {
+                    AddSimpleDisplay(consoleBlock.GetSurface(0));
+                }
             }
 
             public void Init()
@@ -90,13 +96,13 @@ namespace IngameScript
                 foreach (var display in _simpleDisplays)
                 {
                     var frame = display.DrawFrame();
-                    _simpleSprites.ForEach(s => s.Draw(frame));
+                    _simpleSprites.ForEach(sprite => sprite.Draw(frame));
                     frame.Dispose();
                 }
                 foreach (var display in _advDisplays)
                 {
                     var frame = display.DrawFrame();
-                    _advSprites.ForEach(s => s.Draw(frame));
+                    _advSprites.ForEach(sprite => sprite.Draw(frame));
                     frame.Dispose();
                 }
             }
