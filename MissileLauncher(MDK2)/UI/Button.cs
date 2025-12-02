@@ -162,6 +162,12 @@ namespace IngameScript
 
             public void Update(double time)
             {
+                if (Time == 0)
+                {
+                    Time = time;
+                    return;
+                }
+
                 if ((time - _timePressed) > 1f && _state.HasFlag(ButtonState.Pressed))
                 {
                     _state &= ~ButtonState.Pressed;

@@ -62,6 +62,11 @@ namespace IngameScript
 
             public void Update(double time)
             {
+                if (Time == 0)
+                {
+                    Time = time;
+                    return;
+                }
                 _totalAvailableRaycastDistance += (float)(time - Time) * 2000f * _cameras.Count;
                 Time = time;
             }

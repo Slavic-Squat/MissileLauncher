@@ -30,7 +30,7 @@ namespace IngameScript
 
         public enum BayStatus : byte
         {
-            Empty, Loaded, Ready, Launching
+            Empty, Loaded, Ready, Active, Launching
         }
 
         public enum MissileType : byte
@@ -266,6 +266,7 @@ namespace IngameScript
                 case BayStatus.Empty: return "EMPTY";
                 case BayStatus.Loaded: return "LOADED";
                 case BayStatus.Ready: return "READY";
+                case BayStatus.Active: return "ACTIVE";
                 case BayStatus.Launching: return "LAUNCHING";
                 default: return "N/A";
             }

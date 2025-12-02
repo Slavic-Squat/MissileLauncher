@@ -73,11 +73,17 @@ namespace IngameScript
                     MissileBays.Add(new MissileBay(i));
                 }
 
-                _communicationHandler.RegisterTag("MyMissiles", true);
+                _communicationHandler.RegisterTag("MyMissileInfo", true);
             }
 
             public void Run(double time)
             {
+                if (Time == 0)
+                {
+                    Time = time;
+                    return;
+                }
+
                 NumReadyBays = 0;
                 foreach (var bay in MissileBays)
                 {
@@ -85,10 +91,10 @@ namespace IngameScript
                     if (bay.Status == BayStatus.Ready) NumReadyBays++;
                 }
 
-                while (_communicationHandler.HasMessage("MyMissiles", true))
+                while (_communicationHandler.HasMessage("MyMissileInfo", true))
                 {
                     MyIGCMessage message;
-                    if (_communicationHandler.TryRetrieveMessage("MyMissiles", true, out message))
+                    if (_communicationHandler.TryRetrieveMessage("MyMissileInfo", true, out message))
                     {
                         if (!_addressMissileIDMap.ContainsKey(message.Source))
                         {
@@ -111,13 +117,13 @@ namespace IngameScript
                     }
 
                     byte[] selfBytes = SystemCoordinator.SelfInfo.Serialize();
-                    _communicationHandler.SendUnicast(selfBytes, missileAddress, "MyMissileLauncherInfo", true);
+                    _communicationHandler.SendUnicast(selfBytes, missileAddress, "LauncherInfo", true);
 
                     long targetID = _addressTargetIDMap[missileAddress];
                     if (_targetInfo.ContainsKey(targetID))
                     {
                         byte[] targetBytes = _targetInfo[targetID].Info.Serialize();
-                        _communicationHandler.SendUnicast(targetBytes, missileAddress, "MyMissileTargetInfo", true);
+                        _communicationHandler.SendUnicast(targetBytes, missileAddress, "TargetInfo", true);
                     }
                 }
 
@@ -189,6 +195,7 @@ namespace IngameScript
             {
                 if (!bay.IsSelectable) return;
                 _selectedBays.Add(bay);
+                bay.ActivateMissile();
                 bay.IsSelected = true;
             }
 
@@ -203,6 +210,7 @@ namespace IngameScript
 
             private void DeselectBay(MissileBay bay)
             {
+                bay.DeactivateMissile();
                 bay.IsSelected = false;
                 _selectedBays.Remove(bay);
             }
@@ -319,7 +327,7 @@ namespace IngameScript
                 foreach (long address in _addressMissileIDMap.Keys.ToList())
                 {
                     string command = $"SYNC_CLOCK {globalTime}";
-                    _communicationHandler.SendUnicast(command, address, "MyMissileCommands", true);
+                    _communicationHandler.SendUnicast(command, address, "Commands", true);
                 }
             }
 
@@ -339,7 +347,7 @@ namespace IngameScript
                 if (_communicationHandler.CanReach(address))
                 {
                     string command = "ABORT";
-                    _communicationHandler.SendUnicast(command, address, "MyMissileCommands", true);
+                    _communicationHandler.SendUnicast(command, address, "Commands", true);
                 }
             }
 

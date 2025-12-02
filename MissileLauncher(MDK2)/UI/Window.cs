@@ -295,6 +295,12 @@ namespace IngameScript
 
             public virtual void Update(double time)
             {
+                if (Time == 0)
+                {
+                    Time = time;
+                    return;
+                }
+
                 if (!IsOpen) return;
                 foreach (var updatable in _updatables.ToList())
                 {

@@ -56,6 +56,12 @@ namespace IngameScript
 
             public void Run(double time)
             {
+                if (Time == 0)
+                {
+                    Time = time;
+                    return;
+                }
+
                 Update(time);
                 Draw();
                 Time = time;

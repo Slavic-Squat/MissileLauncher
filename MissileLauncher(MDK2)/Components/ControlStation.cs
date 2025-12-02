@@ -76,6 +76,12 @@ namespace IngameScript
 
             public void Run(double time)
             {
+                if (Time == 0)
+                {
+                    Time = time;
+                    return;
+                }
+
                 UserInput.Run(time);
                 _ui.Run(time);
 

@@ -87,6 +87,11 @@ namespace IngameScript
 
             public void Run(double time)
             {
+                if (Time == 0)
+                {
+                    Time = time;
+                    return;
+                }
                 double globalTime = SystemCoordinator.GlobalTime;
 
                 _cameraArray0.Update(time);

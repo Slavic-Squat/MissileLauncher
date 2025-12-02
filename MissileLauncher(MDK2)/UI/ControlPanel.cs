@@ -244,6 +244,12 @@ namespace IngameScript
 
             public void Update(double time)
             {
+                if (Time == 0)
+                {
+                    Time = time;
+                    return;
+                }
+
                 foreach (var updatable in _commonUpdatables)
                 {
                     updatable.Update(time);

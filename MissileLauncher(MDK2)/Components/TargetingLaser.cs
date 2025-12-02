@@ -96,6 +96,12 @@ namespace IngameScript
 
             public void Run(double time)
             {
+                if (Time == 0)
+                {
+                    Time = time;
+                    return;
+                }
+
                 Matrix H0 = _azimuthRotor.RotorBlock.WorldMatrix;
                 Matrix H1 = Matrix.CreateRotationY(_azimuthRotor.CurrentAngle);
                 Matrix H2 = Matrix.CreateRotationX(_elevationRotor.CurrentAngle);

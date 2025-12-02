@@ -276,6 +276,12 @@ namespace IngameScript
 
             public virtual void Update(double time)
             {
+                if (Time == 0)
+                {
+                    Time = time;
+                    return;
+                }
+
                 if (!IsOpen) return;
 
                 if (_autoClose?.Invoke() ?? false)

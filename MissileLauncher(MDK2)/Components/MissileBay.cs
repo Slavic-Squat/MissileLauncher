@@ -117,6 +117,12 @@ namespace IngameScript
 
             public void Run(double time)
             {
+                if (Time == 0)
+                {
+                    Time = time;
+                    return;
+                }
+
                 if (Status == BayStatus.Empty && (time - _timeLastRegister) > 10f)
                 {
                     RegisterMissile();
@@ -135,27 +141,34 @@ namespace IngameScript
                 Time = time;
             }
 
-            public void Launch()
+            public void ActivateMissile()
             {
                 if (Status == BayStatus.Ready)
                 {
                     double globalTime = SystemCoordinator.GlobalTime;
                     _missileComputer.Enabled = true;
-                    if (!_missileComputer.TryRun($"ON | ACTIVATE {IGCS.Me} {globalTime} | LAUNCH"))
-                    {
-                        return;
-                    }
-                    Status = BayStatus.Launching;
+                    if (!_missileComputer.TryRun("ON")) return;
+                    if (!_missileComputer.TryRun($"ACTIVATE {IGCS.Me} {globalTime}")) return;
+                    Status = BayStatus.Active;
                 }
             }
 
-            public void ResetMissile()
+            public void DeactivateMissile()
             {
-                if (Status == BayStatus.Ready)
+                if (Status == BayStatus.Active)
                 {
-                    _missileComputer.TryRun("RESET");
-                    Status = BayStatus.Loaded;
-                    _missileComputer.Enabled = false;
+                    if (!_missileComputer.TryRun("DEACTIVATE")) return;
+                    if (!_missileComputer.TryRun("OFF")) return;
+                    Status = BayStatus.Ready;
+                }
+            }
+
+            public void Launch()
+            {
+                if (Status == BayStatus.Active)
+                {
+                    if (!_missileComputer.TryRun("LAUNCH")) return;
+                    Status = BayStatus.Launching;
                 }
             }
 

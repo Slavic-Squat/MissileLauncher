@@ -189,6 +189,12 @@ namespace IngameScript
 
             public void Update(double time)
             {
+                if (Time == 0)
+                {
+                    Time = time;
+                    return;
+                }
+
                 if (_isPressed?.Invoke() == true)
                 {
                     _state |= ButtonState.Pressed;
