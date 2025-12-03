@@ -50,7 +50,7 @@ namespace IngameScript
                     _isSelected = IsSelectable && value;
                 }
             }
-            public bool IsSelectable => Status == BayStatus.Loaded || Status == BayStatus.Ready;
+            public bool IsSelectable => Status == BayStatus.Ready || Status == BayStatus.Active;
             #endregion
 
             private double _timeLastRegister;

@@ -88,7 +88,7 @@ namespace IngameScript
                 foreach (var bay in MissileBays)
                 {
                     bay.Run(time);
-                    if (bay.Status == BayStatus.Ready) NumReadyBays++;
+                    if (bay.Status == BayStatus.Ready || bay.Status == BayStatus.Active) NumReadyBays++;
                 }
 
                 while (_communicationHandler.HasMessage("MyMissileInfo", true))
