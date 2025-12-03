@@ -27,11 +27,13 @@ namespace IngameScript
             public Vector2 Pos { get; private set; }
             public MySprite Sprite { get; private set; }
             public float Depth { get; private set; }
+            public bool IsValid { get; private set; }
             public MySpriteExt(MySprite sprite, float depth)
             {
                 Sprite = sprite;
                 Depth = depth;
                 Pos = (Vector2)sprite.Position;
+                IsValid = true;
             }
 
             public void Draw(MySpriteDrawFrame frame)

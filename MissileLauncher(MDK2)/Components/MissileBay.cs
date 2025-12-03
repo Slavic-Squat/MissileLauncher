@@ -55,6 +55,10 @@ namespace IngameScript
 
             private double _timeLastRegister;
 
+            public event Action MissileRegistered;
+            public event Action MissileUnregistered;
+            public event Action<long> MissileLaunched;
+
             public MissileBay(int id)
             {
                 ID = id;
@@ -74,13 +78,7 @@ namespace IngameScript
 
             private void RegisterMissile()
             {
-                MissileID = -1;
-                MissileAddress = -1;
-                MissileType = MissileType.Unknown;
-                MissileGuidanceType = MissileGuidanceType.Unknown;
-                MissilePayload = MissilePayload.Unknown;
-                Status = BayStatus.Empty;
-                _missileComputer = null;
+                UnregisterMissile();
 
                 if (_connector.Status != MyShipConnectorStatus.Connected)
                 {
@@ -112,7 +110,20 @@ namespace IngameScript
                 if (MissileID != -1 && MissileAddress != -1 && MissileType != MissileType.Unknown && MissileGuidanceType != MissileGuidanceType.Unknown && MissilePayload != MissilePayload.Unknown)
                 {
                     Status = BayStatus.Ready;
+                    MissileRegistered?.Invoke();
                 }
+            }
+
+            private void UnregisterMissile()
+            {
+                MissileID = -1;
+                MissileAddress = -1;
+                MissileType = MissileType.Unknown;
+                MissileGuidanceType = MissileGuidanceType.Unknown;
+                MissilePayload = MissilePayload.Unknown;
+                Status = BayStatus.Empty;
+                _missileComputer = null;
+                MissileUnregistered?.Invoke();
             }
 
             public void Run(double time)
@@ -130,13 +141,7 @@ namespace IngameScript
                 }
                 if (_missileComputer != null && !GTS.CanAccess(_missileComputer))
                 {
-                    Status = BayStatus.Empty;
-                    MissileID = -1;
-                    MissileAddress = -1;
-                    MissileType = MissileType.Unknown;
-                    MissileGuidanceType = MissileGuidanceType.Unknown;
-                    MissilePayload = MissilePayload.Unknown;
-                    _missileComputer = null;
+                    UnregisterMissile();
                 }
                 Time = time;
             }
@@ -163,12 +168,13 @@ namespace IngameScript
                 }
             }
 
-            public void Launch()
+            public void Launch(long targetID)
             {
                 if (Status == BayStatus.Active)
                 {
                     if (!_missileComputer.TryRun("LAUNCH")) return;
                     Status = BayStatus.Launching;
+                    MissileLaunched?.Invoke(targetID);
                 }
             }
 

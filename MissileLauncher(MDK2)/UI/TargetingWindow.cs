@@ -24,11 +24,11 @@ namespace IngameScript
     {
         public class TargetingWindow : Window
         {
-            public NavMode NavMode { get; private set; } = NavMode.Targeting;
+            public NavMode NavMode { get; private set; } = NavMode.UI;
             public EntityTypeFilter NavTypeFilter { get; private set; } = EntityTypeFilter.Targets;
             public EntityRelationFilter NavRelationFilter { get; private set; } = EntityRelationFilter.All;
             public EntitySourceFilter NavSourceFilter { get; private set; } = EntitySourceFilter.Both;
-            public ScopeScale ScopeScale { get; private set; } = ScopeScale.Close;
+            public ScopeScale ScopeScale { get; private set; } = ScopeScale.Medium;
             public long SelectedEntityID { get; private set; }
 
             private Dictionary<long, EntityInfoExt> _allEntities = new Dictionary<long, EntityInfoExt>();

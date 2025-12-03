@@ -381,7 +381,7 @@ namespace IngameScript
                         _spritesPostPlane.Add(baseSpriteExt);
                         _spritesPostPlane.Add(stemSpriteExt);
 
-                        if (entityInfo.EntityID == targetedID)
+                        if (selectorSpriteExt.IsValid)
                         {
                             _spritesPostPlane.Add(selectorSpriteExt);
                         }
@@ -392,7 +392,7 @@ namespace IngameScript
                         _spritesPrePlane.Add(baseSpriteExt);
                         _spritesPrePlane.Add(stemSpriteExt);
 
-                        if (entityInfo.EntityID == targetedID)
+                        if (selectorSpriteExt.IsValid)
                         {
                             _spritesPrePlane.Add(selectorSpriteExt);
                         }

@@ -234,7 +234,7 @@ namespace IngameScript
 
                     _sprites.Add(MySpriteExtEntity);
 
-                    if (entityInfo.EntityID == targetedID)
+                    if (selectorSpriteExt.IsValid)
                     {
                         _sprites.Add(selectorSpriteExt);
                     }

@@ -25,13 +25,15 @@ namespace IngameScript
         public struct MyEntitySprite : IPositional2D
         {
             public Vector2 Pos => Sprite.Pos;
-            public EntityInfoExt EntityInfo { get; set; }
-            public MySpriteExt Sprite { get; set; }
+            public EntityInfoExt EntityInfo { get; private set; }
+            public MySpriteExt Sprite { get; private set; }
+            public bool IsValid { get; private set; }
 
             public MyEntitySprite(EntityInfoExt entityInfo, MySpriteExt sprite)
             {
                 EntityInfo = entityInfo;
                 Sprite = sprite;
+                IsValid = true;
             }
         }
     }
