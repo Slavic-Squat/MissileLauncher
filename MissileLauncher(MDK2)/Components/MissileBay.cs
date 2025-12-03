@@ -68,7 +68,7 @@ namespace IngameScript
 
             private void GetBlocks()
             {
-                _connector = AllGridBlocks.Find(b => b is IMyShipConnector && b.CustomName.Contains($"Missile Bay {ID}")) as IMyShipConnector;
+                _connector = AllGridBlocks.Find(b => b is IMyShipConnector && b.CustomName.Equals($"Missile Bay {ID} Connector")) as IMyShipConnector;
                 if (_connector == null)
                 {
                     DebugWrite($"Error: No connector found for Missile Bay {ID}!\n", true);
