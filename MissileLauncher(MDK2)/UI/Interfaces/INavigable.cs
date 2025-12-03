@@ -30,8 +30,8 @@ namespace IngameScript
             event Action<INavigable> RequestStopNavigation;
             void StartNavigation(object caller);
             void StopNavigation(object caller);
-            void PauseNavigation();
-            void ResumeNavigation();
+            void PauseNavigation(object caller);
+            void ResumeNavigation(object caller);
             void Navigate(UserInput input, object caller);
         }
     }

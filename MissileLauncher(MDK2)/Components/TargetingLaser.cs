@@ -241,7 +241,7 @@ namespace IngameScript
                     return;
                 }
                 Controller = controller;
-                ResumeControl();
+                ResumeControl(controller);
             }
 
             public void RevokeControl(IController controller)
@@ -251,8 +251,7 @@ namespace IngameScript
                     return;
                 }
                 Controller = null;
-                PauseControl();
-                MoveLaser(0, 0);
+                PauseControl(controller);
             }
 
             private void RevokeControl()
@@ -260,13 +259,22 @@ namespace IngameScript
                 RequestRelease?.Invoke(this);
             }
 
-            public void PauseControl()
+            public void PauseControl(IController controller)
             {
+                if (controller == null || !IsUnderControl || !ReferenceEquals(Controller, controller))
+                {
+                    return;
+                }
+                MoveLaser(0, 0);
                 IsControlPaused = true;
             }
 
-            public void ResumeControl()
+            public void ResumeControl(IController controller)
             {
+                if (controller == null || !IsUnderControl || !ReferenceEquals(Controller, controller))
+                {
+                    return;
+                }
                 IsControlPaused = false;
             }
 

@@ -119,6 +119,8 @@ namespace IngameScript
                 CommunicationHandler.RegisterBroadcastListener("FriendlyCommands", true);
                 CommandHandler.RegisterCommand("SET_MAIN_CLOCK", (args) => SetMainClock(args[0]));
                 CommandHandler.RegisterCommand("SYNC_CLOCK", (args) => SyncClock(args[0]));
+                CommandHandler.RegisterCommand("PAUSE_CONTROL_STATION", (args) => PauseControlStation(args[0]));
+                CommandHandler.RegisterCommand("RESUME_CONTROL_STATION", (args) => ResumeControlStation(args[0]));
 
                 MePb.CustomData = Config.ToString();
             }
@@ -193,18 +195,51 @@ namespace IngameScript
 
             private void SetMainClock(string boolString)
             {
-                bool parsedBool = boolString.ToUpper() == "TRUE" || boolString == "1";
-                IsMainClock = parsedBool;
+                bool isMain;
+                if (!bool.TryParse(boolString, out isMain))
+                {
+                    return;
+                }
+                IsMainClock = isMain;
             }
 
             private void SyncClock(string timeString)
             {
                 if (IsMainClock) return;
                 double time;
-                if (double.TryParse(timeString, out time))
+                if (!double.TryParse(timeString, out time))
                 {
-                    GlobalTime = time;
+                    return;
                 }
+                GlobalTime = time;
+            }
+
+            private void PauseControlStation(string idString)
+            {
+                int id;
+                if (!int.TryParse(idString, out id))
+                {
+                    return;
+                }
+                if (id < 0 || id >= ControlStations.Count)
+                {
+                    return;
+                }
+                ControlStations[id].PauseControl();
+            }
+
+            private void ResumeControlStation(string idString)
+            {
+                int id;
+                if (!int.TryParse(idString, out id))
+                {
+                    return;
+                }
+                if (id < 0 || id >= ControlStations.Count)
+                {
+                    return;
+                }
+                ControlStations[id].ResumeControl();
             }
         }
     }

@@ -17,6 +17,7 @@ using VRage.Game.ModAPI.Ingame;
 using VRage.Game.ModAPI.Ingame.Utilities;
 using VRage.Game.ObjectBuilders.Definitions;
 using VRageMath;
+using static IngameScript.Program;
 
 namespace IngameScript
 {
@@ -38,6 +39,9 @@ namespace IngameScript
 
             private IWindow _activeWindow = null;
             private IPopUp _activePopUp = null;
+            private bool _isPaused = false;
+
+            private int _runCounter = 0;
             public UI (ControlStation station, IMyTextSurface display, UICoordinator uiCoordinator)
             {
                 Station = station;
@@ -63,7 +67,11 @@ namespace IngameScript
                 }
 
                 Update(time);
-                Draw();
+                if (_runCounter++ % 10 == 0)
+                {
+                    Draw();
+                }
+                
                 Time = time;
             }
 
@@ -106,6 +114,11 @@ namespace IngameScript
 
             public void Update(double time)
             {
+                if (_isPaused && _activePopUp == null)
+                {
+                    PopUp pausePopUp = new PopUp(Bounds.Center - Bounds.Size * 0.75f * 0.5f, Bounds.Size * 0.75f, 10f, 10f, () => !_isPaused, "UI NAV PAUSED", Display);
+                    OpenPopUp(pausePopUp);
+                }
                 if (_activePopUp?.CanClose ?? false)
                 {
                     _activePopUp = null;
@@ -122,15 +135,29 @@ namespace IngameScript
 
             public void Navigate(UserInput input, object caller)
             {
-                if (!ReferenceEquals(Station, caller))
-                {
-                    return;
-                }
-                if (_activePopUp != null)
+                if (_activePopUp != null || _isPaused || !ReferenceEquals(Station, caller))
                 {
                     return;
                 }
                 _activeWindow?.Navigate(input, this);
+            }
+
+            public void PauseNavigation(object caller)
+            {
+                if (!ReferenceEquals(Station, caller))
+                {
+                    return;
+                }
+                _activeWindow?.PauseNavigation(this);
+            }
+
+            public void ResumeNavigation(object caller)
+            {
+                if (!ReferenceEquals(Station, caller))
+                {
+                    return;
+                }
+                _activeWindow?.ResumeNavigation(this);
             }
 
             public void Draw()

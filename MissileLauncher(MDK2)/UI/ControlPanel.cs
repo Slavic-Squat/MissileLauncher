@@ -122,7 +122,7 @@ namespace IngameScript
                     return;
                 }
                 IsNavigating = true;
-                ResumeNavigation();
+                ResumeNavigation(caller);
             }
 
             private void StopNavigation()
@@ -137,17 +137,25 @@ namespace IngameScript
                     return;
                 }
                 IsNavigating = false;
-                PauseNavigation();
+                PauseNavigation(caller);
             }
 
-            public void PauseNavigation()
+            public void PauseNavigation(object caller)
             {
+                if (!ReferenceEquals(Parent, caller))
+                {
+                    return;
+                }
                 IsPaused = true;
                 UnhighlightButton(_highlightedButton);
             }
 
-            public void ResumeNavigation()
+            public void ResumeNavigation(object caller)
             {
+                if (!ReferenceEquals(Parent, caller))
+                {
+                    return;
+                }
                 IsPaused = false;
             }
 

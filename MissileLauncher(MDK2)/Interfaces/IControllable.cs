@@ -32,8 +32,8 @@ namespace IngameScript
             void Control(UserInput input, object caller);
             void GiveControl(IController controller);
             void RevokeControl(IController controller);
-            void PauseControl();
-            void ResumeControl();
+            void PauseControl(IController controller);
+            void ResumeControl(IController controller);
         }
     }
 }

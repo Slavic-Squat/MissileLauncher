@@ -24,19 +24,14 @@ namespace IngameScript
     {
         public class TargetingDisplays
         {
-            private TargetingSpriteBuilderSimple _simpleSpriteBuilder;
-            private TargetingSpriteBuilder _advSpriteBuilder;
-            private int _numDisplays;
-
-            private List<IMyTextSurface> _advDisplays = new List<IMyTextSurface>();
-            private List<IMyTextSurface> _simpleDisplays = new List<IMyTextSurface>();
+            private TargetingSpriteBuilderSimple _spriteBuilder;
+            private List<IMyTextSurface> _displays = new List<IMyTextSurface>();
 
             private Dictionary<long, EntityInfoExt> _entityInfo = new Dictionary<long, EntityInfoExt>();
-            public TargetingDisplays(int numDisplays, Dictionary<long, EntityInfoExt> entityInfo)
+            private int _runCounter;
+            public TargetingDisplays(Dictionary<long, EntityInfoExt> entityInfo)
             {
-                _simpleSpriteBuilder = new TargetingSpriteBuilderSimple();
-                _advSpriteBuilder = new TargetingSpriteBuilder();
-                _numDisplays = numDisplays;
+                _spriteBuilder = new TargetingSpriteBuilderSimple();
                 _entityInfo = entityInfo;
 
                 GetBlocks();
@@ -45,41 +40,23 @@ namespace IngameScript
 
             private void GetBlocks()
             {
-                for (int i = 0; i < _numDisplays; i++)
-                {
-                    IMyTextPanel displayBlock = AllGridBlocks.Find(b => b.CustomName.Contains($"Targeting Display {i}")) as IMyTextPanel;
+                IEnumerable<IMyTerminalBlock> temp = AllGridBlocks.Where(b => b is IMyTextSurface && b.CustomName.Contains("Targeting Display"));
 
-                    if (displayBlock == null)
-                    {
-                        DebugWrite($"Error: Targeting Display {i} not found!\n", true);
-                        throw new Exception($"Targeting Display {i} not found!\n");
-                    }
-                    if (displayBlock.CustomData.Contains("-Advanced"))
-                    {
-                        AddAdvancedDisplay(displayBlock);
-                    }
-                    else
-                    {
-                        AddSimpleDisplay(displayBlock);
-                    }
+                foreach (var displayBlock in temp)
+                {
+                    AddDisplay(displayBlock as IMyTextSurface);
                 }
 
                 IMyTextSurfaceProvider consoleBlock = AllGridBlocks.Find(b => b is IMyTextSurfaceProvider && b.CustomName.Contains("Targeting Console")) as IMyTextSurfaceProvider;
                 if (consoleBlock != null)
                 {
-                    AddSimpleDisplay(consoleBlock.GetSurface(0));
+                    AddDisplay(consoleBlock.GetSurface(0));
                 }
             }
 
             public void Init()
             {
-                foreach (var display in _advDisplays)
-                {
-                    display.ContentType = ContentType.SCRIPT;
-                    display.Script = "";
-                    display.ScriptBackgroundColor = Color.Black;
-                }
-                foreach (var display in _simpleDisplays)
+                foreach (var display in _displays)
                 {
                     display.ContentType = ContentType.SCRIPT;
                     display.Script = "";
@@ -89,32 +66,23 @@ namespace IngameScript
 
             public void Run()
             {
-                Dictionary<long, MyEntitySprite> dump = new Dictionary<long, MyEntitySprite>();
-                List<MySpriteExt> _simpleSprites = _simpleSpriteBuilder.BuildSprites(_entityInfo, out dump);
-                List<MySpriteExt> _advSprites = _advSpriteBuilder.BuildSprites(_entityInfo, out dump);
+                if (_runCounter++ % 10 == 0)
+                {
+                    Dictionary<long, MyEntitySprite> dump = new Dictionary<long, MyEntitySprite>();
+                    List<MySpriteExt> sprites = _spriteBuilder.BuildSprites(_entityInfo, out dump);
 
-                foreach (var display in _simpleDisplays)
-                {
-                    var frame = display.DrawFrame();
-                    _simpleSprites.ForEach(sprite => sprite.Draw(frame));
-                    frame.Dispose();
-                }
-                foreach (var display in _advDisplays)
-                {
-                    var frame = display.DrawFrame();
-                    _advSprites.ForEach(sprite => sprite.Draw(frame));
-                    frame.Dispose();
-                }
+                    foreach (var display in _displays)
+                    {
+                        var frame = display.DrawFrame();
+                        sprites.ForEach(sprite => sprite.Draw(frame));
+                        frame.Dispose();
+                    }
+                }                
             }
 
-            public void AddSimpleDisplay(IMyTextSurface display)
+            public void AddDisplay(IMyTextSurface display)
             {
-                _simpleDisplays.Add(display);
-            }
-
-            public void AddAdvancedDisplay(IMyTextSurface display)
-            {
-                _advDisplays.Add(display);
+                _displays.Add(display);
             }
         }
     }

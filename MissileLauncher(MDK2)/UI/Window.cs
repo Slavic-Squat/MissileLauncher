@@ -139,7 +139,7 @@ namespace IngameScript
                     return;
                 }
                 IsNavigating = true;
-                ResumeNavigation();
+                ResumeNavigation(caller);
             }
 
             protected virtual void StopNavigation()
@@ -154,18 +154,28 @@ namespace IngameScript
                     return;
                 }
                 IsNavigating = false;
-                PauseNavigation();
+                PauseNavigation(caller);
             }
 
-            public virtual void ResumeNavigation()
+            public virtual void ResumeNavigation(object caller)
             {
+                if (!ReferenceEquals(Parent, caller))
+                {
+                    return;
+                }
                 IsPaused = false;
+                _navigatedElement?.ResumeNavigation(this);
             }
 
-            public virtual void PauseNavigation()
+            public virtual void PauseNavigation(object caller)
             {
+                if (!ReferenceEquals(Parent, caller))
+                {
+                    return;
+                }
                 IsPaused = true;
                 UnhighlightElement(_highlightedElement);
+                _navigatedElement?.PauseNavigation(this);
             }
 
             public virtual void AddButton(IButton button)
@@ -243,7 +253,7 @@ namespace IngameScript
                 navigable.StartNavigation(this);
                 navigable.RequestStopNavigation += StopNavigatingElement;
                 
-                _navigatedElement?.PauseNavigation();
+                _navigatedElement?.PauseNavigation(this);
                 _navigatedElement = navigable;
             }
 
@@ -264,7 +274,7 @@ namespace IngameScript
                     if (_navigables.Count > 0)
                     {
                         _navigatedElement = _navigables.Last();
-                        _navigatedElement.ResumeNavigation();
+                        _navigatedElement.ResumeNavigation(this);
                     }
                 }
             }

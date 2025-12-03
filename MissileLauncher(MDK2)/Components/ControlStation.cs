@@ -36,6 +36,7 @@ namespace IngameScript
             private IMyShipController _controllerReference;
             private UI _ui;
             private UICoordinator _uiCoordinator;
+            private bool _isPaused = false;
             public ControlStation(int iD, UICoordinator uiCoordinator)
             {
                 ID = iD;
@@ -85,11 +86,11 @@ namespace IngameScript
                 UserInput.Run(time);
                 _ui.Run(time);
 
-                if (!IsControlling)
+                if (!_isPaused && !IsControlling)
                 {
                     _ui.Navigate(UserInput, this);
                 }
-                else
+                else if (!_isPaused && IsControlling)
                 {
                     Controllable.Control(UserInput, this);
                 }
@@ -126,7 +127,9 @@ namespace IngameScript
                 controllable.RequestRelease += ReleaseControl;
                 Controllable = controllable;
 
-                _ui.OpenPopUp(new PopUp(_ui.Bounds.Center - _ui.Bounds.Size * 0.75f * 0.5f, _ui.Bounds.Size * 0.75f, 10f, 10f, () => !IsControlling, $"UI Navigation Disabled\nReason: Controlling Object", PrimaryDisplay));
+                PopUp popUp = new PopUp(_ui.Bounds.Center - _ui.Bounds.Size * 0.75f * 0.5f, _ui.Bounds.Size * 0.75f, 10f, 10f, () => !IsControlling, $"UI NAV PAUSED\nREASON: CONTROLLING OBJECT", _ui.Display);
+                _ui.OpenPopUp(popUp);
+                _ui.PauseNavigation(this);
             }
 
             public void ReleaseControl(IControllable controllable)
@@ -138,6 +141,35 @@ namespace IngameScript
                 controllable.RevokeControl(this);
                 controllable.RequestRelease -= ReleaseControl;
                 Controllable = null;
+                _ui.ResumeNavigation(this);
+            }
+
+            public void PauseControl()
+            {
+                _isPaused = true;
+                if (IsControlling)
+                {
+                    Controllable.PauseControl(this);
+                }
+                else
+                {
+                    PopUp pausePopUp = new PopUp(_ui.Bounds.Center - _ui.Bounds.Size * 0.75f * 0.5f, _ui.Bounds.Size * 0.75f, 10f, 10f, () => !_isPaused, "UI NAV PAUSED\nREASON: USER PAUSED", _ui.Display);
+                    _ui.OpenPopUp(pausePopUp);
+                    _ui.PauseNavigation(this);
+                }
+            }
+
+            public void ResumeControl()
+            {
+                _isPaused = false;
+                if (IsControlling)
+                {
+                    Controllable.ResumeControl(this);
+                }
+                else
+                {
+                    _ui.ResumeNavigation(this);
+                }
             }
         }
     }
