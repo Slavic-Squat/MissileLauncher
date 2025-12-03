@@ -67,7 +67,7 @@ namespace IngameScript
                 }
 
                 Update(time);
-                if (_runCounter++ % 10 == 0)
+                if (_runCounter++ % 5 == 0)
                 {
                     Draw();
                 }
