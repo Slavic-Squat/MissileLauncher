@@ -54,7 +54,7 @@ namespace IngameScript
                 }
             }
 
-            public void Init()
+            private void Init()
             {
                 foreach (var display in _displays)
                 {
