@@ -59,7 +59,7 @@ namespace IngameScript
                     AllEntities[missile.Key] = missile.Value;
                 }
 
-                TargetingDisplays.Run();
+                TargetingDisplays.Draw();
             }
 
             public void SelectBay(MissileBay bay, object caller) => _systemCoordinator.MissileCoordinator.SelectBay(bay, caller);

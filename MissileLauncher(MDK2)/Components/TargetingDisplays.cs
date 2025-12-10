@@ -64,7 +64,7 @@ namespace IngameScript
                 }
             }
 
-            public void Run()
+            public void Draw()
             {
                 if (_runCounter++ % 10 == 0)
                 {
