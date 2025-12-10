@@ -26,12 +26,9 @@ namespace IngameScript
         {
             public static MySprite CreateText(Vector2 pos, string text, Color color, float scale = 1f, TextAlignment alignment = TextAlignment.LEFT, bool vertCentered = false)
             {
-                IMyTextSurface referenceSurface = MePb.GetSurface(0);
-                var sb = new StringBuilder(text);
-
                 if (vertCentered)
                 {
-                    float textHeight = referenceSurface.MeasureStringInPixels(sb, "White", scale).Y;
+                    float textHeight = MeasureStringInPixels(text, "White", scale).Y;
                     pos.Y -= textHeight / 2;
                 }
                 return new MySprite()
@@ -48,14 +45,11 @@ namespace IngameScript
 
             public static MySprite CreateText(RectangleF bounds, string text, Color color, float scale = 1f, TextAlignment alignment = TextAlignment.LEFT, bool vertCentered = false, float padding = 0f)
             {
-                IMyTextSurface referenceSurface = MePb.GetSurface(0);
-                var sb = new StringBuilder(text);
-
                 bounds.Size -= 2 * padding;
                 bounds.Position += padding;
                 Vector2 pos = bounds.Position;
 
-                Vector2 textSize = referenceSurface.MeasureStringInPixels(sb, "White", 1f);
+                Vector2 textSize = MeasureStringInPixels(text, "White", scale);
                 float fillScale = Math.Min(bounds.Size.X / textSize.X, bounds.Size.Y / textSize.Y);
 
                 if (vertCentered)
@@ -85,6 +79,13 @@ namespace IngameScript
                     Alignment = alignment,
                     FontId = "White"
                 };
+            }
+
+            public static Vector2 MeasureStringInPixels(string text, string font = "White", float scale = 1f)
+            {
+                IMyTextSurface referenceSurface = MePb.GetSurface(0);
+                var sb = new StringBuilder(text);
+                return referenceSurface.MeasureStringInPixels(sb, font, scale);
             }
         }
     }
