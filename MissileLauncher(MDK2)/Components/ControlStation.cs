@@ -127,7 +127,7 @@ namespace IngameScript
                 controllable.RequestRelease += ReleaseControl;
                 Controllable = controllable;
 
-                PopUp popUp = new PopUp(_ui.Bounds.Center - _ui.Bounds.Size * 0.75f * 0.5f, _ui.Bounds.Size * 0.75f, 10f, 10f, () => !IsControlling, $"UI NAV PAUSED\nREASON: CONTROLLING OBJECT", _ui.Display);
+                PopUp popUp = new PopUp(_ui.Bounds.Center - _ui.Bounds.Size * 0.75f * 0.5f, _ui.Bounds.Size * 0.75f, 10f, 10f, () => !IsControlling, $"UI NAV PAUSED\nREASON: CONTROLLING OBJECT", _ui.Bounds);
                 _ui.OpenPopUp(popUp);
                 _ui.PauseNavigation(this);
             }
@@ -153,7 +153,7 @@ namespace IngameScript
                 }
                 else
                 {
-                    PopUp pausePopUp = new PopUp(_ui.Bounds.Center - _ui.Bounds.Size * 0.75f * 0.5f, _ui.Bounds.Size * 0.75f, 10f, 10f, () => !_isPaused, "UI NAV PAUSED\nREASON: USER PAUSED", _ui.Display);
+                    PopUp pausePopUp = new PopUp(_ui.Bounds.Center - _ui.Bounds.Size * 0.75f * 0.5f, _ui.Bounds.Size * 0.75f, 10f, 10f, () => !_isPaused, "UI NAV PAUSED\nREASON: USER PAUSED", _ui.Bounds);
                     _ui.OpenPopUp(pausePopUp);
                     _ui.PauseNavigation(this);
                 }

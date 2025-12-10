@@ -48,8 +48,8 @@ namespace IngameScript
             protected int _currentPageIndex = 0;
             protected IButton _highlightedButton;
 
-            protected IMyTextSurface _surface;
             protected bool _obscure;
+            protected RectangleF _screenBounds;
 
             protected MySprite _fillSprite;
             protected MySprite _borderSprite;
@@ -57,19 +57,22 @@ namespace IngameScript
 
             protected List<MySprite> _commonSprites = new List<MySprite>();
 
-            public Menu(object parent, Vector2 pos, Vector2 size, float borderThickness, bool obscure = false, IMyTextSurface surface = null, Func<bool> autoClose = null, bool canUserClose = true)
+            public Menu(object parent, Vector2 pos, Vector2 size, float borderThickness, bool obscure = false, Func<bool> autoClose = null, bool canUserClose = true, RectangleF screenBounds = default(RectangleF))
             {
                 Parent = parent;
                 _bounds = new RectangleF(pos, size);
                 _borderThickness = borderThickness;
                 _obscure = obscure;
-                _surface = surface;
                 _autoClose = autoClose;
                 _canUserClose = canUserClose;
 
-                if (_surface == null && obscure)
+                if (screenBounds == default(RectangleF))
                 {
-                    throw new ArgumentException("Surface must be provided if obscure is true");
+                    _screenBounds = new RectangleF(0, 0, 1024f, 1024f);
+                }
+                else
+                {
+                    _screenBounds = screenBounds;
                 }
             }
 
@@ -93,8 +96,8 @@ namespace IngameScript
                     {
                         Type = SpriteType.TEXTURE,
                         Data = "SquareSimple",
-                        Position = _surface.TextureSize * 0.5f,
-                        Size = _surface.SurfaceSize,
+                        Position = _screenBounds.Center,
+                        Size = _screenBounds.Size,
                         RotationOrScale = 0f,
                         Color = new Color(0, 0, 0, 229),
                         Alignment = TextAlignment.CENTER,

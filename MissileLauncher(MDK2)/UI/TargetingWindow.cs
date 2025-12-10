@@ -130,7 +130,7 @@ namespace IngameScript
                     Color = UIConfig.WindowBorderColor,
                     Alignment = TextAlignment.CENTER
                 };
-                MySprite labelTextSprite = SpriteHelper.CreateText(labelBounds, "-TARGETING-", Color.White, Display, TextAlignment.CENTER, true, _borderThickness + 10f);
+                MySprite labelTextSprite = SpriteHelper.CreateText(labelBounds, "-TARGETING-", Color.White, alignment: TextAlignment.CENTER, vertCentered: true, padding: _borderThickness + 10f);
                 AddSprite(labelBorderSprite);
                 AddSprite(labelFillSprite);
                 AddSprite(labelTextSprite);
@@ -156,7 +156,7 @@ namespace IngameScript
                         return "No Target Selected";
                     }
                 };
-                InfoPanel targetPanel = new InfoPanel(targetInfoPanelPos, targetInfoPanelSize, 5f, 10f, targetInfoGetter, Display);
+                InfoPanel targetPanel = new InfoPanel(targetInfoPanelPos, targetInfoPanelSize, 5f, 10f, targetInfoGetter);
                 AddInfoPanel(targetPanel);
 
                 Vector2 navFilterPanelPos = Pos + new Vector2(0, 100f);
@@ -174,13 +174,13 @@ namespace IngameScript
                 MissileCoordinator coordinator = UI.UICoordinator.MissileCoordinator;
                 AWACS awacs = UI.UICoordinator.AWACS;
                 Func<string> targetingInfoGetter = () => coordinator.ToString() + $"\nAWACS TRGTS: {awacs.TargetCount}";
-                InfoPanel targetingInfoPanel = new InfoPanel(targetingInfoPanelPos, targetingInfoPanelSize, 5f, 10f, targetingInfoGetter, Display);
+                InfoPanel targetingInfoPanel = new InfoPanel(targetingInfoPanelPos, targetingInfoPanelSize, 5f, 10f, targetingInfoGetter);
                 AddInfoPanel(targetingInfoPanel);
 
                 Vector2 navModeInfoPanelSize = new Vector2(180f, 35f);
                 Vector2 navModeInfoPanelPos = Pos + new Vector2(0, Size.Y - navModeInfoPanelSize.Y);
                 Func<string> navModeInfoGetter = () => $"NAV MODE: {GetName(NavMode)}";
-                InfoPanel navModeInfoPanel = new InfoPanel(navModeInfoPanelPos, navModeInfoPanelSize, 3f, 5f, navModeInfoGetter, Display);
+                InfoPanel navModeInfoPanel = new InfoPanel(navModeInfoPanelPos, navModeInfoPanelSize, 3f, 5f, navModeInfoGetter);
                 AddInfoPanel(navModeInfoPanel);
             }
 

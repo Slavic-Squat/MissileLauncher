@@ -37,8 +37,6 @@ namespace IngameScript
             public event Action<IWindow> RequestClose;
             public event Action<INavigable> RequestStopNavigation;
 
-            public IMyTextSurface Display => UI.Display;
-
             protected bool _canUserClose;
 
             protected RectangleF _bounds;

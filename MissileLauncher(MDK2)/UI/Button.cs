@@ -55,9 +55,7 @@ namespace IngameScript
             private MySprite _highlightSprite;
             private MySprite _textSprite;
 
-            private IMyTextSurface _surface;
-
-            public Button(Vector2 pos, Vector2 size, float padding, float borderThickness, float highlightThickness, Func<string> textGetter, Action action, IMyTextSurface surface, Func<bool> canPress = null)
+            public Button(Vector2 pos, Vector2 size, float padding, float borderThickness, float highlightThickness, Func<string> textGetter, Action action, Func<bool> canPress = null)
             {
                 _bounds = new RectangleF(pos, size);
                 _padding = padding;
@@ -66,7 +64,6 @@ namespace IngameScript
 
                 _textGetter = textGetter;
                 _action = action;
-                _surface = surface;
                 _canPress = canPress;
             }
 
@@ -136,7 +133,7 @@ namespace IngameScript
                     Alignment = TextAlignment.CENTER
                 };
 
-                _textSprite = SpriteHelper.CreateText(bounds, _textGetter(), textColor, _surface, TextAlignment.CENTER, true, _borderThickness + _padding);
+                _textSprite = SpriteHelper.CreateText(bounds, _textGetter(), textColor, alignment: TextAlignment.CENTER, vertCentered: true, padding: _borderThickness + _padding);
             }
 
             public void Press()

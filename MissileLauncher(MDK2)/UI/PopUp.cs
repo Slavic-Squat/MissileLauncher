@@ -39,17 +39,16 @@ namespace IngameScript
             private MySprite _borderSprite;
             private MySprite _textSprite;
             private MySprite _obscureSprite;
+            private RectangleF _screenBounds;
 
-            private IMyTextSurface _surface;
-
-            public PopUp(Vector2 pos, Vector2 size, float borderThickness, float padding, Func<bool> condition, string text, IMyTextSurface surface)
+            public PopUp(Vector2 pos, Vector2 size, float borderThickness, float padding, Func<bool> condition, string text, RectangleF screenBounds)
             {
                 _bounds = new RectangleF(pos, size);
                 _borderThickness = borderThickness;
                 _text = text;
                 _condition = condition;
-                _surface = surface;
                 _padding = padding;
+                _screenBounds = screenBounds;
             }
 
             private void BuildSprites()
@@ -78,13 +77,13 @@ namespace IngameScript
                 {
                     Type = SpriteType.TEXTURE,
                     Data = "SquareSimple",
-                    Position = _surface.TextureSize * 0.5f,
-                    Size = _surface.SurfaceSize,
+                    Position = _screenBounds.Center,
+                    Size = _screenBounds.Size,
                     Color = new Color(0, 0, 0, 229),
                     Alignment = TextAlignment.CENTER
                 };
 
-                _textSprite = SpriteHelper.CreateText(Bounds, _text, new Color(252, 3, 94, 255), _surface, TextAlignment.CENTER, true, _borderThickness + _padding);
+                _textSprite = SpriteHelper.CreateText(Bounds, _text, new Color(252, 3, 94, 255), alignment: TextAlignment.CENTER, vertCentered: true, padding: _borderThickness + _padding);
             }
 
             public void Draw(MySpriteDrawFrame frame)

@@ -35,18 +35,15 @@ namespace IngameScript
             private float _borderThickness;
             private float _padding;
 
-            private IMyTextSurface _surface;
-
             private MySprite _fillSprite;
             private MySprite _borderSprite;
             private MySprite _textSprite;
 
-            public InfoPanel(Vector2 pos, Vector2 size, float borderThickness, float padding, Func<string> textGetter, IMyTextSurface surface)
+            public InfoPanel(Vector2 pos, Vector2 size, float borderThickness, float padding, Func<string> textGetter)
             {
                 _bounds = new RectangleF(pos, size);
                 _borderThickness = borderThickness;
                 _textGetter = textGetter;
-                _surface = surface;
                 _padding = padding;
             }
 
@@ -72,7 +69,7 @@ namespace IngameScript
                     Color = UIConfig.PanelBorderColor,
                     Alignment = TextAlignment.CENTER,
                 };
-                _textSprite = SpriteHelper.CreateText(Bounds, _textGetter(), Color.White, _surface, TextAlignment.LEFT, false, _borderThickness + _padding);
+                _textSprite = SpriteHelper.CreateText(Bounds, _textGetter(), Color.White, alignment: TextAlignment.LEFT, vertCentered: false, padding: _borderThickness + _padding);
             }
 
             public void Draw(MySpriteDrawFrame frame)
