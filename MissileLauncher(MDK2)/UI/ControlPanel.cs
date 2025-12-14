@@ -47,8 +47,7 @@ namespace IngameScript
             private int _currentPageIndex = 0;
             private IButton _highlightedButton;
 
-            private MySprite _fillSprite;
-            private MySprite _borderSprite;
+            private MySprite[] _bodySprites;
             private MySprite _highlightSprite;
 
             private List<MySprite> _commonSprites = new List<MySprite>();
@@ -74,26 +73,8 @@ namespace IngameScript
                     fillColor = UIConfig.PanelFillColorActive;
                     borderColor = UIConfig.PanelBorderColorActive;
                 }
-                _fillSprite = new MySprite()
-                {
-                    Type = SpriteType.TEXTURE,
-                    Data = "SquareSimple",
-                    Position = Center,
-                    Size = Size - 2 * _borderThickness,
-                    RotationOrScale = 0f,
-                    Color = fillColor,
-                    Alignment = TextAlignment.CENTER,
-                };
-                _borderSprite = new MySprite()
-                {
-                    Type = SpriteType.TEXTURE,
-                    Data = "SquareSimple",
-                    Position = Center,
-                    Size = Size,
-                    RotationOrScale = 0f,
-                    Color = borderColor,
-                    Alignment = TextAlignment.CENTER,
-                };
+
+                _bodySprites = SpriteHelper.CreateBoxFilled(_bounds, borderColor, fillColor, _borderThickness);
                 _highlightSprite = new MySprite()
                 {
                     Type = SpriteType.TEXTURE,
@@ -283,8 +264,7 @@ namespace IngameScript
                 {
                     frame.Add(_highlightSprite);
                 }
-                frame.Add(_borderSprite);
-                frame.Add(_fillSprite);
+                frame.AddRange(_bodySprites);
 
                 foreach (var sprite in _commonSprites)
                 {

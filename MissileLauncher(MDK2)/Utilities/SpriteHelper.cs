@@ -24,11 +24,11 @@ namespace IngameScript
     {
         public static class SpriteHelper
         {
-            public static MySprite CreateText(Vector2 pos, string text, Color color, float scale = 1f, TextAlignment alignment = TextAlignment.LEFT, bool vertCentered = false)
+            public static MySprite CreateText(Vector2 pos, string text, Color color, float scale = 1f, string fontId = "White", TextAlignment alignment = TextAlignment.LEFT, bool vertCentered = false)
             {
                 if (vertCentered)
                 {
-                    float textHeight = MeasureStringInPixels(text, "White", scale).Y;
+                    float textHeight = MeasureStringInPixels(text, fontId, scale).Y;
                     pos.Y -= textHeight / 2;
                 }
                 return new MySprite()
@@ -39,18 +39,19 @@ namespace IngameScript
                     Color = color,
                     RotationOrScale = scale,
                     Alignment = alignment,
-                    FontId = "White"
+                    FontId = fontId
                 };
             }
 
-            public static MySprite CreateText(RectangleF bounds, string text, Color color, float scale = 1f, TextAlignment alignment = TextAlignment.LEFT, bool vertCentered = false, float padding = 0f)
+            public static MySprite CreateText(RectangleF bounds, string text, Color color, float maxScale = 10f, string fontId = "White", TextAlignment alignment = TextAlignment.LEFT, bool vertCentered = false, float padding = 0f)
             {
                 bounds.Size -= 2 * padding;
                 bounds.Position += padding;
                 Vector2 pos = bounds.Position;
 
-                Vector2 textSize = MeasureStringInPixels(text, "White", scale);
+                Vector2 textSize = MeasureStringInPixels(text, fontId, 1);
                 float fillScale = Math.Min(bounds.Size.X / textSize.X, bounds.Size.Y / textSize.Y);
+                fillScale = Math.Min(fillScale, maxScale);
 
                 if (vertCentered)
                 {
@@ -77,7 +78,7 @@ namespace IngameScript
                     Color = color,
                     RotationOrScale = fillScale,
                     Alignment = alignment,
-                    FontId = "White"
+                    FontId = fontId
                 };
             }
 
@@ -86,6 +87,82 @@ namespace IngameScript
                 IMyTextSurface referenceSurface = MePb.GetSurface(0);
                 var sb = new StringBuilder(text);
                 return referenceSurface.MeasureStringInPixels(sb, font, scale);
+            }
+
+            public static MySprite[] CreateBoxFilled(RectangleF bounds, Color borderColor, Color fillColor, float borderThickness)
+            {
+                MySprite[] sprites = new MySprite[2];
+
+                // Border
+                sprites[0] = new MySprite()
+                {
+                    Type = SpriteType.TEXTURE,
+                    Data = "SquareSimple",
+                    Position = bounds.Center,
+                    Size = bounds.Size,
+                    Color = borderColor,
+                    Alignment = TextAlignment.CENTER,
+                };
+                // Fill
+                sprites[1] = new MySprite()
+                {
+                    Type = SpriteType.TEXTURE,
+                    Data = "SquareSimple",
+                    Position = bounds.Center,
+                    Size = bounds.Size - 2 * borderThickness,
+                    Color = fillColor,
+                    Alignment = TextAlignment.CENTER,
+                };
+
+                return sprites;
+            }
+
+            public static MySprite[] CreateBoxHollow(RectangleF bounds, Color borderColor, float borderThickness)
+            {
+                MySprite[] sprites = new MySprite[4];
+
+                // Top
+                sprites[0] = new MySprite()
+                {
+                    Type = SpriteType.TEXTURE,
+                    Data = "SquareSimple",
+                    Position = new Vector2(bounds.Center.X, bounds.Y + borderThickness / 2f),
+                    Size = new Vector2(bounds.X, borderThickness),
+                    Color = borderColor,
+                    Alignment = TextAlignment.CENTER,
+                };
+                // Bottom
+                sprites[1] = new MySprite()
+                {
+                    Type = SpriteType.TEXTURE,
+                    Data = "SquareSimple",
+                    Position = new Vector2(bounds.Center.X, bounds.Bottom - borderThickness / 2f),
+                    Size = new Vector2(bounds.X, borderThickness),
+                    Color = borderColor,
+                    Alignment = TextAlignment.CENTER,
+                };
+                // Left
+                sprites[2] = new MySprite()
+                {
+                    Type = SpriteType.TEXTURE,
+                    Data = "SquareSimple",
+                    Position = new Vector2(bounds.X + borderThickness / 2f, bounds.Center.Y),
+                    Size = new Vector2(borderThickness, bounds.Y),
+                    Color = borderColor,
+                    Alignment = TextAlignment.CENTER,
+                };
+                // Right
+                sprites[3] = new MySprite()
+                {
+                    Type = SpriteType.TEXTURE,
+                    Data = "SquareSimple",
+                    Position = new Vector2(bounds.Right - borderThickness / 2f, bounds.Center.Y),
+                    Size = new Vector2(borderThickness, bounds.Y),
+                    Color = borderColor,
+                    Alignment = TextAlignment.CENTER,
+                };
+
+                return sprites;
             }
         }
     }

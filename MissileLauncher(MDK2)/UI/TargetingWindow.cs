@@ -53,87 +53,14 @@ namespace IngameScript
                 _additionalSprites.Clear();
                 base.BuildSprites();
 
-                Vector2 leftBorderSize = new Vector2(_borderThickness, Size.Y);
-                Vector2 leftBorderPos = Pos;
-                RectangleF leftBorderBounds = new RectangleF(leftBorderPos, leftBorderSize);
-                MySprite leftBorderSprite = new MySprite()
-                {
-                    Type = SpriteType.TEXTURE,
-                    Data = "SquareSimple",
-                    Position = leftBorderBounds.Center,
-                    Size = leftBorderBounds.Size,
-                    Color = UIConfig.WindowBorderColor,
-                    Alignment = TextAlignment.CENTER
-                };
-                _additionalSprites.Add(leftBorderSprite);
+                MySprite[] borderSprite = SpriteHelper.CreateBoxHollow(Bounds, UIConfig.WindowBorderColor, _borderThickness);
+                _additionalSprites.AddRange(borderSprite);
 
-                Vector2 rightBorderSize = new Vector2(_borderThickness, Size.Y);
-                Vector2 rightBorderPos = Pos + new Vector2(Size.X - _borderThickness, 0);
-                RectangleF rightBorderBounds = new RectangleF(rightBorderPos, rightBorderSize);
-                MySprite rightBorderSprite = new MySprite()
-                {
-                    Type = SpriteType.TEXTURE,
-                    Data = "SquareSimple",
-                    Position = rightBorderBounds.Center,
-                    Size = rightBorderBounds.Size,
-                    Color = UIConfig.WindowBorderColor,
-                    Alignment = TextAlignment.CENTER
-                };
-                _additionalSprites.Add(rightBorderSprite);
-
-                Vector2 topBorderSize = new Vector2(Size.X, _borderThickness);
-                Vector2 topBorderPos = Pos;
-                RectangleF topBorderBounds = new RectangleF(topBorderPos, topBorderSize);
-                MySprite topBorderSprite = new MySprite()
-                {
-                    Type = SpriteType.TEXTURE,
-                    Data = "SquareSimple",
-                    Position = topBorderBounds.Center,
-                    Size = topBorderBounds.Size,
-                    Color = UIConfig.WindowBorderColor,
-                    Alignment = TextAlignment.CENTER
-                };
-                _additionalSprites.Add(topBorderSprite);
-
-                Vector2 bottomBorderSize = new Vector2(Size.X, _borderThickness);
-                Vector2 bottomBorderPos = Pos + new Vector2(0, Size.Y - _borderThickness);
-                RectangleF bottomBorderBounds = new RectangleF(bottomBorderPos, bottomBorderSize);
-                MySprite bottomBorderSprite = new MySprite()
-                {
-                    Type = SpriteType.TEXTURE,
-                    Data = "SquareSimple",
-                    Position = bottomBorderBounds.Center,
-                    Size = bottomBorderBounds.Size,
-                    Color = UIConfig.WindowBorderColor,
-                    Alignment = TextAlignment.CENTER
-                };
-                _additionalSprites.Add(bottomBorderSprite);
-
-                Vector2 labelSize = new Vector2(250f, 100f);
-                Vector2 labelPos = Pos;
-                RectangleF labelBounds = new RectangleF(labelPos, labelSize);
-                MySprite labelFillSprite = new MySprite()
-                {
-                    Type = SpriteType.TEXTURE,
-                    Data = "SquareSimple",
-                    Position = labelBounds.Center,
-                    Size = labelBounds.Size - 2 * _borderThickness,
-                    Color = UIConfig.WindowFillColor,
-                    Alignment = TextAlignment.CENTER
-                };
-                MySprite labelBorderSprite = new MySprite()
-                {
-                    Type = SpriteType.TEXTURE,
-                    Data = "SquareSimple",
-                    Position = labelBounds.Center,
-                    Size = labelBounds.Size,
-                    Color = UIConfig.WindowBorderColor,
-                    Alignment = TextAlignment.CENTER
-                };
+                RectangleF labelBounds = new RectangleF(Pos.X, Pos.Y, 250f, 100f);
+                MySprite[] labelBox = SpriteHelper.CreateBoxFilled(labelBounds, UIConfig.WindowBorderColor, UIConfig.WindowFillColor, _borderThickness);
+                _additionalSprites.AddRange(labelBox);
                 MySprite labelTextSprite = SpriteHelper.CreateText(labelBounds, "-TARGETING-", Color.White, alignment: TextAlignment.CENTER, vertCentered: true, padding: _borderThickness + 10f);
-                AddSprite(labelBorderSprite);
-                AddSprite(labelFillSprite);
-                AddSprite(labelTextSprite);
+                _additionalSprites.Add(labelTextSprite);
             }
 
             private void Init()
@@ -219,8 +146,7 @@ namespace IngameScript
             {
                 if (!IsOpen) return;
                 BuildSprites();
-                frame.Add(_borderSprite);
-                frame.Add(_fillSprite);
+                frame.AddRange(_bodySprites);
 
                 _targetingSprites = _targetingSpriteBuilder.BuildSprites(_allEntities, out _entitySprites, targetedID: SelectedEntityID);
                 foreach (var sprite in _targetingSprites)

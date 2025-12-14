@@ -28,7 +28,6 @@ namespace IngameScript
             private List<IMyTextSurface> _displays = new List<IMyTextSurface>();
 
             private Dictionary<long, EntityInfoExt> _entityInfo = new Dictionary<long, EntityInfoExt>();
-            private int _runCounter;
             public TargetingDisplays(Dictionary<long, EntityInfoExt> entityInfo)
             {
                 _spriteBuilder = new TargetingSpriteBuilderSimple();
@@ -66,18 +65,15 @@ namespace IngameScript
 
             public void Draw()
             {
-                if (_runCounter++ % 10 == 0)
-                {
-                    Dictionary<long, MyEntitySprite> dump = new Dictionary<long, MyEntitySprite>();
-                    List<MySpriteExt> sprites = _spriteBuilder.BuildSprites(_entityInfo, out dump);
+                Dictionary<long, MyEntitySprite> dump = new Dictionary<long, MyEntitySprite>();
+                List<MySpriteExt> sprites = _spriteBuilder.BuildSprites(_entityInfo, out dump);
 
-                    foreach (var display in _displays)
-                    {
-                        var frame = display.DrawFrame();
-                        sprites.ForEach(sprite => sprite.Draw(frame));
-                        frame.Dispose();
-                    }
-                }                
+                foreach (var display in _displays)
+                {
+                    var frame = display.DrawFrame();
+                    sprites.ForEach(sprite => sprite.Draw(frame));
+                    frame.Dispose();
+                }
             }
 
             public void AddDisplay(IMyTextSurface display)

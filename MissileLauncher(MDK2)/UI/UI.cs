@@ -60,6 +60,9 @@ namespace IngameScript
 
             public void Run(double time)
             {
+                _runCounter++;
+                if (_runCounter >= int.MaxValue) _runCounter = 0;
+
                 if (Time == 0)
                 {
                     Time = time;
@@ -67,7 +70,8 @@ namespace IngameScript
                 }
 
                 Update(time);
-                if (_runCounter++ % 5 == 0)
+
+                if (_runCounter % 5 == 0)
                 {
                     Draw();
                 }

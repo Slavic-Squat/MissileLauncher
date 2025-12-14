@@ -42,8 +42,7 @@ namespace IngameScript
             protected RectangleF _bounds;
             protected float _borderThickness;
 
-            protected MySprite _fillSprite;
-            protected MySprite _borderSprite;
+            protected MySprite[] _bodySprites;
             protected List<MySprite> _additionalSprites = new List<MySprite>();
 
             protected List<IHighlightable> _highlightables = new List<IHighlightable>();
@@ -85,25 +84,7 @@ namespace IngameScript
 
             protected virtual void BuildSprites()
             {
-                _fillSprite = new MySprite()
-                {
-                    Type = SpriteType.TEXTURE,
-                    Data = "SquareSimple",
-                    Position = Center,
-                    Size = Size - 2 * _borderThickness,
-                    Color = UIConfig.WindowFillColor,
-                    Alignment = TextAlignment.CENTER
-                };
-
-                _borderSprite = new MySprite()
-                {
-                    Type = SpriteType.TEXTURE,
-                    Data = "SquareSimple",
-                    Position = Center,
-                    Size = Size,
-                    Color = UIConfig.WindowBorderColor,
-                    Alignment = TextAlignment.CENTER
-                };
+                _bodySprites = SpriteHelper.CreateBoxFilled(Bounds, UIConfig.WindowBorderColor, UIConfig.WindowFillColor, _borderThickness);
             }
 
             public virtual void Open(object caller)
@@ -321,8 +302,7 @@ namespace IngameScript
             {
                 if (!IsOpen) return;
                 BuildSprites();
-                frame.Add(_borderSprite);
-                frame.Add(_fillSprite);
+                frame.AddRange(_bodySprites);
 
                 foreach (var sprite in _additionalSprites)
                 {

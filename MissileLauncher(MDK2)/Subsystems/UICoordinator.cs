@@ -41,6 +41,8 @@ namespace IngameScript
             public AWACS AWACS => _systemCoordinator.AWACS;
             public TargetingDisplays TargetingDisplays { get; private set; }
 
+            private int _runCounter = 0;
+
             public UICoordinator(SystemCoordinator systemCoordinator)
             {
                 _systemCoordinator = systemCoordinator;
@@ -49,6 +51,9 @@ namespace IngameScript
 
             public void Run()
             {
+                _runCounter++;
+                if (_runCounter >= int.MaxValue) _runCounter = 0;
+
                 AllEntities.Clear();
                 foreach (var target in AllTargets)
                 {
@@ -59,7 +64,10 @@ namespace IngameScript
                     AllEntities[missile.Key] = missile.Value;
                 }
 
-                TargetingDisplays.Draw();
+                if (_runCounter % 10 == 0)
+                {
+                    TargetingDisplays.Draw();
+                }
             }
 
             public void SelectBay(MissileBay bay, object caller) => _systemCoordinator.MissileCoordinator.SelectBay(bay, caller);

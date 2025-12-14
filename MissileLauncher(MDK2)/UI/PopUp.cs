@@ -35,8 +35,7 @@ namespace IngameScript
             private float _padding;
             private string _text;
             private Func<bool> _condition;
-            private MySprite _fillSprite;
-            private MySprite _borderSprite;
+            private MySprite[] _bodySprites;
             private MySprite _textSprite;
             private MySprite _obscureSprite;
             private RectangleF _screenBounds;
@@ -53,25 +52,7 @@ namespace IngameScript
 
             private void BuildSprites()
             {
-                _fillSprite = new MySprite()
-                {
-                    Type = SpriteType.TEXTURE,
-                    Data = "SquareSimple",
-                    Position = Center,
-                    Size = Size - 2 * _borderThickness,
-                    Color = new Color(38, 19, 26, 255),
-                    Alignment = TextAlignment.CENTER
-                };
-
-                _borderSprite = new MySprite()
-                {
-                    Type = SpriteType.TEXTURE,
-                    Data = "SquareSimple",
-                    Position = Center,
-                    Size = Size,
-                    Color = new Color(252, 3, 94, 255),
-                    Alignment = TextAlignment.CENTER
-                };
+                _bodySprites = SpriteHelper.CreateBoxFilled(Bounds, new Color(252, 3, 94, 255), new Color(38, 19, 26, 255), _borderThickness);
 
                 _obscureSprite = new MySprite()
                 {
@@ -90,8 +71,7 @@ namespace IngameScript
             {
                 BuildSprites();
                 frame.Add(_obscureSprite);
-                frame.Add(_borderSprite);
-                frame.Add(_fillSprite);
+                frame.AddRange(_bodySprites);
                 frame.Add(_textSprite);
             }
         }

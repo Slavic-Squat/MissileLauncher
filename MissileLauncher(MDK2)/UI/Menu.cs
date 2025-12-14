@@ -51,8 +51,7 @@ namespace IngameScript
             protected bool _obscure;
             protected RectangleF _screenBounds;
 
-            protected MySprite _fillSprite;
-            protected MySprite _borderSprite;
+            protected MySprite[] _bodySprites;
             protected MySprite _obscureSprite;
 
             protected List<MySprite> _commonSprites = new List<MySprite>();
@@ -103,26 +102,7 @@ namespace IngameScript
                         Alignment = TextAlignment.CENTER,
                     };
                 }
-                _fillSprite = new MySprite()
-                {
-                    Type = SpriteType.TEXTURE,
-                    Data = "SquareSimple",
-                    Position = Center,
-                    Size = Size - 2 * _borderThickness,
-                    RotationOrScale = 0f,
-                    Color = fillColor,
-                    Alignment = TextAlignment.CENTER,
-                };
-                _borderSprite = new MySprite()
-                {
-                    Type = SpriteType.TEXTURE,
-                    Data = "SquareSimple",
-                    Position = Center,
-                    Size = Size,
-                    RotationOrScale = 0f,
-                    Color = borderColor,
-                    Alignment = TextAlignment.CENTER,
-                };
+                _bodySprites = SpriteHelper.CreateBoxFilled(Bounds, borderColor, fillColor, _borderThickness);
             }
 
             public virtual void Open(object caller)
@@ -326,8 +306,7 @@ namespace IngameScript
                 {
                     frame.Add(_obscureSprite);
                 }
-                frame.Add(_borderSprite);
-                frame.Add(_fillSprite);
+                frame.AddRange(_bodySprites);
 
                 foreach (var sprite in _commonSprites)
                 {

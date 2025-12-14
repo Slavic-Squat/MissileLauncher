@@ -35,8 +35,7 @@ namespace IngameScript
             private float _borderThickness;
             private float _padding;
 
-            private MySprite _fillSprite;
-            private MySprite _borderSprite;
+            private MySprite[] _bodySprites;
             private MySprite _textSprite;
 
             public InfoPanel(Vector2 pos, Vector2 size, float borderThickness, float padding, Func<string> textGetter)
@@ -49,34 +48,14 @@ namespace IngameScript
 
             private void BuildSprites()
             {
-                _fillSprite = new MySprite()
-                {
-                    Type = SpriteType.TEXTURE,
-                    Data = "SquareSimple",
-                    Position = Center,
-                    Size = Size - 2 * _borderThickness,
-                    RotationOrScale = 0f,
-                    Color = UIConfig.PanelFillColor,
-                    Alignment = TextAlignment.CENTER,
-                };
-                _borderSprite = new MySprite()
-                {
-                    Type = SpriteType.TEXTURE,
-                    Data = "SquareSimple",
-                    Position = Center,
-                    Size = Size,
-                    RotationOrScale = 0f,
-                    Color = UIConfig.PanelBorderColor,
-                    Alignment = TextAlignment.CENTER,
-                };
+                _bodySprites = SpriteHelper.CreateBoxFilled(Bounds, UIConfig.PanelBorderColor, UIConfig.PanelFillColor, _borderThickness);
                 _textSprite = SpriteHelper.CreateText(Bounds, _textGetter(), Color.White, alignment: TextAlignment.LEFT, vertCentered: false, padding: _borderThickness + _padding);
             }
 
             public void Draw(MySpriteDrawFrame frame)
             {
                 BuildSprites();
-                frame.Add(_borderSprite);
-                frame.Add(_fillSprite);
+                frame.AddRange(_bodySprites);
                 frame.Add(_textSprite);
             }
         }

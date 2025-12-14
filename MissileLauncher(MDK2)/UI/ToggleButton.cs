@@ -66,8 +66,7 @@ namespace IngameScript
             private Func<bool> _canRelease;
             private Func<string> _textGetter;
 
-            private MySprite _fillSprite;
-            private MySprite _borderSprite;
+            private MySprite[] _bodySprites;
             private MySprite _highlightSprite;
             private MySprite _textSprite;
 
@@ -122,25 +121,7 @@ namespace IngameScript
                 bounds.Size = Size * scale;
                 bounds.Position = Pos + (Size - bounds.Size) / 2;
 
-                _fillSprite = new MySprite()
-                {
-                    Type = SpriteType.TEXTURE,
-                    Data = "SquareSimple",
-                    Position = bounds.Center,
-                    Size = bounds.Size - 2 * _borderThickness * scale,
-                    Color = fillColor,
-                    Alignment = TextAlignment.CENTER
-                };
-
-                _borderSprite = new MySprite()
-                {
-                    Type = SpriteType.TEXTURE,
-                    Data = "SquareSimple",
-                    Position = bounds.Center,
-                    Size = bounds.Size,
-                    Color = borderColor,
-                    Alignment = TextAlignment.CENTER
-                };
+                _bodySprites = SpriteHelper.CreateBoxFilled(bounds, borderColor, fillColor, _borderThickness * scale);
 
                 _highlightSprite = new MySprite()
                 {
@@ -219,8 +200,7 @@ namespace IngameScript
                 {
                     frame.Add(_highlightSprite);
                 }
-                frame.Add(_borderSprite);
-                frame.Add(_fillSprite);
+                frame.AddRange(_bodySprites);
                 frame.Add(_textSprite);
             }
         }
