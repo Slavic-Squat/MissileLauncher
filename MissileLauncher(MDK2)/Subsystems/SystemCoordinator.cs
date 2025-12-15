@@ -107,8 +107,6 @@ namespace IngameScript
                 CommandHandler0.RegisterCommand("SYNC_CLOCK", (args) => SyncClock(args[0]));
                 CommandHandler0.RegisterCommand("PAUSE_CONTROL_STATION", (args) => PauseControlStation(args[0]));
                 CommandHandler0.RegisterCommand("RESUME_CONTROL_STATION", (args) => ResumeControlStation(args[0]));
-
-                MePb.CustomData = Config.ToString();
             }
 
             public void Run(double time)
