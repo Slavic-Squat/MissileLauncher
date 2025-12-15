@@ -59,6 +59,7 @@ namespace IngameScript
             CommunicationHandler0 = new CommunicationHandler(0, secureBroadcastPIN);
             CommandHandler0 = new CommandHandler();
             _systemCoordinator = new SystemCoordinator();
+            MePb.CustomData = Config.ToString();
         }
 
         public void Save()
