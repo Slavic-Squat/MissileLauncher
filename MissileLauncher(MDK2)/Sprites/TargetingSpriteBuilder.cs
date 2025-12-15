@@ -24,7 +24,6 @@ namespace IngameScript
     {
         public class TargetingSpriteBuilder
         {
-            #region Properties
             public float Zoom
             {
                 get { return _zoom; }
@@ -38,9 +37,7 @@ namespace IngameScript
                     BuildStaticSprites();
                 }
             }
-            #endregion
 
-            #region Fields
             private float _FOV = 30;
             private float _AR = 1;
             private float _n = 100;
@@ -57,7 +54,6 @@ namespace IngameScript
             private List<MySpriteExt> _staticSpritesPrePlane = new List<MySpriteExt>();
 
             private Matrix _projectionMatrix = Matrix.Identity;
-            #endregion
 
             public TargetingSpriteBuilder()
             {

@@ -24,20 +24,16 @@ namespace IngameScript
     {
         public class TargetingSpriteBuilderSimple
         {
-            #region Properties
             public float Range
             {
                 get { return _range; }
                 set { _range = value; }
             }
-            #endregion
 
-            #region Fields
             private float _range = 12000f;
 
             private List<MySpriteExt> _sprites = new List<MySpriteExt>();
             private List<MySpriteExt> _staticSprites = new List<MySpriteExt>();
-            #endregion
 
             public TargetingSpriteBuilderSimple()
             {

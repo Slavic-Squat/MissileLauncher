@@ -24,19 +24,14 @@ namespace IngameScript
     {
         public class AWACS
         {
-            #region Parts
             private Rotor _spinRotor;
             private CameraArray _cameraArray0;
             private CameraArray _cameraArray1;
             private CameraArray _cameraArray2;
             private CameraArray _cameraArray3;
-            #endregion
 
-            #region State Info
             private Matrix _referenceMatrix;
-            #endregion
 
-            #region Properties
             public int ID { get; private set; }
             public double Time { get; private set; }
             public float MaxRaycastDistance
@@ -57,7 +52,6 @@ namespace IngameScript
             public Dictionary<long, EntityInfoExt> Targets { get; private set; }
             public int TargetCount => Targets.Count;
             public Dictionary<long, bool> TargetsSyncInfo {  get; private set; }
-            #endregion
 
             private float _maxRaycastDistance;
             public AWACS(int id, float maxRaycastDistance = 5000)

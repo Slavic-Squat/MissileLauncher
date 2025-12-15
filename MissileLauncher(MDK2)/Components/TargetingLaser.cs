@@ -25,26 +25,19 @@ namespace IngameScript
     {
         public class TargetingLaser : IControllable
         {
-            #region Parts
             private Rotor _azimuthRotor;
             private Rotor _elevationRotor;
             private CameraArray _cameraArray;
-            #endregion
 
-            #region State Info
             private float _maxRaycastDistance;
             private Matrix _referenceMatrix;
             private double _lastUniqueDetectionTime;
             private int _matchingDetectionCounter;
             private MyDetectedEntityInfo _previouslyDetectedEntity;
-            #endregion
 
-            #region Controllers
             private PIDControl _azimuthPID;
             private PIDControl _elevationPID;
-            #endregion
 
-            #region Properties
             public int ID { get; private set; }
             public double Time { get; private set; }
             public IController Controller { get; private set; }
@@ -68,7 +61,6 @@ namespace IngameScript
             public EntityInfoExt Target {  get; private set; }
             public event Action<TargetingLaser> SyncRequested;
             public event Action<IControllable> RequestRelease;
-            #endregion
 
             public TargetingLaser(int id, float sensitivity = 0.05f, float maxRaycastDistance = 5000, bool manualOverride = false)
             {

@@ -24,12 +24,6 @@ namespace IngameScript
     {
         public class TargetCoordinator
         {
-            #region Parts
-            private CommunicationHandler _communicationHandler;
-            #endregion
-
-            #region Properties
-            public int ID { get; private set; }
             public double Time { get; private set; }
 
             private Dictionary<long, EntityInfoExt> _targetsLocal = new Dictionary<long, EntityInfoExt>();
@@ -39,20 +33,17 @@ namespace IngameScript
             public HashSet<long> NeutralIDs { get; private set; }
             public HashSet<long> HostileIDs { get; private set; }
             public HashSet<long> FriendlyIDs { get; private set; }
-            #endregion
 
-            public TargetCoordinator(int id, CommunicationHandler communicationHandler)
+            public TargetCoordinator()
             {
-                ID = id;
-                _communicationHandler = communicationHandler;
                 Init();
             }
 
             private void Init()
             {
-                _communicationHandler.RegisterBroadcastListener("TargetShare", true);
-                _communicationHandler.RegisterBroadcastListener("AllMissileInfo", false);
-                _communicationHandler.RegisterBroadcastListener("FriendlyInfo", true);
+                CommunicationHandler0.RegisterBroadcastListener("TargetShare", true);
+                CommunicationHandler0.RegisterBroadcastListener("AllMissileInfo", false);
+                CommunicationHandler0.RegisterBroadcastListener("FriendlyInfo", true);
 
                 AllTargetsExt = new Dictionary<long, EntityInfoExt>();
                 NeutralIDs = new HashSet<long>();
@@ -69,10 +60,10 @@ namespace IngameScript
                 }
                 double globalTime = SystemCoordinator.GlobalTime;
 
-                while (_communicationHandler.HasMessage("TargetShare", true))
+                while (CommunicationHandler0.HasMessage("TargetShare", true))
                 {
                     MyIGCMessage message;
-                    if (_communicationHandler.TryRetrieveMessage("TargetShare", true, out message))
+                    if (CommunicationHandler0.TryRetrieveMessage("TargetShare", true, out message))
                     {
                         byte[] bytes = Convert.FromBase64String(message.Data as string);
                         EntityInfo entityInfo = EntityInfo.Deserialize(bytes, 0);
@@ -80,10 +71,10 @@ namespace IngameScript
                     }
                 }
 
-                while (_communicationHandler.HasMessage("FriendlyInfo", true))
+                while (CommunicationHandler0.HasMessage("FriendlyInfo", true))
                 {
                     MyIGCMessage message;
-                    if (_communicationHandler.TryRetrieveMessage("FriendlyInfo", true, out message))
+                    if (CommunicationHandler0.TryRetrieveMessage("FriendlyInfo", true, out message))
                     {
                         byte[] bytes = Convert.FromBase64String(message.Data as string);
                         EntityInfo entityInfo = EntityInfo.Deserialize(bytes, 0);
@@ -91,10 +82,10 @@ namespace IngameScript
                     }
                 }
 
-                while (_communicationHandler.HasMessage("AllMissileInfo", false))
+                while (CommunicationHandler0.HasMessage("AllMissileInfo", false))
                 {
                     MyIGCMessage message;
-                    if (_communicationHandler.TryRetrieveMessage("AllMissileInfo", false, out message))
+                    if (CommunicationHandler0.TryRetrieveMessage("AllMissileInfo", false, out message))
                     {
                         byte[] bytes = Convert.FromBase64String(message.Data as string);
                         EntityInfo entityInfo = EntityInfo.Deserialize(bytes, 0);
@@ -114,7 +105,7 @@ namespace IngameScript
 
                     var targetInfo = _targetsLocal[targetKey].Info;
                     byte[] bytes = targetInfo.Serialize();
-                    _communicationHandler.SendBroadcast(bytes, "TargetShare", true);
+                    CommunicationHandler0.SendBroadcast(bytes, "TargetShare", true);
                 }
 
                 foreach (var targetKey in _targetsRemote.Keys.ToList())

@@ -24,13 +24,10 @@ namespace IngameScript
     {
         public class MissileBay
         {
-            #region Parts
             private IMyProgrammableBlock _missileComputer;
             private IMyShipConnector _connector;
             private bool _isSelected = false;
-            #endregion
 
-            #region Properties
             public int ID {  get; private set; }
             public double Time { get; private set; }
             public BayStatus Status { get; private set; } = BayStatus.Empty;
@@ -51,7 +48,6 @@ namespace IngameScript
                 }
             }
             public bool IsSelectable => Status == BayStatus.Ready || Status == BayStatus.Active;
-            #endregion
 
             private double _timeLastRegister;
 

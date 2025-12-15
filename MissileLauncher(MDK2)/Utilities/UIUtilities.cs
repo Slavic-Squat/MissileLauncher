@@ -133,6 +133,16 @@ namespace IngameScript
                 if (numElements <= 0) return 0;
                 return totalSize / (numElements + spacingRatio * (numElements - 1));
             }
+
+            public static Color Lerp(Color colorA, Color colorB, float t)
+            {
+                t = MathHelper.Clamp(t, 0f, 1f);
+                byte r = (byte)(colorA.R + (colorB.R - colorA.R) * t);
+                byte g = (byte)(colorA.G + (colorB.G - colorA.G) * t);
+                byte b = (byte)(colorA.B + (colorB.B - colorA.B) * t);
+                byte a = (byte)(colorA.A + (colorB.A - colorA.A) * t);
+                return new Color(r, g, b, a);
+            }
         }
     }
 }

@@ -26,7 +26,6 @@ namespace IngameScript
     {
         public class SystemCoordinator
         {
-            public static double SystemTime { get; private set; }
             public static double GlobalTime { get; private set; }
             public static IMyShipController ReferenceController { get; private set; }
             public static Matrix ReferenceWorldMatrix => ReferenceController.WorldMatrix;
@@ -36,17 +35,16 @@ namespace IngameScript
             public static EntityInfo SelfInfo { get; private set; }
 
             public bool IsMainClock { get; private set; } = true;
-            public MyIni Config { get; private set; }
-            public CommunicationHandler CommunicationHandler { get; private set; }
-            public CommandHandler CommandHandler { get; private set; }
             public List<ControlStation> ControlStations { get; private set; }
             public List<TargetingLaser> TargetingLasers { get; private set; }
             public AWACS AWACS { get; private set; }
             public TargetCoordinator TargetCoordinator { get; private set; }
             public MissileCoordinator MissileCoordinator { get; private set; }
             public UICoordinator UICoordinator { get; private set; }
+            public double Time { get; private set; }
 
             private double _lastClockSync;
+            private double _globalTimeOffset;
 
             public SystemCoordinator()
             {
@@ -66,21 +64,9 @@ namespace IngameScript
 
             private void Init()
             {
-                Config = new MyIni();
-                if (!Config.TryParse(MePb.CustomData))
-                {
-                    Config.Clear();
-                }
-
-                long secureBroadcastPIN = Config.Get("Config", "SecureBroadcastPIN").ToInt64(123456);
-                Config.Set("Config", "SecureBroadcastPIN", secureBroadcastPIN);
-
                 IsMainClock = Config.Get("Config", "IsMainClock").ToBoolean(true);
                 Config.Set("Config", "IsMainClock", IsMainClock);
 
-                CommandHandler = new CommandHandler();
-                CommunicationHandler = new CommunicationHandler(0, secureBroadcastPIN);
-                
                 TargetingLasers = new List<TargetingLaser>();
                 int numLasers = Config.Get("Targeting", "NumLasers").ToInt32(1);
                 Config.Set("Targeting", "NumLasers", numLasers);
@@ -99,11 +85,11 @@ namespace IngameScript
                 Config.Set("AWACS", "MaxDistance", maxAWACSDist);
                 AWACS = new AWACS(0, maxAWACSDist);
 
-                TargetCoordinator = new TargetCoordinator(0, CommunicationHandler);
+                TargetCoordinator = new TargetCoordinator();
 
                 int numBays = Config.Get("Missiles", "NumBays").ToInt32(1);
                 Config.Set("Missiles", "NumBays", numBays);
-                MissileCoordinator = new MissileCoordinator(0, numBays, CommunicationHandler, TargetCoordinator.AllTargetsExt);
+                MissileCoordinator = new MissileCoordinator(numBays, TargetCoordinator.AllTargetsExt);
 
                 UICoordinator = new UICoordinator(this);
 
@@ -116,38 +102,38 @@ namespace IngameScript
                     ControlStations.Add(controlStation);
                 }
 
-                CommunicationHandler.RegisterBroadcastListener("FriendlyCommands", true);
-                CommandHandler.RegisterCommand("SET_MAIN_CLOCK", (args) => SetMainClock(args[0]));
-                CommandHandler.RegisterCommand("SYNC_CLOCK", (args) => SyncClock(args[0]));
-                CommandHandler.RegisterCommand("PAUSE_CONTROL_STATION", (args) => PauseControlStation(args[0]));
-                CommandHandler.RegisterCommand("RESUME_CONTROL_STATION", (args) => ResumeControlStation(args[0]));
+                CommunicationHandler0.RegisterBroadcastListener("FriendlyCommands", true);
+                CommandHandler0.RegisterCommand("SET_MAIN_CLOCK", (args) => SetMainClock(args[0]));
+                CommandHandler0.RegisterCommand("SYNC_CLOCK", (args) => SyncClock(args[0]));
+                CommandHandler0.RegisterCommand("PAUSE_CONTROL_STATION", (args) => PauseControlStation(args[0]));
+                CommandHandler0.RegisterCommand("RESUME_CONTROL_STATION", (args) => ResumeControlStation(args[0]));
 
                 MePb.CustomData = Config.ToString();
             }
 
-            public void Run()
+            public void Run(double time)
             {
-                SystemTime += RuntimeInfo.TimeSinceLastRun.TotalSeconds;
-                GlobalTime += RuntimeInfo.TimeSinceLastRun.TotalSeconds;
-                DebugEcho($"System Time: {SystemTime:F2}s\n");
-                DebugWrite($"System Time: {SystemTime:F2}s\n", false);
-                DebugEcho($"Last Run Time: {RuntimeInfo.LastRunTimeMs:F2}ms\n");
-                DebugWrite($"Last Run Time: {RuntimeInfo.LastRunTimeMs:F2}ms\n", true);
-                CommunicationHandler.Recieve();
+                if (Time == 0)
+                {
+                    Time = time;
+                    return;
+                }
 
-                SelfInfo = new EntityInfo(SelfID, ReferencePosition, ReferenceVelocity, SystemTime);
+                GlobalTime = time + _globalTimeOffset;
+
+                SelfInfo = new EntityInfo(SelfID, ReferencePosition, ReferenceVelocity, GlobalTime);
                 byte[] selfInfoData = SelfInfo.Serialize();
 
-                CommunicationHandler.SendBroadcast(selfInfoData, "FriendlyInfo", true);
+                CommunicationHandler0.SendBroadcast(selfInfoData, "FriendlyInfo", true);
 
                 foreach (var targetingLaser in TargetingLasers)
                 {
-                    targetingLaser.Run(SystemTime);
+                    targetingLaser.Run(time);
                 }
 
-                AWACS.Run(SystemTime);
-                TargetCoordinator.Run(SystemTime);
-                MissileCoordinator.Run(SystemTime);
+                AWACS.Run(time);
+                TargetCoordinator.Run(time);
+                MissileCoordinator.Run(time);
 
                 foreach (var target in AWACS.Targets.Values)
                 {
@@ -158,25 +144,27 @@ namespace IngameScript
 
                 foreach (var controlStation in ControlStations)
                 {
-                    controlStation.Run(SystemTime);
+                    controlStation.Run(time);
                 }
 
-                if (IsMainClock && (SystemTime - _lastClockSync) > 10f)
+                if (IsMainClock && (time - _lastClockSync) > 10f)
                 {
-                    string command = $"SYNC_CLOCK {SystemTime}";
-                    CommunicationHandler.SendBroadcast(command, "FriendlyCommands", true);
-                    _lastClockSync = SystemTime;
+                    string command = $"SYNC_CLOCK {time}";
+                    CommunicationHandler0.SendBroadcast(command, "FriendlyCommands", true);
+                    _lastClockSync = time;
                 }
 
-                while (CommunicationHandler.HasMessage("FriendlyCommands", true))
+                while (CommunicationHandler0.HasMessage("FriendlyCommands", true))
                 {
                     MyIGCMessage msg;
-                    if (CommunicationHandler.TryRetrieveMessage("FriendlyCommands", true, out msg))
+                    if (CommunicationHandler0.TryRetrieveMessage("FriendlyCommands", true, out msg))
                     {
                         string command = msg.Data as string;
-                        Command(command);
+                        CommandHandler0.RunCommands(command);
                     }
                 }
+
+                Time = time;
             }
 
             private void SyncTarget(TargetingLaser laser)
@@ -186,11 +174,6 @@ namespace IngameScript
                 if (!target.IsValid) return;
 
                 AWACS.AddTarget(target);
-            }
-
-            public void Command(string command)
-            {
-                CommandHandler.RunCommands(command);
             }
 
             private void SetMainClock(string boolString)
@@ -211,7 +194,7 @@ namespace IngameScript
                 {
                     return;
                 }
-                GlobalTime = time;
+                _globalTimeOffset = time - Time;
             }
 
             private void PauseControlStation(string idString)
