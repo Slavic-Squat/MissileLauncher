@@ -94,9 +94,9 @@ namespace IngameScript
                 {
                     MissileID = missileConfig.Get("Config", "MissileID").ToInt64(-1);
                     MissileAddress = missileConfig.Get("Config", "MissileAddress").ToInt64(-1);
-                    MissileType = GetMissileType(missileConfig.Get("Config", "Type").ToString());
-                    MissileGuidanceType = GetMissileGuidanceType(missileConfig.Get("Config", "GuidanceType").ToString());
-                    MissilePayload = GetMissilePayload(missileConfig.Get("Config", "Payload").ToString());
+                    MissileType = MissileEnumHelper.GetMissileType(missileConfig.Get("Config", "Type").ToString());
+                    MissileGuidanceType = MissileEnumHelper.GetMissileGuidanceType(missileConfig.Get("Config", "GuidanceType").ToString());
+                    MissilePayload = MissileEnumHelper.GetMissilePayload(missileConfig.Get("Config", "Payload").ToString());
                 }
                 else
                 {
@@ -176,7 +176,7 @@ namespace IngameScript
 
             public override string ToString()
             {
-                return $"Bay [{ID}]\n----------------\nSTATUS: {GetDisplayString(Status)}\nMISL TYPE: {GetDisplayString(MissileType)}\nMISL GUIDANCE: {GetDisplayString(MissileGuidanceType)}\nMISL PAYLOAD: {GetDisplayString(MissilePayload)}\n";
+                return $"Bay [{ID}]\n----------------\nSTATUS: {MiscEnumHelper.GetDisplayString(Status)}\nMISL TYPE: {MissileEnumHelper.GetDisplayString(MissileType)}\nMISL GUIDANCE: {MissileEnumHelper.GetDisplayString(MissileGuidanceType)}\nMISL PAYLOAD: {MissileEnumHelper.GetDisplayString(MissilePayload)}\n";
             }
         }
     }

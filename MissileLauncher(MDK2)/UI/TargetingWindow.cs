@@ -68,7 +68,7 @@ namespace IngameScript
                 _allEntities = UI.UICoordinator.AllEntities;
 
                 _targetingSpriteBuilder = new TargetingSpriteBuilder();
-                _targetingSpriteBuilder.Zoom = GetValue(ScopeScale);
+                _targetingSpriteBuilder.Zoom = MiscEnumHelper.GetValue(ScopeScale);
 
                 Vector2 targetInfoPanelSize = new Vector2(150, 200);
                 Vector2 targetInfoPanelPos = Pos + new Vector2(Size.X - targetInfoPanelSize.X, Size.Y * 0.5f - targetInfoPanelSize.Y * 0.5f);
@@ -106,7 +106,7 @@ namespace IngameScript
 
                 Vector2 navModeInfoPanelSize = new Vector2(180f, 35f);
                 Vector2 navModeInfoPanelPos = Pos + new Vector2(0, Size.Y - navModeInfoPanelSize.Y);
-                Func<string> navModeInfoGetter = () => $"NAV MODE: {GetDisplayString(NavMode)}";
+                Func<string> navModeInfoGetter = () => $"NAV MODE: {MiscEnumHelper.GetDisplayString(NavMode)}";
                 InfoPanel navModeInfoPanel = new InfoPanel(navModeInfoPanelPos, navModeInfoPanelSize, 3f, 5f, navModeInfoGetter);
                 AddInfoPanel(navModeInfoPanel);
             }
@@ -190,28 +190,28 @@ namespace IngameScript
                         break;
                 }
 
-                NavMode = NextNavMode(NavMode);
+                NavMode = MiscEnumHelper.NextNavMode(NavMode);
             }
 
             public void CycleScopeScale()
             {
-                ScopeScale = NextScopeScale(ScopeScale);
-                _targetingSpriteBuilder.Zoom = GetValue(ScopeScale);
+                ScopeScale = MiscEnumHelper.NextScopeScale(ScopeScale);
+                _targetingSpriteBuilder.Zoom = MiscEnumHelper.GetValue(ScopeScale);
             }
 
             public void CycleTypeFilter()
             {
-                NavTypeFilter = NextEntityTypeFilter(NavTypeFilter);
+                NavTypeFilter = EntityFilterEnumHelper.NextEntityTypeFilter(NavTypeFilter);
             }
 
             public void CycleRelationFilter()
             {
-                NavRelationFilter = NextEntityRelationFilter(NavRelationFilter);
+                NavRelationFilter = EntityFilterEnumHelper.NextEntityRelationFilter(NavRelationFilter);
             }
 
             public void CycleSourceFilter()
             {
-                NavSourceFilter = NextEntitySourceFilter(NavSourceFilter);
+                NavSourceFilter = EntityFilterEnumHelper.NextEntitySourceFilter(NavSourceFilter);
             }
 
             public override void Navigate(UserInput input, object caller)
@@ -255,7 +255,7 @@ namespace IngameScript
                     return;
                 }
 
-                Dictionary<long, MyEntitySprite> filtered = _entitySprites.Where(kvp => Matches(kvp.Value.EntityInfo, NavTypeFilter, NavRelationFilter, NavSourceFilter)).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+                Dictionary<long, MyEntitySprite> filtered = _entitySprites.Where(kvp => EntityFilterEnumHelper.Matches(kvp.Value.EntityInfo, NavTypeFilter, NavRelationFilter, NavSourceFilter)).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
 
                 if (filtered.Count() == 0)
                 {

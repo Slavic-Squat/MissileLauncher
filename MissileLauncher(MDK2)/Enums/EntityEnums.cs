@@ -1,0 +1,82 @@
+﻿using Sandbox.Game.EntityComponents;
+using Sandbox.ModAPI.Ingame;
+using Sandbox.ModAPI.Interfaces;
+using SpaceEngineers.Game.ModAPI.Ingame;
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Linq;
+using System.Text;
+using VRage;
+using VRage.Collections;
+using VRage.Game;
+using VRage.Game.Components;
+using VRage.Game.GUI.TextPanel;
+using VRage.Game.ModAPI.Ingame;
+using VRage.Game.ModAPI.Ingame.Utilities;
+using VRage.Game.ObjectBuilders.Definitions;
+using VRageMath;
+
+namespace IngameScript
+{
+    partial class Program
+    {
+        public enum EntityType : byte
+        {
+            Target, Missile
+        }
+
+        public enum EntityInfoSubType : byte
+        {
+            None, MissileInfoLite, MissileInfo,
+        }
+
+        public enum EntityRelation : byte
+        {
+            Neutral, Hostile, Friendly, Me
+        }
+
+        [Flags]
+        public enum EntitySource : byte
+        {
+            None = 0, Local = 1, Remote = 1 << 1, Both = Local | Remote
+        }
+        public static class EntityEnumHelper
+        {
+            public static string GetDisplayString(EntitySource source)
+            {
+                switch (source)
+                {
+                    case EntitySource.None: return "NONE";
+                    case EntitySource.Local: return "LOCAL";
+                    case EntitySource.Remote: return "REMOTE";
+                    case EntitySource.Both: return "BOTH";
+                    default: return "N/A";
+                }
+            }
+
+            public static string GetDisplayString(EntityType type)
+            {
+                switch (type)
+                {
+                    case EntityType.Target: return "TRGT";
+                    case EntityType.Missile: return "MISL";
+                    default: return "N/A";
+                }
+            }
+
+            public static string GetDisplayString(EntityRelation relation)
+            {
+                switch (relation)
+                {
+                    case EntityRelation.Neutral: return "NTRL";
+                    case EntityRelation.Hostile: return "HSTL";
+                    case EntityRelation.Friendly: return "FRND";
+                    case EntityRelation.Me: return "ME";
+                    default: return "N/A";
+                }
+            }
+        }
+    }
+}

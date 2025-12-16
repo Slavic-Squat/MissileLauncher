@@ -48,7 +48,7 @@ namespace IngameScript
 
                 Vector2 buttonPos = panel.Pos + new Vector2(padding, padding);
 
-                Func<string> getText = () => "SCALE: " + GetDisplayString(window.ScopeScale);
+                Func<string> getText = () => "SCALE: " + MiscEnumHelper.GetDisplayString(window.ScopeScale);
                 Action action = () => window.CycleScopeScale();
 
                 Button button = new Button(buttonPos, buttonSize, 5f, 3f, 2f, getText, action);
@@ -105,7 +105,7 @@ namespace IngameScript
 
                 Vector2 buttonPos = panel.Pos + new Vector2(panel.Size.X / 2f - buttonSize.X / 2f, padding + labelSize.Y);
 
-                Func<string> getText = () => "TYPE: " + GetDisplayString(window.NavTypeFilter);
+                Func<string> getText = () => "TYPE: " + EntityFilterEnumHelper.GetDisplayString(window.NavTypeFilter);
                 Action action = () => window.CycleTypeFilter();
 
                 Button button = new Button(buttonPos, buttonSize, 5f, 3f, 2f, getText, action);
@@ -113,7 +113,7 @@ namespace IngameScript
 
                 buttonPos.Y += buttonSize.Y + spacing;
 
-                getText = () => "REL: " + GetDisplayString(window.NavRelationFilter);
+                getText = () => "REL: " + EntityFilterEnumHelper.GetDisplayString(window.NavRelationFilter);
                 action = () => window.CycleRelationFilter();
 
                 button = new Button(buttonPos, buttonSize, 5f, 3f, 2f, getText, action);
@@ -121,7 +121,7 @@ namespace IngameScript
 
                 buttonPos.Y += buttonSize.Y + spacing;
 
-                getText = () => "SRC: " + GetDisplayString(window.NavSourceFilter);
+                getText = () => "SRC: " + EntityFilterEnumHelper.GetDisplayString(window.NavSourceFilter);
                 action = () => window.CycleSourceFilter();
 
                 button = new Button(buttonPos, buttonSize, 5f, 3f, 2f, getText, action);
