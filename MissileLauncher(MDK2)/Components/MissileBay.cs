@@ -176,7 +176,7 @@ namespace IngameScript
 
             public override string ToString()
             {
-                return $"Bay [{ID}]\n----------------\nSTATUS: {GetName(Status)}\nMISL TYPE: {GetName(MissileType)}\nMISL GUIDANCE: {GetName(MissileGuidanceType)}\nMISL PAYLOAD: {GetName(MissilePayload)}\n";
+                return $"Bay [{ID}]\n----------------\nSTATUS: {GetDisplayString(Status)}\nMISL TYPE: {GetDisplayString(MissileType)}\nMISL GUIDANCE: {GetDisplayString(MissileGuidanceType)}\nMISL PAYLOAD: {GetDisplayString(MissilePayload)}\n";
             }
         }
     }

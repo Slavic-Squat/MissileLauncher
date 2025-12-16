@@ -93,7 +93,7 @@ namespace IngameScript
 
             public override string ToString()
             {
-                StringBuilder sb = new StringBuilder($"[{GetName(Type)} INFO]\n-----------------------\nTYPE: {GetName(Type)}\nSRC: {GetName(Source)}\nREL: {GetName(Relation)}\n");
+                StringBuilder sb = new StringBuilder($"[{GetDisplayString(Type)} INFO]\n-----------------------\nTYPE: {GetDisplayString(Type)}\nSRC: {GetDisplayString(Source)}\nREL: {GetDisplayString(Relation)}\n");
 
                 float distance = Vector3.Distance(SystemCoordinator.ReferencePosition, Position);
                 if (distance > 1000f)
@@ -131,7 +131,7 @@ namespace IngameScript
                 if (Info.SubType == EntityInfoSubType.MissileInfo)
                 {
                     var missileInfo = Info.MissileInfo.Value;
-                    sb.Append($"MISL TYPE: {GetName(missileInfo.Type)}\nPAYLOAD: {GetName(missileInfo.Payload)}\nSTAGE: {GetName(missileInfo.Stage)}\n");
+                    sb.Append($"MISL TYPE: {GetDisplayString(missileInfo.Type)}\nPAYLOAD: {GetDisplayString(missileInfo.Payload)}\nSTAGE: {GetDisplayString(missileInfo.Stage)}\n");
                 }
 
                 return sb.ToString().TrimEnd('\n');

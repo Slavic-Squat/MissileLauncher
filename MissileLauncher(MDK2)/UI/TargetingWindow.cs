@@ -106,7 +106,7 @@ namespace IngameScript
 
                 Vector2 navModeInfoPanelSize = new Vector2(180f, 35f);
                 Vector2 navModeInfoPanelPos = Pos + new Vector2(0, Size.Y - navModeInfoPanelSize.Y);
-                Func<string> navModeInfoGetter = () => $"NAV MODE: {GetName(NavMode)}";
+                Func<string> navModeInfoGetter = () => $"NAV MODE: {GetDisplayString(NavMode)}";
                 InfoPanel navModeInfoPanel = new InfoPanel(navModeInfoPanelPos, navModeInfoPanelSize, 3f, 5f, navModeInfoGetter);
                 AddInfoPanel(navModeInfoPanel);
             }
