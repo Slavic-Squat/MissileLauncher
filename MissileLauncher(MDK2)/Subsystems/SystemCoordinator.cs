@@ -118,6 +118,7 @@ namespace IngameScript
                 }
 
                 GlobalTime = time + _globalTimeOffset;
+                DebugEcho($"Global Time: {GlobalTime:F2}s");
 
                 SelfInfo = new EntityInfo(SelfID, ReferencePosition, ReferenceVelocity, GlobalTime);
                 byte[] selfInfoBytes = SelfInfo.Serialize();
