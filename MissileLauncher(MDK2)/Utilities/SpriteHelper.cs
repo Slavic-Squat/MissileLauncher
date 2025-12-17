@@ -127,7 +127,7 @@ namespace IngameScript
                     Type = SpriteType.TEXTURE,
                     Data = "SquareSimple",
                     Position = new Vector2(bounds.Center.X, bounds.Y + borderThickness / 2f),
-                    Size = new Vector2(bounds.X, borderThickness),
+                    Size = new Vector2(bounds.Width, borderThickness),
                     Color = borderColor,
                     Alignment = TextAlignment.CENTER,
                 };
@@ -137,7 +137,7 @@ namespace IngameScript
                     Type = SpriteType.TEXTURE,
                     Data = "SquareSimple",
                     Position = new Vector2(bounds.Center.X, bounds.Bottom - borderThickness / 2f),
-                    Size = new Vector2(bounds.X, borderThickness),
+                    Size = new Vector2(bounds.Width, borderThickness),
                     Color = borderColor,
                     Alignment = TextAlignment.CENTER,
                 };
@@ -147,7 +147,7 @@ namespace IngameScript
                     Type = SpriteType.TEXTURE,
                     Data = "SquareSimple",
                     Position = new Vector2(bounds.X + borderThickness / 2f, bounds.Center.Y),
-                    Size = new Vector2(borderThickness, bounds.Y),
+                    Size = new Vector2(borderThickness, bounds.Height),
                     Color = borderColor,
                     Alignment = TextAlignment.CENTER,
                 };
@@ -157,7 +157,7 @@ namespace IngameScript
                     Type = SpriteType.TEXTURE,
                     Data = "SquareSimple",
                     Position = new Vector2(bounds.Right - borderThickness / 2f, bounds.Center.Y),
-                    Size = new Vector2(borderThickness, bounds.Y),
+                    Size = new Vector2(borderThickness, bounds.Height),
                     Color = borderColor,
                     Alignment = TextAlignment.CENTER,
                 };

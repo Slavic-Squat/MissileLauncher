@@ -30,7 +30,7 @@ namespace IngameScript
                 ControlStation station = window.UI.Station;
                 MissileCoordinator coordinator = uiCoordinator.MissileCoordinator;
 
-                int numButtons = 3;
+                int numButtons = 4;
                 float padding = 15f;
                 float spacing = 10f;
 
@@ -74,6 +74,16 @@ namespace IngameScript
                     Vector2 laserMenuPos = window.Center;
                     Menu laserMenu = CreateLaserControlMenu(laserMenuPos, window, true, true);
                     window.OpenMenu(laserMenu);
+                };
+                button = new Button(buttonPos, buttonSize, 5f, 3f, 2f, getText, action);
+                panel.AddButton(button, -1);
+
+                buttonPos.X += buttonSize.X + spacing;
+                getText = () => "BAY SELCT";
+                action = () =>
+                {
+                    Menu bayMenu = CreateBayMenu(window.Center, window, true, true);
+                    window.OpenMenu(bayMenu);
                 };
                 button = new Button(buttonPos, buttonSize, 5f, 3f, 2f, getText, action);
                 panel.AddButton(button, -1);
