@@ -98,20 +98,6 @@ namespace IngameScript
                     }
                 }
 
-                foreach (var missileAddress in _addressMissileIDMap.Keys.ToList())
-                {
-                    if (!CommunicationHandler0.CanReach(missileAddress))
-                    {
-                        long missileID = _addressMissileIDMap[missileAddress];
-                        RemoveMissile(missileID);
-                        UnregisterMissile(missileAddress);
-                        continue;
-                    }
-
-                    byte[] selfBytes = SystemCoordinator.SelfInfo.Serialize();
-                    CommunicationHandler0.SendUnicast(selfBytes, missileAddress, "LauncherInfo", true);
-                }
-
                 foreach (var missileAddress in _addressTargetIDMap.Keys.ToList())
                 {
                     if (!CommunicationHandler0.CanReach(missileAddress))

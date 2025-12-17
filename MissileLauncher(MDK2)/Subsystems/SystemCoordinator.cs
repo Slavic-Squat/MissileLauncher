@@ -120,9 +120,9 @@ namespace IngameScript
                 GlobalTime = time + _globalTimeOffset;
 
                 SelfInfo = new EntityInfo(SelfID, ReferencePosition, ReferenceVelocity, GlobalTime);
-                byte[] selfInfoData = SelfInfo.Serialize();
+                byte[] selfInfoBytes = SelfInfo.Serialize();
 
-                CommunicationHandler0.SendBroadcast(selfInfoData, "FriendlyInfo", true);
+                CommunicationHandler0.SendBroadcast(selfInfoBytes, "FriendlyInfo", true);
 
                 foreach (var targetingLaser in TargetingLasers)
                 {

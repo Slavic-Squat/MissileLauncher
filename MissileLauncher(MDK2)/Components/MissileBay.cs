@@ -149,7 +149,7 @@ namespace IngameScript
                     double globalTime = SystemCoordinator.GlobalTime;
                     _missileComputer.Enabled = true;
                     if (!_missileComputer.TryRun("ON")) return;
-                    if (!_missileComputer.TryRun($"ACTIVATE {IGCS.Me} {globalTime}")) return;
+                    if (!_missileComputer.TryRun($"ACTIVATE {IGCS.Me} {SystemCoordinator.SelfID} {globalTime}")) return;
                     Status = BayStatus.Active;
                 }
             }
