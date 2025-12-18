@@ -31,8 +31,6 @@ namespace IngameScript
             private CameraArray _cameraArray3;
 
             private Matrix _referenceMatrix;
-
-            public int ID { get; private set; }
             public double Time { get; private set; }
             public float MaxRaycastDistance
             {
@@ -54,9 +52,8 @@ namespace IngameScript
             public Dictionary<long, bool> TargetsSyncInfo {  get; private set; }
 
             private float _maxRaycastDistance;
-            public AWACS(int id, float maxRaycastDistance = 5000)
+            public AWACS(float maxRaycastDistance = 5000)
             {
-                ID = id;
                 _maxRaycastDistance = maxRaycastDistance;
 
                 GetBlocks();
@@ -65,7 +62,7 @@ namespace IngameScript
 
             private void GetBlocks()
             {
-                _spinRotor = new Rotor($"AWACS {ID} Spin Rotor");
+                _spinRotor = new Rotor($"AWACS Spin Rotor");
             }
 
             private void Init()

@@ -81,10 +81,15 @@ namespace IngameScript
                     TargetingLasers.Add(laser);
                 }
 
+                bool hasAWACS = Config.Get("AWACS", "Enabled").ToBoolean(true);
+                Config.Set("AWACS", "Enabled", hasAWACS);
                 float maxAWACSDist = Config.Get("AWACS", "MaxDistance").ToSingle(5000);
                 Config.Set("AWACS", "MaxDistance", maxAWACSDist);
-                AWACS = new AWACS(0, maxAWACSDist);
-
+                if (hasAWACS)
+                {
+                    AWACS = new AWACS(maxAWACSDist);
+                }
+                
                 TargetCoordinator = new TargetCoordinator();
 
                 int numBays = Config.Get("Missiles", "NumBays").ToInt32(1);
@@ -128,17 +133,20 @@ namespace IngameScript
                 foreach (var targetingLaser in TargetingLasers)
                 {
                     targetingLaser.Run(time);
+                    TargetCoordinator.AddLocalTarget(targetingLaser.Target);
                 }
 
-                AWACS.Run(time);
+                if (AWACS != null)
+                {
+                    AWACS.Run(time);
+                    foreach (var target in AWACS.Targets.Values)
+                    {
+                        TargetCoordinator.AddLocalTarget(target);
+                    }
+                }
+
                 TargetCoordinator.Run(time);
                 MissileCoordinator.Run(time);
-
-                foreach (var target in AWACS.Targets.Values)
-                {
-                    TargetCoordinator.AddLocalTarget(target);
-                }
-
                 UICoordinator.Run();
 
                 foreach (var controlStation in ControlStations)
@@ -170,7 +178,7 @@ namespace IngameScript
             {
                 EntityInfoExt target = laser.Target;
 
-                if (!target.IsValid) return;
+                if (!target.IsValid || AWACS == null) return;
 
                 AWACS.AddTarget(target);
             }
