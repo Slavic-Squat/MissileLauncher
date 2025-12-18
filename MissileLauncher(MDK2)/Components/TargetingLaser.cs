@@ -81,7 +81,7 @@ namespace IngameScript
 
             private void Init()
             {
-                _cameraArray = new CameraArray(0, _maxRaycastDistance);
+                _cameraArray = new CameraArray($"Laser {ID}", 0, _maxRaycastDistance);
                 _azimuthPID = new PIDControl(25, 2, 0.1f);
                 _elevationPID = new PIDControl(25, 2, 0.1f);
             }

@@ -70,10 +70,10 @@ namespace IngameScript
                 Targets = new Dictionary<long, EntityInfoExt>();
                 TargetsSyncInfo = new Dictionary<long, bool>();
 
-                _cameraArray0 = new CameraArray(1, _maxRaycastDistance);
-                _cameraArray1 = new CameraArray(2, _maxRaycastDistance);
-                _cameraArray2 = new CameraArray(3, _maxRaycastDistance);
-                _cameraArray3 = new CameraArray(4, _maxRaycastDistance);
+                _cameraArray0 = new CameraArray("AWACS", 0, _maxRaycastDistance);
+                _cameraArray1 = new CameraArray("AWACS", 1, _maxRaycastDistance);
+                _cameraArray2 = new CameraArray("AWACS", 2, _maxRaycastDistance);
+                _cameraArray3 = new CameraArray("AWACS", 3, _maxRaycastDistance);
             }
 
             public void Run(double time)
