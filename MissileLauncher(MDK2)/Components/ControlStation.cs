@@ -48,7 +48,7 @@ namespace IngameScript
 
             private void GetBlocks()
             {
-                _controllerReference = AllGridBlocks.Find(b => b is IMyShipController && b.CustomName.Contains($"Control Station {ID}")) as IMyShipController;
+                _controllerReference = AllGridBlocks.Find(b => b is IMyShipController && b.CustomName.ToUpper().Contains($"CONTROL STATION {ID}")) as IMyShipController;
                 if (_controllerReference == null)
                 {
                     DebugWrite($"Error: No controller found for Control Station {ID}!\n", true);
@@ -59,7 +59,7 @@ namespace IngameScript
                 {
                     _displays.Add((_controllerReference as IMyTextSurfaceProvider).GetSurface(i));
                 }
-                IEnumerable<IMyTextPanel> additionalDisplays = AllGridBlocks.Where(b => b is IMyTextPanel && b.CustomName.Contains($"Control Station {ID} Display")).Cast<IMyTextPanel>();
+                IEnumerable<IMyTextPanel> additionalDisplays = AllGridBlocks.Where(b => b is IMyTextPanel && b.CustomName.ToUpper().Contains($"CONTROL STATION {ID} DISPLAY")).Cast<IMyTextPanel>();
                 _displays.AddRange(additionalDisplays);
                 if (_displays.Count == 0)
                 {

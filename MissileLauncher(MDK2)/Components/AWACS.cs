@@ -62,7 +62,7 @@ namespace IngameScript
 
             private void GetBlocks()
             {
-                _spinRotor = new Rotor($"AWACS Spin Rotor");
+                _spinRotor = new Rotor($"AWACS SPIN ROTOR");
             }
 
             private void Init()
@@ -70,10 +70,10 @@ namespace IngameScript
                 Targets = new Dictionary<long, EntityInfoExt>();
                 TargetsSyncInfo = new Dictionary<long, bool>();
 
-                _cameraArray0 = new CameraArray("AWACS", 0, _maxRaycastDistance);
-                _cameraArray1 = new CameraArray("AWACS", 1, _maxRaycastDistance);
-                _cameraArray2 = new CameraArray("AWACS", 2, _maxRaycastDistance);
-                _cameraArray3 = new CameraArray("AWACS", 3, _maxRaycastDistance);
+                _cameraArray0 = new CameraArray("AWACS CAMERA ARRAY 0", _maxRaycastDistance);
+                _cameraArray1 = new CameraArray("AWACS CAMERA ARRAY 1", _maxRaycastDistance);
+                _cameraArray2 = new CameraArray("AWACS CAMERA ARRAY 2", _maxRaycastDistance);
+                _cameraArray3 = new CameraArray("AWACS CAMERA ARRAY 3", _maxRaycastDistance);
             }
 
             public void Run(double time)

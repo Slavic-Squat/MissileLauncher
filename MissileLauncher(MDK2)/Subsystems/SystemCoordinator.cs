@@ -54,7 +54,7 @@ namespace IngameScript
 
             private void GetBlocks()
             {
-                ReferenceController = AllGridBlocks.Find(b => b is IMyShipController && b.CustomName.Contains("Main Controller")) as IMyShipController;
+                ReferenceController = AllGridBlocks.Find(b => b is IMyShipController && b.CustomName.ToUpper().Contains("MAIN CONTROLLER")) as IMyShipController;
                 if (ReferenceController == null)
                 {
                     DebugWrite($"Error: main controller not found!\n", true);

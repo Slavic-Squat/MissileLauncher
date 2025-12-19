@@ -30,14 +30,12 @@ namespace IngameScript
             private int _cameraIndex;
             private float _totalAvailableRaycastDistance;
 
-            public string Tag { get; private set; }
-            public int ID { get; private set; }
+            public string Name { get; private set; }
             public float MaxRaycastDistance { get; set; }
             public bool Recharging => _totalAvailableRaycastDistance < 2 * MaxRaycastDistance * _cameras.Count;
-            public CameraArray(string tag, int id, float maxRaycastDistance)
+            public CameraArray(string name, float maxRaycastDistance)
             {
-                Tag = tag;
-                ID = id;
+                Name = name.ToUpper();
                 MaxRaycastDistance = maxRaycastDistance;
 
                 GetBLocks();
@@ -46,11 +44,11 @@ namespace IngameScript
 
             private void GetBLocks()
             {
-                _cameras = AllGridBlocks.Where(b => b is IMyCameraBlock && b.CustomName.Contains($"{Tag} Camera Array {ID}")).Cast<IMyCameraBlock>().ToList();
+                _cameras = AllGridBlocks.Where(b => b is IMyCameraBlock && b.CustomName.ToUpper().Contains(Name)).Cast<IMyCameraBlock>().ToList();
                 if (_cameras.Count == 0)
                 {
-                    DebugWrite($"Error: {Tag} Camera Array {ID} on has no cameras!\n", true);
-                    throw new Exception($"{Tag} Camera Array {ID} on has no cameras!\n");
+                    DebugWrite($"Error: {Name} Camera Array on has no cameras!\n", true);
+                    throw new Exception($"{Name} Camera Array on has no cameras!\n");
                 }
             }
 

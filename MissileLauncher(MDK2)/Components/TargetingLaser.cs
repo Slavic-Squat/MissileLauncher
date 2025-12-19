@@ -75,13 +75,13 @@ namespace IngameScript
 
             private void GetBlocks()
             {
-                _azimuthRotor = new Rotor($"Laser {ID} Azimuth Rotor");
-                _elevationRotor = new Rotor($"Laser {ID} Elevation Rotor");
+                _azimuthRotor = new Rotor($"LASER {ID} AZIMUTH ROTOR");
+                _elevationRotor = new Rotor($"LASER {ID} ELEVATION ROTOR");
             }
 
             private void Init()
             {
-                _cameraArray = new CameraArray($"Laser {ID}", 0, _maxRaycastDistance);
+                _cameraArray = new CameraArray($"LASER {ID} CAMERA ARRAY", _maxRaycastDistance);
                 _azimuthPID = new PIDControl(25, 2, 0.1f);
                 _elevationPID = new PIDControl(25, 2, 0.1f);
             }

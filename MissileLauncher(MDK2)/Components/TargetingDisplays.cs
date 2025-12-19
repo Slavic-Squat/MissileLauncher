@@ -39,14 +39,14 @@ namespace IngameScript
 
             private void GetBlocks()
             {
-                IEnumerable<IMyTerminalBlock> temp = AllGridBlocks.Where(b => b is IMyTextSurface && b.CustomName.Contains("Targeting Display"));
+                IEnumerable<IMyTerminalBlock> temp = AllGridBlocks.Where(b => b is IMyTextSurface && b.CustomName.ToUpper().Contains("TARGETING DISPLAY"));
 
                 foreach (var displayBlock in temp)
                 {
                     AddDisplay(displayBlock as IMyTextSurface);
                 }
 
-                IMyTextSurfaceProvider consoleBlock = AllGridBlocks.Find(b => b is IMyTextSurfaceProvider && b.CustomName.Contains("Targeting Console")) as IMyTextSurfaceProvider;
+                IMyTextSurfaceProvider consoleBlock = AllGridBlocks.Find(b => b is IMyTextSurfaceProvider && b.CustomName.ToUpper().Contains("TARGETING CONSOLE")) as IMyTextSurfaceProvider;
                 if (consoleBlock != null)
                 {
                     AddDisplay(consoleBlock.GetSurface(0));

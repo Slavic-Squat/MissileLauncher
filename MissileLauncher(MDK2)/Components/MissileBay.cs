@@ -64,7 +64,7 @@ namespace IngameScript
 
             private void GetBlocks()
             {
-                _connector = AllGridBlocks.Find(b => b is IMyShipConnector && b.CustomName.Contains($"Missile Bay {ID} Connector")) as IMyShipConnector;
+                _connector = AllGridBlocks.Find(b => b is IMyShipConnector && b.CustomName.ToUpper().Contains($"MISSILE BAY {ID} CONNECTOR")) as IMyShipConnector;
                 if (_connector == null)
                 {
                     DebugWrite($"Error: No connector found for Missile Bay {ID}!\n", true);
@@ -82,7 +82,7 @@ namespace IngameScript
                 }
                 IMyShipConnector missileConnector = _connector.OtherConnector;
                 List<IMyProgrammableBlock> pbBlocks = new List<IMyProgrammableBlock>();
-                GTS.GetBlocksOfType(pbBlocks, pb => pb.IsSameConstructAs(missileConnector) && pb.CustomName.Contains("Missile Computer"));
+                GTS.GetBlocksOfType(pbBlocks, pb => pb.IsSameConstructAs(missileConnector) && pb.CustomName.ToUpper().Contains("MISSILE COMPUTER"));
                 if (pbBlocks.Count == 0)
                 {
                     return;

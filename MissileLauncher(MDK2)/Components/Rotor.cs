@@ -116,14 +116,15 @@ namespace IngameScript
             public IMyMotorStator RotorBlock { get; private set; }
             public Rotor(string blockName)
             {
-                RotorBlock = AllGridBlocks.Find(b => b is IMyMotorStator && b.CustomName.Contains(blockName)) as IMyMotorStator;
+                blockName = blockName.ToUpper();
+                RotorBlock = AllGridBlocks.Find(b => b is IMyMotorStator && b.CustomName.ToUpper().Contains(blockName)) as IMyMotorStator;
                 if (RotorBlock == null)
                 {
                     DebugWrite($"Error: Rotor block '{blockName}' not found!\n", true);
                     throw new ArgumentException($"Rotor block '{blockName}' not found!\n");
                 }                    
 
-                IsInverted = RotorBlock.CustomData.Contains("-Inverted");
+                IsInverted = RotorBlock.CustomData.ToUpper().Contains("-INVERTED");
             }
 
             public Rotor(IMyMotorStator rotorBlock)
@@ -135,7 +136,7 @@ namespace IngameScript
                 }
                     
                 RotorBlock = rotorBlock;
-                IsInverted = RotorBlock.CustomData.Contains("-Inverted");
+                IsInverted = RotorBlock.CustomData.ToUpper().Contains("-INVERTED");
             }
         }
     }
