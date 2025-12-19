@@ -67,7 +67,7 @@ namespace IngameScript
 
                 }
 
-                CommunicationHandler0.RegisterTag("MyMissileInfo", true);
+                CommunicationHandler0.RegisterTag("MY_MISSILE_INFO", true);
             }
 
             public void Run(double time)
@@ -83,10 +83,10 @@ namespace IngameScript
                     bay.Run(time);
                 }
 
-                while (CommunicationHandler0.HasMessage("MyMissileInfo", true))
+                while (CommunicationHandler0.HasMessage("MY_MISSILE_INFO", true))
                 {
                     MyIGCMessage message;
-                    if (CommunicationHandler0.TryRetrieveMessage("MyMissileInfo", true, out message))
+                    if (CommunicationHandler0.TryRetrieveMessage("MY_MISSILE_INFO", true, out message))
                     {
                         if (!_addressMissileIDMap.ContainsKey(message.Source))
                         {
@@ -112,7 +112,7 @@ namespace IngameScript
                     if (_targetInfo.ContainsKey(targetID))
                     {
                         byte[] targetBytes = _targetInfo[targetID].Info.Serialize();
-                        CommunicationHandler0.SendUnicast(targetBytes, missileAddress, "TargetInfo", true);
+                        CommunicationHandler0.SendUnicast(targetBytes, missileAddress, "TARGET_INFO", true);
                     }
                 }
 
@@ -316,7 +316,7 @@ namespace IngameScript
                 foreach (long address in _addressMissileIDMap.Keys.ToList())
                 {
                     string command = $"SYNC_CLOCK {globalTime}";
-                    CommunicationHandler0.SendUnicast(command, address, "Commands", true);
+                    CommunicationHandler0.SendUnicast(command, address, "COMMANDS", true);
                 }
             }
 
@@ -336,7 +336,7 @@ namespace IngameScript
                 if (CommunicationHandler0.CanReach(address))
                 {
                     string command = "ABORT";
-                    CommunicationHandler0.SendUnicast(command, address, "Commands", true);
+                    CommunicationHandler0.SendUnicast(command, address, "COMMANDS", true);
                 }
             }
 

@@ -107,7 +107,7 @@ namespace IngameScript
                     ControlStations.Add(controlStation);
                 }
 
-                CommunicationHandler0.RegisterBroadcastListener("FriendlyCommands", true);
+                CommunicationHandler0.RegisterBroadcastListener("FRIENDLY_COMMANDS", true);
                 CommandHandler0.RegisterCommand("SET_MAIN_CLOCK", (args) => SetMainClock(args[0]));
                 CommandHandler0.RegisterCommand("SYNC_CLOCK", (args) => SyncClock(args[0]));
                 CommandHandler0.RegisterCommand("PAUSE_CONTROL_STATION", (args) => PauseControlStation(args[0]));
@@ -128,7 +128,7 @@ namespace IngameScript
                 SelfInfo = new EntityInfo(SelfID, ReferencePosition, ReferenceVelocity, GlobalTime);
                 byte[] selfInfoBytes = SelfInfo.Serialize();
 
-                CommunicationHandler0.SendBroadcast(selfInfoBytes, "FriendlyInfo", true);
+                CommunicationHandler0.SendBroadcast(selfInfoBytes, "FRIENDLY_INFO", true);
 
                 foreach (var targetingLaser in TargetingLasers)
                 {
@@ -157,14 +157,14 @@ namespace IngameScript
                 if (IsMainClock && (time - _lastClockSync) > 10f)
                 {
                     string command = $"SYNC_CLOCK {time}";
-                    CommunicationHandler0.SendBroadcast(command, "FriendlyCommands", true);
+                    CommunicationHandler0.SendBroadcast(command, "FRIENDLY_COMMANDS", true);
                     _lastClockSync = time;
                 }
 
-                while (CommunicationHandler0.HasMessage("FriendlyCommands", true))
+                while (CommunicationHandler0.HasMessage("FRIENDLY_COMMANDS", true))
                 {
                     MyIGCMessage msg;
-                    if (CommunicationHandler0.TryRetrieveMessage("FriendlyCommands", true, out msg))
+                    if (CommunicationHandler0.TryRetrieveMessage("FRIENDLY_COMMANDS", true, out msg))
                     {
                         string command = msg.Data as string;
                         CommandHandler0.RunCommands(command);

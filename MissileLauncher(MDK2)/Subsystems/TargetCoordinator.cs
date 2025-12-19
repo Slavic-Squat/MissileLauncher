@@ -41,9 +41,9 @@ namespace IngameScript
 
             private void Init()
             {
-                CommunicationHandler0.RegisterBroadcastListener("TargetShare", true);
-                CommunicationHandler0.RegisterBroadcastListener("AllMissileInfo", false);
-                CommunicationHandler0.RegisterBroadcastListener("FriendlyInfo", true);
+                CommunicationHandler0.RegisterBroadcastListener("TARGET_SHARE", true);
+                CommunicationHandler0.RegisterBroadcastListener("ALL_MISSILE_INFO", false);
+                CommunicationHandler0.RegisterBroadcastListener("FRIENDLY_INFO", true);
 
                 AllTargetsExt = new Dictionary<long, EntityInfoExt>();
                 NeutralIDs = new HashSet<long>();
@@ -60,10 +60,10 @@ namespace IngameScript
                 }
                 double globalTime = SystemCoordinator.GlobalTime;
 
-                while (CommunicationHandler0.HasMessage("TargetShare", true))
+                while (CommunicationHandler0.HasMessage("TARGET_SHARE", true))
                 {
                     MyIGCMessage message;
-                    if (CommunicationHandler0.TryRetrieveMessage("TargetShare", true, out message))
+                    if (CommunicationHandler0.TryRetrieveMessage("TARGET_SHARE", true, out message))
                     {
                         byte[] bytes = Convert.FromBase64String(message.Data as string);
                         EntityInfo entityInfo = EntityInfo.Deserialize(bytes, 0);
@@ -71,10 +71,10 @@ namespace IngameScript
                     }
                 }
 
-                while (CommunicationHandler0.HasMessage("FriendlyInfo", true))
+                while (CommunicationHandler0.HasMessage("FRIENDLY_INFO", true))
                 {
                     MyIGCMessage message;
-                    if (CommunicationHandler0.TryRetrieveMessage("FriendlyInfo", true, out message))
+                    if (CommunicationHandler0.TryRetrieveMessage("FRIENDLY_INFO", true, out message))
                     {
                         byte[] bytes = Convert.FromBase64String(message.Data as string);
                         EntityInfo entityInfo = EntityInfo.Deserialize(bytes, 0);
@@ -82,10 +82,10 @@ namespace IngameScript
                     }
                 }
 
-                while (CommunicationHandler0.HasMessage("AllMissileInfo", false))
+                while (CommunicationHandler0.HasMessage("ALL_MISSILE_INFO", false))
                 {
                     MyIGCMessage message;
-                    if (CommunicationHandler0.TryRetrieveMessage("AllMissileInfo", false, out message))
+                    if (CommunicationHandler0.TryRetrieveMessage("ALL_MISSILE_INFO", false, out message))
                     {
                         byte[] bytes = Convert.FromBase64String(message.Data as string);
                         EntityInfo entityInfo = EntityInfo.Deserialize(bytes, 0);
@@ -105,7 +105,7 @@ namespace IngameScript
 
                     var targetInfo = _targetsLocal[targetKey].Info;
                     byte[] bytes = targetInfo.Serialize();
-                    CommunicationHandler0.SendBroadcast(bytes, "TargetShare", true);
+                    CommunicationHandler0.SendBroadcast(bytes, "TARGET_SHARE", true);
                 }
 
                 foreach (var targetKey in _targetsRemote.Keys.ToList())
