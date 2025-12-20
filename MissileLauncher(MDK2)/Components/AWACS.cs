@@ -149,8 +149,7 @@ namespace IngameScript
 
                         if (raycastResult.EntityId == targetID)
                         {
-                            var freshTarget = new EntityInfoExt(raycastResult, globalTime);
-                            Targets[targetID] = target.Merge(freshTarget);
+                            Targets[targetID] = new EntityInfoExt(raycastResult, globalTime);
                             TargetsSyncInfo[targetID] = true;
                         }
                     }

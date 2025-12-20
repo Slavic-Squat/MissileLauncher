@@ -223,7 +223,11 @@ namespace IngameScript
                 if (AllTargetsExt.ContainsKey(entityID))
                 {
                     var original = AllTargetsExt[entityID];
-                    if ((original.Source & EntitySource.Remote) != 0)
+                    if (original.Source == EntitySource.Remote)
+                    {
+                        AllTargetsExt.Remove(entityID);
+                    }
+                    else if ((original.Source & EntitySource.Remote) != 0)
                     {
                         EntitySource newSource = original.Source & ~EntitySource.Remote;
                         var newInfo = new EntityInfoExt(original.Info, newSource, original.Relation, original.RelationID);
@@ -243,7 +247,11 @@ namespace IngameScript
                 if (AllTargetsExt.ContainsKey(entityID))
                 {
                     var original = AllTargetsExt[entityID];
-                    if ((original.Source & EntitySource.Local) != 0)
+                    if (original.Source == EntitySource.Local)
+                    {
+                        AllTargetsExt.Remove(entityID);
+                    }
+                    else if ((original.Source & EntitySource.Local) != 0)
                     {
                         EntitySource newSource = original.Source & ~EntitySource.Local;
                         var newInfo = new EntityInfoExt(original.Info, newSource, original.Relation, original.RelationID);
