@@ -30,11 +30,15 @@ namespace IngameScript
         public static List<IMyTerminalBlock> AllGridBlocks { get; private set; } = new List<IMyTerminalBlock>();
         public static IMyIntergridCommunicationSystem IGCS { get; private set; }
         public static IMyGridProgramRuntimeInfo RuntimeInfo { get; private set; }
-        public static MyIni Config { get; private set; }
-        public static CommunicationHandler CommunicationHandler0 { get; private set; }
-        public static CommandHandler CommandHandler0 { get; private set; }
         public static double SystemTime { get; private set; }
+        public static MyIni Config { get; private set; }
+        public static CommandHandler CommandHandler0 { get; private set; }
+        public static CommunicationHandler CommunicationHandler0 { get; private set; }
+
         public static int DebugCounter { get; set; } = 0;
+
+        private const string _programName = "MissileLauncher";
+        private const string _programVersion = "1.0";
 
         public Program()
         {
@@ -45,7 +49,7 @@ namespace IngameScript
             RuntimeInfo = Runtime;
             MePb = Me;
             Runtime.UpdateFrequency = UpdateFrequency.Update1;
-            
+
             GridTerminalSystem.GetBlocksOfType(AllGridBlocks, b => b.IsSameConstructAs(Me));
 
             Config = new MyIni();
@@ -53,7 +57,6 @@ namespace IngameScript
             {
                 Config.Clear();
             }
-
             long secureBroadcastPIN = Config.Get("Config", "SecureBroadcastPIN").ToInt64(123456);
             Config.Set("Config", "SecureBroadcastPIN", secureBroadcastPIN);
             CommunicationHandler0 = new CommunicationHandler(0, secureBroadcastPIN);
@@ -70,8 +73,10 @@ namespace IngameScript
         public void Main(string argument, UpdateType updateSource)
         {
             SystemTime += RuntimeInfo.TimeSinceLastRun.TotalSeconds;
+            DebugEcho($"[{_programName}] | Version: {_programVersion}\n");
+            DebugWrite($"[{_programName}] | Version: {_programVersion}\n", false);
             DebugEcho($"System Time: {SystemTime:F2}s\n");
-            DebugWrite($"System Time: {SystemTime:F2}s\n", false);
+            DebugWrite($"System Time: {SystemTime:F2}s\n", true);
             DebugEcho($"Last Run Time: {RuntimeInfo.LastRunTimeMs:F2}ms\n");
             DebugWrite($"Last Run Time: {RuntimeInfo.LastRunTimeMs:F2}ms\n", true);
 
