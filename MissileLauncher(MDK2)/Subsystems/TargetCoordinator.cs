@@ -122,6 +122,10 @@ namespace IngameScript
 
             private void AddRemoteTarget(EntityInfo entityInfo, bool friendly)
             {
+                if (!entityInfo.IsValid)
+                {
+                    return;
+                }
                 var entityID = entityInfo.EntityID;
                 var relationID = entityID;
 
@@ -177,6 +181,10 @@ namespace IngameScript
 
             public void AddLocalTarget(EntityInfoExt targetInfoExt)
             {
+                if (!targetInfoExt.IsValid || targetInfoExt.Source != EntitySource.Local)
+                {
+                    return;
+                }
                 var entityID = targetInfoExt.EntityID;
                 var relationID = entityID;
 
@@ -215,15 +223,15 @@ namespace IngameScript
                 if (AllTargetsExt.ContainsKey(entityID))
                 {
                     var original = AllTargetsExt[entityID];
-                    if (original.Source == EntitySource.Remote)
-                    {
-                        AllTargetsExt.Remove(entityID);
-                    }
-                    else if ((original.Source & EntitySource.Remote) != 0)
+                    if ((original.Source & EntitySource.Remote) != 0)
                     {
                         EntitySource newSource = original.Source & ~EntitySource.Remote;
                         var newInfo = new EntityInfoExt(original.Info, newSource, original.Relation, original.RelationID);
                         AllTargetsExt[entityID] = newInfo;
+                    }
+                    else
+                    {
+                        AllTargetsExt.Remove(entityID);
                     }
                 }
             }
@@ -235,15 +243,15 @@ namespace IngameScript
                 if (AllTargetsExt.ContainsKey(entityID))
                 {
                     var original = AllTargetsExt[entityID];
-                    if (original.Source == EntitySource.Local)
-                    {
-                        AllTargetsExt.Remove(entityID);
-                    }
-                    else if ((original.Source & EntitySource.Local) != 0)
+                    if ((original.Source & EntitySource.Local) != 0)
                     {
                         EntitySource newSource = original.Source & ~EntitySource.Local;
                         var newInfo = new EntityInfoExt(original.Info, newSource, original.Relation, original.RelationID);
                         AllTargetsExt[entityID] = newInfo;
+                    }
+                    else
+                    {
+                        AllTargetsExt.Remove(entityID);
                     }
                 }
             }

@@ -70,15 +70,16 @@ namespace IngameScript
                 }
             }
 
-            public void SelectBay(MissileBay bay, object caller) => _systemCoordinator.MissileCoordinator.SelectBay(bay, caller);
-            public void DeselectBay(MissileBay bay, object caller) => _systemCoordinator.MissileCoordinator.DeselectBay(bay, caller);
-            public void ClearSelectedBays(object caller) => _systemCoordinator.MissileCoordinator.ClearSelectedBays(caller);
-            public void SelectAllBays(object caller) => _systemCoordinator.MissileCoordinator.SelectAllBays(caller);
-            public void LaunchMissiles(long targetID, object caller) => _systemCoordinator.MissileCoordinator.LaunchMissiles(targetID, caller);
-            public void LaunchMissile(long targetID, object caller) => _systemCoordinator.MissileCoordinator.LaunchMissile(targetID, caller);
-            public void ForgetTarget(long targetID) => _systemCoordinator.AWACS.RemoveTarget(targetID);
-            public void AbortMissile(long missileID, object caller) => _systemCoordinator.MissileCoordinator.AbortMissile(missileID, caller);
-            public void SetRelation(long entityID, EntityRelation relation) => _systemCoordinator.TargetCoordinator.SetTargetRelation(entityID, relation);
+            public void SelectBay(MissileBay bay, object caller) => MissileCoordinator.SelectBay(bay, caller);
+            public void DeselectBay(MissileBay bay, object caller) => MissileCoordinator.DeselectBay(bay, caller);
+            public void ClearSelectedBays(object caller) => MissileCoordinator.ClearSelectedBays(caller);
+            public void SelectAllBays(object caller) => MissileCoordinator.SelectAllBays(caller);
+            public void LaunchMissiles(long targetID, object caller) => MissileCoordinator.LaunchMissiles(targetID, caller);
+            public void LaunchMissile(long targetID, object caller) => MissileCoordinator.LaunchMissile(targetID, caller);
+            public void ForgetTarget(long targetID) => AWACS.RemoveTarget(targetID);
+            public void AddTarget(EntityInfoExt target) => AWACS.AddTarget(target);
+            public void AbortMissile(long missileID, object caller) => MissileCoordinator.AbortMissile(missileID, caller);
+            public void SetRelation(long entityID, EntityRelation relation) => TargetCoordinator.SetTargetRelation(entityID, relation);
         }
     }
 }

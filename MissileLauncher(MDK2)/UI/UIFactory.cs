@@ -185,7 +185,7 @@ namespace IngameScript
                 }
                 else if (entity.Source == EntitySource.Remote)
                 {
-                    int numButtons = 4;
+                    int numButtons = 5;
                     float totalWidth = numButtons * buttonSize.X + (numButtons - 1) * spacing + 2 * padding;
                     float totalHeight = buttonSize.Y + 2 * padding;
                     Vector2 menuSize = new Vector2(totalWidth, totalHeight);
@@ -247,6 +247,14 @@ namespace IngameScript
                         Menu relationMenu = CreateRelationMenu(relationMenuPos, targetID, window, true, true);
                         window.OpenMenu(relationMenu);
                     };
+
+                    button = new Button(buttonPos, buttonSize, 5f, 3f, 1f, getText, action);
+                    menu.AddButton(button, -1);
+
+                    buttonPos.X += buttonSize.X + spacing;
+
+                    getText = () => "ADD";
+                    action = () => uiCoordinator.AddTarget(entity);
 
                     button = new Button(buttonPos, buttonSize, 5f, 3f, 1f, getText, action);
                     menu.AddButton(button, -1);

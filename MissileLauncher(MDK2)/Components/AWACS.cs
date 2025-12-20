@@ -160,6 +160,10 @@ namespace IngameScript
 
             public void AddTarget(EntityInfoExt target)
             {
+                if (!target.IsValid)
+                {
+                    return;
+                }
                 Targets[target.EntityID] = target;
                 TargetsSyncInfo[target.EntityID] = false;
             }
