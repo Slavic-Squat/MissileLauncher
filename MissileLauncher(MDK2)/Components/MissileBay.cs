@@ -60,6 +60,7 @@ namespace IngameScript
                 ID = id;
 
                 GetBlocks();
+                Init();
             }
 
             private void GetBlocks()
@@ -70,6 +71,14 @@ namespace IngameScript
                     DebugWrite($"Error: No connector found for Missile Bay {ID}!\n", true);
                     throw new Exception($"No connector found for Missile Bay {ID}!\n");
                 }
+            }
+
+            private void Init()
+            {
+                _connector.IsParkingEnabled = false;
+                _connector.PullStrength = 1f;
+
+                RegisterMissile();
             }
 
             private void RegisterMissile()
