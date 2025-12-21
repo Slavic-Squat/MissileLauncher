@@ -48,7 +48,7 @@ namespace IngameScript
 
             private void GetBlocks()
             {
-                _controllerReference = AllGridBlocks.Find(b => b is IMyShipController && b.CustomName.ToUpper().Contains($"CONTROL STATION {ID}")) as IMyShipController;
+                _controllerReference = AllGridBlocks.Where(b => b is IMyShipController && b.CustomName.ToUpper().Contains($"CONTROL STATION {ID}")).FirstOrDefault() as IMyShipController;
                 if (_controllerReference == null)
                 {
                     DebugWrite($"Error: No controller found for Control Station {ID}!\n", true);

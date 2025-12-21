@@ -25,19 +25,16 @@ namespace IngameScript
         public class UICoordinator
         {
             private SystemCoordinator _systemCoordinator;
+            private Dictionary<long, EntityInfoExt> _allEntities = new Dictionary<long, EntityInfoExt>();
 
-            public HashSet<long> NeutralIDs => _systemCoordinator.TargetCoordinator.NeutralIDs;
-            public HashSet<long> FriendlyIDs => _systemCoordinator.TargetCoordinator.FriendlyIDs;
-            public HashSet<long> HostileIDs => _systemCoordinator.TargetCoordinator.HostileIDs;
-            public Dictionary<long, EntityInfoExt> AllTargets => _systemCoordinator.TargetCoordinator.AllTargetsExt;
-            public Dictionary<long, EntityInfoExt> AllMyMissiles => _systemCoordinator.MissileCoordinator.MyMissilesExt;
-            public Dictionary<long, EntityInfoExt> AllEntities { get; private set; } = new Dictionary<long, EntityInfoExt>();
+            public IReadOnlyDictionary<long, EntityInfoExt> AllTargets => _systemCoordinator.TargetCoordinator.AllTargetsExt;
+            public IReadOnlyDictionary<long, EntityInfoExt> AllMyMissiles => _systemCoordinator.MissileCoordinator.MyMissilesExt;
+            public IReadOnlyDictionary<long, EntityInfoExt> AllEntities => _allEntities;
 
-            public List<TargetingLaser> TargetingLasers => _systemCoordinator.TargetingLasers;
-            public List<ControlStation> ControlStations => _systemCoordinator.ControlStations;
+            public IReadOnlyList<TargetingLaser> TargetingLasers => _systemCoordinator.TargetingLasers;
             public MissileCoordinator MissileCoordinator => _systemCoordinator.MissileCoordinator;
             public TargetCoordinator TargetCoordinator => _systemCoordinator.TargetCoordinator;
-            public List<MissileBay> MissileBays => _systemCoordinator.MissileCoordinator.MissileBays;
+            public IReadOnlyList<MissileBay> MissileBays => _systemCoordinator.MissileCoordinator.MissileBays;
             public AWACS AWACS => _systemCoordinator.AWACS;
             public TargetingDisplays TargetingDisplays { get; private set; }
 
@@ -54,14 +51,14 @@ namespace IngameScript
                 _runCounter++;
                 if (_runCounter >= int.MaxValue) _runCounter = 0;
 
-                AllEntities.Clear();
+                _allEntities.Clear();
                 foreach (var target in AllTargets)
                 {
-                    AllEntities[target.Key] = target.Value;
+                    _allEntities[target.Key] = target.Value;
                 }
                 foreach (var missile in AllMyMissiles)
                 {
-                    AllEntities[missile.Key] = missile.Value;
+                    _allEntities[missile.Key] = missile.Value;
                 }
 
                 if (_runCounter % 10 == 0)

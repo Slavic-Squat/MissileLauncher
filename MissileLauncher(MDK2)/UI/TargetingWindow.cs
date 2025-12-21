@@ -31,10 +31,9 @@ namespace IngameScript
             public ScopeScale ScopeScale { get; private set; } = ScopeScale.Medium;
             public long SelectedEntityID { get; private set; }
 
-            private Dictionary<long, EntityInfoExt> _allEntities = new Dictionary<long, EntityInfoExt>();
+            private IReadOnlyDictionary<long, EntityInfoExt> _allEntities = new Dictionary<long, EntityInfoExt>();
             private Dictionary<long, MyEntitySprite> _entitySprites = new Dictionary<long, MyEntitySprite>();
             private List<MySpriteExt> _targetingSprites = new List<MySpriteExt>();
-
             private TargetingSpriteBuilder _targetingSpriteBuilder;
 
 

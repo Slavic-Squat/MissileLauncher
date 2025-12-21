@@ -28,11 +28,12 @@ namespace IngameScript
 
             private Dictionary<long, EntityInfoExt> _targetsLocal = new Dictionary<long, EntityInfoExt>();
             private Dictionary<long, EntityInfoExt> _targetsRemote = new Dictionary<long, EntityInfoExt>();
+            private Dictionary<long, EntityInfoExt> _allTargetsExt = new Dictionary<long, EntityInfoExt>();
+            private HashSet<long> _neutralIDs = new HashSet<long>();
+            private HashSet<long> _hostileIDs = new HashSet<long>();
+            private HashSet<long> _friendlyIDs = new HashSet<long>();
 
-            public Dictionary<long, EntityInfoExt> AllTargetsExt { get; private set; }
-            public HashSet<long> NeutralIDs { get; private set; }
-            public HashSet<long> HostileIDs { get; private set; }
-            public HashSet<long> FriendlyIDs { get; private set; }
+            public IReadOnlyDictionary<long, EntityInfoExt> AllTargetsExt => _allTargetsExt;
 
             public TargetCoordinator()
             {
@@ -44,11 +45,6 @@ namespace IngameScript
                 CommunicationHandler0.RegisterBroadcastListener("TARGET_SHARE", true);
                 CommunicationHandler0.RegisterBroadcastListener("ALL_MISSILE_INFO", false);
                 CommunicationHandler0.RegisterBroadcastListener("FRIENDLY_INFO", true);
-
-                AllTargetsExt = new Dictionary<long, EntityInfoExt>();
-                NeutralIDs = new HashSet<long>();
-                HostileIDs = new HashSet<long>();
-                FriendlyIDs = new HashSet<long>();
             }
 
             public void Run(double time)
@@ -148,13 +144,13 @@ namespace IngameScript
                 {
                     SetTargetRelation(relationID, EntityRelation.Friendly);
                 }
-                else if (!NeutralIDs.Contains(relationID) && !HostileIDs.Contains(relationID) && !FriendlyIDs.Contains(relationID))
+                else if (!_neutralIDs.Contains(relationID) && !_hostileIDs.Contains(relationID) && !_friendlyIDs.Contains(relationID))
                 {
                     SetTargetRelation(relationID, EntityRelation.Neutral);
                 }
 
                 EntitySource source = EntitySource.Remote;
-                EntityRelation relation = FriendlyIDs.Contains(relationID) ? EntityRelation.Friendly : HostileIDs.Contains(relationID) ? EntityRelation.Hostile : EntityRelation.Neutral;
+                EntityRelation relation = _friendlyIDs.Contains(relationID) ? EntityRelation.Friendly : _hostileIDs.Contains(relationID) ? EntityRelation.Hostile : EntityRelation.Neutral;
 
                 var entityInfoExt = new EntityInfoExt(entityInfo, source, relation, relationID);
 
@@ -168,14 +164,14 @@ namespace IngameScript
                     _targetsRemote[entityID] = original.Merge(entityInfoExt);
                 }
 
-                if (!AllTargetsExt.ContainsKey(entityID))
+                if (!_allTargetsExt.ContainsKey(entityID))
                 {
-                    AllTargetsExt.Add(entityID, entityInfoExt);
+                    _allTargetsExt.Add(entityID, entityInfoExt);
                 }
                 else
                 {
-                    var original = AllTargetsExt[entityID];
-                    AllTargetsExt[entityID] = original.Merge(entityInfoExt);
+                    var original = _allTargetsExt[entityID];
+                    _allTargetsExt[entityID] = original.Merge(entityInfoExt);
                 }
             }
 
@@ -205,14 +201,14 @@ namespace IngameScript
                     _targetsLocal[entityID] = original.Merge(targetInfoExt);
                 }
 
-                if (!AllTargetsExt.ContainsKey(entityID))
+                if (!_allTargetsExt.ContainsKey(entityID))
                 {
-                    AllTargetsExt.Add(entityID, targetInfoExt);
+                    _allTargetsExt.Add(entityID, targetInfoExt);
                 }
                 else
                 {
-                    var original = AllTargetsExt[entityID];
-                    AllTargetsExt[entityID] = original.Merge(targetInfoExt);
+                    var original = _allTargetsExt[entityID];
+                    _allTargetsExt[entityID] = original.Merge(targetInfoExt);
                 }
             }
 
@@ -220,22 +216,22 @@ namespace IngameScript
             {
                 _targetsRemote.Remove(entityID);
 
-                if (AllTargetsExt.ContainsKey(entityID))
+                if (_allTargetsExt.ContainsKey(entityID))
                 {
-                    var original = AllTargetsExt[entityID];
+                    var original = _allTargetsExt[entityID];
                     if (original.Source == EntitySource.Remote)
                     {
-                        AllTargetsExt.Remove(entityID);
+                        _allTargetsExt.Remove(entityID);
                     }
                     else if ((original.Source & EntitySource.Remote) != 0)
                     {
                         EntitySource newSource = original.Source & ~EntitySource.Remote;
                         var newInfo = new EntityInfoExt(original.Info, newSource, original.Relation, original.RelationID);
-                        AllTargetsExt[entityID] = newInfo;
+                        _allTargetsExt[entityID] = newInfo;
                     }
                     else
                     {
-                        AllTargetsExt.Remove(entityID);
+                        _allTargetsExt.Remove(entityID);
                     }
                 }
             }
@@ -244,22 +240,22 @@ namespace IngameScript
             {
                 _targetsLocal.Remove(entityID);
 
-                if (AllTargetsExt.ContainsKey(entityID))
+                if (_allTargetsExt.ContainsKey(entityID))
                 {
-                    var original = AllTargetsExt[entityID];
+                    var original = _allTargetsExt[entityID];
                     if (original.Source == EntitySource.Local)
                     {
-                        AllTargetsExt.Remove(entityID);
+                        _allTargetsExt.Remove(entityID);
                     }
                     else if ((original.Source & EntitySource.Local) != 0)
                     {
                         EntitySource newSource = original.Source & ~EntitySource.Local;
                         var newInfo = new EntityInfoExt(original.Info, newSource, original.Relation, original.RelationID);
-                        AllTargetsExt[entityID] = newInfo;
+                        _allTargetsExt[entityID] = newInfo;
                     }
                     else
                     {
-                        AllTargetsExt.Remove(entityID);
+                        _allTargetsExt.Remove(entityID);
                     }
                 }
             }
@@ -269,26 +265,26 @@ namespace IngameScript
                 switch (relation)
                 {
                     case EntityRelation.Neutral:
-                        HostileIDs.Remove(entityID);
-                        FriendlyIDs.Remove(entityID);
-                        NeutralIDs.Add(entityID);
+                        _hostileIDs.Remove(entityID);
+                        _friendlyIDs.Remove(entityID);
+                        _neutralIDs.Add(entityID);
                         break;
 
                     case EntityRelation.Friendly:
-                        NeutralIDs.Remove(entityID);
-                        HostileIDs.Remove(entityID);
-                        FriendlyIDs.Add(entityID);
+                        _neutralIDs.Remove(entityID);
+                        _hostileIDs.Remove(entityID);
+                        _friendlyIDs.Add(entityID);
                         break;
 
                     case EntityRelation.Hostile:
-                        NeutralIDs.Remove(entityID);
-                        FriendlyIDs.Remove(entityID);
-                        HostileIDs.Add(entityID);
+                        _neutralIDs.Remove(entityID);
+                        _friendlyIDs.Remove(entityID);
+                        _hostileIDs.Add(entityID);
                         break;
                     case EntityRelation.Me:
-                        NeutralIDs.Remove(entityID);
-                        FriendlyIDs.Remove(entityID);
-                        HostileIDs.Remove(entityID);
+                        _neutralIDs.Remove(entityID);
+                        _friendlyIDs.Remove(entityID);
+                        _hostileIDs.Remove(entityID);
                         break;
                 }
 
@@ -296,15 +292,15 @@ namespace IngameScript
                 {
                     entityID,
                 };
-                idsToUpdate.AddRange(AllTargetsExt.Values.Where(t => t.RelationID == entityID).Select(t => t.EntityID));
+                idsToUpdate.AddRange(_allTargetsExt.Values.Where(t => t.RelationID == entityID).Select(t => t.EntityID));
 
                 foreach (var id in idsToUpdate)
                 {
-                    if (AllTargetsExt.ContainsKey(id))
+                    if (_allTargetsExt.ContainsKey(id))
                     {
-                        var original = AllTargetsExt[id];
+                        var original = _allTargetsExt[id];
                         var newInfo = new EntityInfoExt(original.Info, original.Source, relation, original.RelationID);
-                        AllTargetsExt[id] = newInfo;
+                        _allTargetsExt[id] = newInfo;
                     }
                     if (_targetsLocal.ContainsKey(id))
                     {

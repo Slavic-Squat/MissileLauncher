@@ -26,13 +26,11 @@ namespace IngameScript
         public class CameraArray
         {
             private List<IMyCameraBlock> _cameras = new List<IMyCameraBlock>();
+            private PriorityQueue<IMyCameraBlock, double> _cameraQueue;
             public double Time { get; private set; }
-            private int _cameraIndex;
-            private float _totalAvailableRaycastDistance;
-
             public string Name { get; private set; }
             public float MaxRaycastDistance { get; set; }
-            public bool Recharging => _totalAvailableRaycastDistance < 2 * MaxRaycastDistance * _cameras.Count;
+            public bool Recharging => _cameraQueue.Peek().AvailableScanRange < MaxRaycastDistance;
             public CameraArray(string name, float maxRaycastDistance)
             {
                 Name = name.ToUpper();
@@ -58,27 +56,19 @@ namespace IngameScript
                 {
                     camera.EnableRaycast = true;
                 }
-            }
 
-            public void Update(double time)
-            {
-                if (Time == 0)
-                {
-                    Time = time;
-                    return;
-                }
-                _totalAvailableRaycastDistance += (float)(time - Time) * 2000f * _cameras.Count;
-                Time = time;
+                Func<IMyCameraBlock, double> prioritySelector = c => -c.AvailableScanRange;
+                _cameraQueue = new PriorityQueue<IMyCameraBlock, double>(prioritySelector, _cameras);
             }
 
             public MyDetectedEntityInfo Raycast(Vector3 raycastTarget)
             {
                 if (CanScan(raycastTarget))
                 {
-                    var result = _cameras[_cameraIndex].Raycast(raycastTarget);
-                    float distanceUsed = Vector3.Distance(raycastTarget, _cameras[_cameraIndex].GetPosition());
-                    _totalAvailableRaycastDistance -= distanceUsed;
-                    _cameraIndex = (_cameraIndex + 1) % _cameras.Count;
+                    IMyCameraBlock nextCamera = _cameraQueue.Dequeue();
+                    var result = nextCamera.Raycast(raycastTarget);
+                    float distanceUsed = Vector3.Distance(raycastTarget, nextCamera.GetPosition());
+                    _cameraQueue.Enqueue(nextCamera);
 
                     return result;
                 }
@@ -90,7 +80,7 @@ namespace IngameScript
 
             public MyDetectedEntityInfo Raycast(Vector3 raycastTarget, float overshoot)
             {
-                Vector3 raycastOvershoot = (raycastTarget - _cameras[_cameraIndex].GetPosition()) * overshoot;
+                Vector3 raycastOvershoot = (raycastTarget - GetCameraPosition()) * overshoot;
                 raycastTarget += raycastOvershoot;
 
                 return Raycast(raycastTarget);
@@ -98,9 +88,10 @@ namespace IngameScript
 
             public bool CanScan(Vector3 raycastTarget)
             {
-                float raycastDistance = Vector3.Distance(raycastTarget, _cameras[_cameraIndex].GetPosition());
+                IMyCameraBlock nextCamera = _cameraQueue.Peek();
+                float raycastDistance = Vector3.Distance(raycastTarget, nextCamera.GetPosition());
 
-                if (_cameras[_cameraIndex].CanScan(raycastTarget) && !Recharging && raycastDistance < MaxRaycastDistance)
+                if (nextCamera.CanScan(raycastTarget) && raycastDistance < MaxRaycastDistance)
                 {
                     return true;
                 }
@@ -112,13 +103,13 @@ namespace IngameScript
 
             public bool CanScan(Vector3 raycastTarget, float overshoot)
             {
-                Vector3 raycastOvershoot = (raycastTarget - _cameras[_cameraIndex].GetPosition()) * overshoot;
+                Vector3 raycastOvershoot = (raycastTarget - GetCameraPosition()) * overshoot;
                 raycastTarget += raycastOvershoot;
 
                 return CanScan(raycastTarget);
             }
 
-            public Vector3 GetCameraPosition() => _cameras[_cameraIndex].GetPosition();
+            public Vector3 GetCameraPosition() => _cameraQueue.Peek().GetPosition();
         }
     }
 }

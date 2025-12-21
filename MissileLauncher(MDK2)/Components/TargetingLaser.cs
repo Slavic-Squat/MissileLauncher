@@ -101,8 +101,6 @@ namespace IngameScript
 
                 _referenceMatrix = H2 * H1 * H0;
 
-                _cameraArray.Update(time);
-
                 if (!IsUnderControl && !HasTarget)
                 {
                     MoveLaser(0, 0);

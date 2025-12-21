@@ -25,28 +25,29 @@ namespace IngameScript
         public class MissileCoordinator
         {
             public double Time { get; private set; }
-            public Dictionary<long, EntityInfoExt> MyMissilesExt { get; private set; }
-            public ControlStation Station { get; private set; }
-            public bool FireControlAvail => Station == null;
-            public int NumBays { get; private set; }
-            public int NumSelectedBays => _selectedBays.Count;
-            public int NumReadyBays => MissileBays.Count(bay => bay.Status == BayStatus.Ready || bay.Status == BayStatus.Active);
-            public bool IsLaunching => _launchCoroutine != null;
-            public int NumMissiles => _addressTargetIDMap.Count;
-            public List<MissileBay> MissileBays { get; private set; }
+            
+            private List<MissileBay> _missileBays = new List<MissileBay>();
             private HashSet<MissileBay> _selectedBays = new HashSet<MissileBay>();
             private Dictionary<long, long> _addressMissileIDMap = new Dictionary<long, long>();
             private Dictionary<long, long> _addressTargetIDMap = new Dictionary<long, long>();
             private Dictionary<long, long> _missileIDAddressMap = new Dictionary<long, long>();
-
-            private Dictionary<long, EntityInfoExt> _targetInfo = new Dictionary<long, EntityInfoExt>();
-
+            private IReadOnlyDictionary<long, EntityInfoExt> _targetInfo = new Dictionary<long, EntityInfoExt>();
+            private Dictionary<long, EntityInfoExt> _myMissilesExt = new Dictionary<long, EntityInfoExt>();
             private IEnumerator<int> _launchCoroutine;
-
             private double _lastClockSync;
             private double _lastLaunch;
 
-            public MissileCoordinator(int numBays, Dictionary<long, EntityInfoExt> targetInfo)
+            public IReadOnlyDictionary<long, EntityInfoExt> MyMissilesExt => _myMissilesExt;
+            public IReadOnlyList<MissileBay> MissileBays => _missileBays;
+            public ControlStation Station { get; private set; }
+            public bool FireControlAvail => Station == null;
+            public int NumBays { get; private set; }
+            public int NumSelectedBays => _selectedBays.Count;
+            public int NumReadyBays => _missileBays.Count(bay => bay.Status == BayStatus.Ready || bay.Status == BayStatus.Active);
+            public bool IsLaunching => _launchCoroutine != null;
+            public int NumMissiles => _addressTargetIDMap.Count;
+
+            public MissileCoordinator(int numBays, IReadOnlyDictionary<long, EntityInfoExt> targetInfo)
             {
                 NumBays = numBays;
                 _targetInfo = targetInfo;
@@ -55,15 +56,13 @@ namespace IngameScript
 
             private void Init()
             {
-                MissileBays = new List<MissileBay>();
-                MyMissilesExt = new Dictionary<long, EntityInfoExt>();
                 for (int i = 0; i < NumBays; i++)
                 {
                     MissileBay bay = new MissileBay(i);
                     bay.MissileRegistered += () => RegisterMissileAddress(bay.MissileAddress, bay.MissileID);
                     bay.MissileUnregistered += () => DeselectBay(bay);
                     bay.MissileLaunched += (long targetID) => RegisterMissileTarget(bay.MissileAddress, targetID);
-                    MissileBays.Add(bay);
+                    _missileBays.Add(bay);
 
                 }
 
@@ -78,7 +77,7 @@ namespace IngameScript
                     return;
                 }
 
-                foreach (var bay in MissileBays)
+                foreach (var bay in _missileBays)
                 {
                     bay.Run(time);
                 }
@@ -137,20 +136,20 @@ namespace IngameScript
                 EntitySource source = EntitySource.Remote;
                 EntityRelation relation = EntityRelation.Me;
                 EntityInfoExt entityInfoExt = new EntityInfoExt(entityInfo, source, relation, relationID);
-                if (!MyMissilesExt.ContainsKey(key))
+                if (!_myMissilesExt.ContainsKey(key))
                 {
-                    MyMissilesExt.Add(key, entityInfoExt);
+                    _myMissilesExt.Add(key, entityInfoExt);
                 }
                 else
                 {
-                    var original = MyMissilesExt[key];
-                    MyMissilesExt[key] = original.Merge(entityInfoExt);
+                    var original = _myMissilesExt[key];
+                    _myMissilesExt[key] = original.Merge(entityInfoExt);
                 }
             }
 
             private void RemoveMissile(long entityID)
             {
-                MyMissilesExt.Remove(entityID);
+                _myMissilesExt.Remove(entityID);
             }
 
             private void RegisterMissileAddress(long address, long missileID)
@@ -257,7 +256,7 @@ namespace IngameScript
 
             private void SelectAllBays()
             {
-                MissileBays.ForEach(bay => SelectBay(bay));
+                _missileBays.ForEach(bay => SelectBay(bay));
             }
 
             public void LaunchMissile(long targetID, object caller)

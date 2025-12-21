@@ -115,7 +115,7 @@ namespace IngameScript
                 _staticSprites.Add(selfSpriteExt);
             }
 
-            public List<MySpriteExt> BuildSprites(Dictionary<long, EntityInfoExt> entityInfoExts, out Dictionary<long, MyEntitySprite> entitySprites, long targetedID = -1)
+            public List<MySpriteExt> BuildSprites(IReadOnlyDictionary<long, EntityInfoExt> entityInfoExts, out Dictionary<long, MyEntitySprite> entitySprites, long targetedID = -1)
             {
                 List<MySpriteExt> finalSprites = new List<MySpriteExt>();
                 entitySprites = new Dictionary<long, MyEntitySprite>();

@@ -26,9 +26,8 @@ namespace IngameScript
         {
             private TargetingSpriteBuilderSimple _spriteBuilder;
             private List<IMyTextSurface> _displays = new List<IMyTextSurface>();
-
-            private Dictionary<long, EntityInfoExt> _entityInfo = new Dictionary<long, EntityInfoExt>();
-            public TargetingDisplays(Dictionary<long, EntityInfoExt> entityInfo)
+            private IReadOnlyDictionary<long, EntityInfoExt> _entityInfo = new Dictionary<long, EntityInfoExt>();
+            public TargetingDisplays(IReadOnlyDictionary<long, EntityInfoExt> entityInfo)
             {
                 _spriteBuilder = new TargetingSpriteBuilderSimple();
                 _entityInfo = entityInfo;
@@ -46,7 +45,7 @@ namespace IngameScript
                     AddDisplay(displayBlock as IMyTextSurface);
                 }
 
-                IMyTextSurfaceProvider consoleBlock = AllGridBlocks.Find(b => b is IMyTextSurfaceProvider && b.CustomName.ToUpper().Contains("TARGETING CONSOLE")) as IMyTextSurfaceProvider;
+                IMyTextSurfaceProvider consoleBlock = AllGridBlocks.Where(b => b is IMyTextSurfaceProvider && b.CustomName.ToUpper().Contains("TARGETING CONSOLE")).FirstOrDefault() as IMyTextSurfaceProvider;
                 if (consoleBlock != null)
                 {
                     AddDisplay(consoleBlock.GetSurface(0));

@@ -34,17 +34,19 @@ namespace IngameScript
             public static long SelfID => ReferenceController.CubeGrid.EntityId;
             public static EntityInfo SelfInfo { get; private set; }
 
-            public bool IsMainClock { get; private set; } = true;
-            public List<ControlStation> ControlStations { get; private set; }
-            public List<TargetingLaser> TargetingLasers { get; private set; }
+            private List<ControlStation> _controlStations = new List<ControlStation>();
+            private List<TargetingLaser> _targetingLasers = new List<TargetingLaser>();
+
+            private bool _isMainClock = true;
+            private double _lastClockSync;
+            private double _globalTimeOffset;
+
             public AWACS AWACS { get; private set; }
+            public IReadOnlyList<TargetingLaser> TargetingLasers => _targetingLasers;
             public TargetCoordinator TargetCoordinator { get; private set; }
             public MissileCoordinator MissileCoordinator { get; private set; }
             public UICoordinator UICoordinator { get; private set; }
             public double Time { get; private set; }
-
-            private double _lastClockSync;
-            private double _globalTimeOffset;
 
             public SystemCoordinator()
             {
@@ -54,7 +56,7 @@ namespace IngameScript
 
             private void GetBlocks()
             {
-                ReferenceController = AllGridBlocks.Find(b => b is IMyShipController && b.CustomName.ToUpper().Contains("MAIN CONTROLLER")) as IMyShipController;
+                ReferenceController = AllGridBlocks.Where(b => b is IMyShipController && b.CustomName.ToUpper().Contains("MAIN CONTROLLER")).FirstOrDefault() as IMyShipController;
                 if (ReferenceController == null)
                 {
                     DebugWrite($"Error: main controller not found!\n", true);
@@ -64,10 +66,9 @@ namespace IngameScript
 
             private void Init()
             {
-                IsMainClock = Config.Get("Config", "IsMainClock").ToBoolean(true);
-                Config.Set("Config", "IsMainClock", IsMainClock);
+                _isMainClock = Config.Get("Config", "IsMainClock").ToBoolean(true);
+                Config.Set("Config", "IsMainClock", _isMainClock);
 
-                TargetingLasers = new List<TargetingLaser>();
                 int numLasers = Config.Get("Targeting", "NumLasers").ToInt32(1);
                 Config.Set("Targeting", "NumLasers", numLasers);
                 for (int i = 0; i < numLasers; i++)
@@ -78,7 +79,7 @@ namespace IngameScript
                     Config.Set("Targeting", $"Laser{i}Sensitivity", sensitivity);
                     TargetingLaser laser = new TargetingLaser(i, sensitivity, maxLaserDist);
                     laser.SyncRequested += SyncTarget;
-                    TargetingLasers.Add(laser);
+                    _targetingLasers.Add(laser);
                 }
 
                 bool hasAWACS = Config.Get("AWACS", "Enabled").ToBoolean(true);
@@ -89,7 +90,7 @@ namespace IngameScript
                 {
                     AWACS = new AWACS(maxAWACSDist);
                 }
-                
+
                 TargetCoordinator = new TargetCoordinator();
 
                 int numBays = Config.Get("Missiles", "NumBays").ToInt32(1);
@@ -98,13 +99,12 @@ namespace IngameScript
 
                 UICoordinator = new UICoordinator(this);
 
-                ControlStations = new List<ControlStation>();
                 int numControlStations = Config.Get("Config", "NumControlStations").ToInt32(1);
                 Config.Set("Config", "NumControlStations", numControlStations);
                 for (int i = 0; i < numControlStations; i++)
                 {
                     ControlStation controlStation = new ControlStation(i, UICoordinator);
-                    ControlStations.Add(controlStation);
+                    _controlStations.Add(controlStation);
                 }
 
                 CommunicationHandler0.RegisterBroadcastListener("FRIENDLY_COMMANDS", true);
@@ -130,7 +130,7 @@ namespace IngameScript
 
                 CommunicationHandler0.SendBroadcast(selfInfoBytes, "FRIENDLY_INFO", true);
 
-                foreach (var targetingLaser in TargetingLasers)
+                foreach (var targetingLaser in _targetingLasers)
                 {
                     targetingLaser.Run(time);
                     TargetCoordinator.AddLocalTarget(targetingLaser.Target);
@@ -149,12 +149,12 @@ namespace IngameScript
                 MissileCoordinator.Run(time);
                 UICoordinator.Run();
 
-                foreach (var controlStation in ControlStations)
+                foreach (var controlStation in _controlStations)
                 {
                     controlStation.Run(time);
                 }
 
-                if (IsMainClock && (time - _lastClockSync) > 10f)
+                if (_isMainClock && (time - _lastClockSync) > 10f)
                 {
                     string command = $"SYNC_CLOCK {time}";
                     CommunicationHandler0.SendBroadcast(command, "FRIENDLY_COMMANDS", true);
@@ -190,12 +190,12 @@ namespace IngameScript
                 {
                     return;
                 }
-                IsMainClock = isMain;
+                _isMainClock = isMain;
             }
 
             private void SyncClock(string timeString)
             {
-                if (IsMainClock) return;
+                if (_isMainClock) return;
                 double time;
                 if (!double.TryParse(timeString, out time))
                 {
@@ -211,11 +211,11 @@ namespace IngameScript
                 {
                     return;
                 }
-                if (id < 0 || id >= ControlStations.Count)
+                if (id < 0 || id >= _controlStations.Count)
                 {
                     return;
                 }
-                ControlStations[id].PauseControl();
+                _controlStations[id].PauseControl();
             }
 
             private void ResumeControlStation(string idString)
@@ -225,11 +225,11 @@ namespace IngameScript
                 {
                     return;
                 }
-                if (id < 0 || id >= ControlStations.Count)
+                if (id < 0 || id >= _controlStations.Count)
                 {
                     return;
                 }
-                ControlStations[id].ResumeControl();
+                _controlStations[id].ResumeControl();
             }
         }
     }

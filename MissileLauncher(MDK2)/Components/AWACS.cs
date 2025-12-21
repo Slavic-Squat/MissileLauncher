@@ -31,6 +31,11 @@ namespace IngameScript
             private CameraArray _cameraArray3;
 
             private Matrix _referenceMatrix;
+            
+            private Dictionary<long, EntityInfoExt> _targets = new Dictionary<long, EntityInfoExt>();
+            private PriorityQueue<long, double> _targetQueue;
+            private float _maxRaycastDistance;
+
             public double Time { get; private set; }
             public float MaxRaycastDistance
             {
@@ -47,11 +52,8 @@ namespace IngameScript
                     _cameraArray3.MaxRaycastDistance = value;
                 }
             }
-            public Dictionary<long, EntityInfoExt> Targets { get; private set; }
-            public int TargetCount => Targets.Count;
-            public Dictionary<long, bool> TargetsSyncInfo {  get; private set; }
-
-            private float _maxRaycastDistance;
+            public IReadOnlyDictionary<long, EntityInfoExt> Targets => _targets;
+            public int TargetCount => _targets.Count;
             public AWACS(float maxRaycastDistance = 5000)
             {
                 _maxRaycastDistance = maxRaycastDistance;
@@ -67,8 +69,8 @@ namespace IngameScript
 
             private void Init()
             {
-                Targets = new Dictionary<long, EntityInfoExt>();
-                TargetsSyncInfo = new Dictionary<long, bool>();
+                Func<long, double> prioritySelector = targetID => _targets[targetID].TimeRecorded;
+                _targetQueue = new PriorityQueue<long, double>(prioritySelector);
 
                 _cameraArray0 = new CameraArray("AWACS CAMERA ARRAY 0", _maxRaycastDistance);
                 _cameraArray1 = new CameraArray("AWACS CAMERA ARRAY 1", _maxRaycastDistance);
@@ -85,12 +87,7 @@ namespace IngameScript
                 }
                 double globalTime = SystemCoordinator.GlobalTime;
 
-                _cameraArray0.Update(time);
-                _cameraArray1.Update(time);
-                _cameraArray2.Update(time);
-                _cameraArray3.Update(time);
-
-                if (Targets.Count != 0)
+                if (_targets.Count != 0)
                 {
                     Quaternion rotation = Quaternion.CreateFromAxisAngle(_spinRotor.RotorBlock.WorldMatrix.Up, _spinRotor.CurrentAngle);
 
@@ -98,10 +95,11 @@ namespace IngameScript
 
                     _referenceMatrix.Translation = _spinRotor.RotorBlock.GetPosition();
 
-                    foreach (var targetID in Targets.Keys.ToList())
+                    foreach (var targetID in _targets.Keys.ToList())
                     {
-                        double timeSinceLastDetection = globalTime - Targets[targetID].TimeRecorded;
-                        Vector3 estimatedTargetPos = Targets[targetID].Position + Targets[targetID].Velocity * (float)timeSinceLastDetection;
+                        EntityInfoExt target = _targets[targetID];
+                        double timeSinceLastDetection = globalTime - target.TimeRecorded;
+                        Vector3 estimatedTargetPos = target.Position + target.Velocity * (float)timeSinceLastDetection;
                         Vector3 estimatedTargetPosLocal = Vector3.TransformNormal(estimatedTargetPos - _referenceMatrix.Translation, Matrix.Transpose(_referenceMatrix));
                         float estimatedTargetDistance = estimatedTargetPosLocal.Length();
                         Vector3 estimatedTargetDirLocal = estimatedTargetDistance == 0 ? Vector3.Zero : estimatedTargetPosLocal / estimatedTargetDistance;
@@ -113,16 +111,15 @@ namespace IngameScript
                         }
                     }
 
-                    var OrderedTargetIDs = Targets.Keys.OrderBy(id => Targets[id].TimeRecorded);
-
-                    foreach (long targetID in OrderedTargetIDs)
+                    for (int i = 0; i < _targetQueue.Count; i++)
                     {
                         if (_cameraArray0.Recharging && _cameraArray1.Recharging && _cameraArray2.Recharging && _cameraArray3.Recharging)
                         {
                             break;
                         }
 
-                        EntityInfoExt target = Targets[targetID];
+                        long targetID = _targetQueue.Dequeue();
+                        EntityInfoExt target = _targets[targetID];
                         MyDetectedEntityInfo raycastResult = default(MyDetectedEntityInfo);
                         double timeSinceLastDetection = globalTime - target.TimeRecorded;
                         Vector3 estimatedTargetPos = target.Position + target.Velocity * (float)timeSinceLastDetection;
@@ -149,8 +146,8 @@ namespace IngameScript
 
                         if (raycastResult.EntityId == targetID)
                         {
-                            Targets[targetID] = new EntityInfoExt(raycastResult, globalTime);
-                            TargetsSyncInfo[targetID] = true;
+                            EntityInfoExt updatedTarget = new EntityInfoExt(raycastResult, globalTime);
+                            AddTarget(updatedTarget);
                         }
                     }
                 }
@@ -163,14 +160,13 @@ namespace IngameScript
                 {
                     return;
                 }
-                Targets[target.EntityID] = target;
-                TargetsSyncInfo[target.EntityID] = false;
+                _targets[target.EntityID] = target;
+                _targetQueue.Enqueue(target.EntityID);
             }
 
             public void RemoveTarget(long targetID)
             {
-                Targets.Remove(targetID);
-                TargetsSyncInfo.Remove(targetID);
+                _targets.Remove(targetID);
             }
         }
     }
