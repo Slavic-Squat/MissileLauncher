@@ -32,10 +32,10 @@ namespace IngameScript
             public double Time { get; private set; }
             public string ID { get; private set; }
             public float MaxRaycastDistance { get; set; }
-            public bool Recharging => Time - _timeLastRaycast < TimeBetweenRaycasts;
+            public bool Recharging => Time - _timeLastRaycast < Period;
             public int CameraCount => _cameras.Count;
-            public double TimeBetweenRaycasts => _avgRaycastDistance.Average / (_cameras[0].RaycastTimeMultiplier * 1000 * CameraCount);
-            public double Frequency => 1 / TimeBetweenRaycasts;
+            public double Period => _avgRaycastDistance.Average / (_cameras[0].RaycastTimeMultiplier * 1000 * CameraCount);
+            public double Frequency => 1 / Period;
             public CameraArray(string id, float maxRaycastDistance)
             {
                 ID = id.ToUpper();
