@@ -27,13 +27,18 @@ namespace IngameScript
         {
             private List<IMyCameraBlock> _cameras = new List<IMyCameraBlock>();
             private PriorityQueue<IMyCameraBlock, double> _cameraQueue;
+            private MovingAverage _avgRaycastDistance = new MovingAverage(10);
+            private double _timeLastRaycast;
             public double Time { get; private set; }
-            public string Name { get; private set; }
+            public string ID { get; private set; }
             public float MaxRaycastDistance { get; set; }
-            public bool Recharging => _cameraQueue.Peek().AvailableScanRange < MaxRaycastDistance;
-            public CameraArray(string name, float maxRaycastDistance)
+            public bool Recharging => Time - _timeLastRaycast < TimeBetweenRaycasts;
+            public int CameraCount => _cameras.Count;
+            public double TimeBetweenRaycasts => _avgRaycastDistance.Average / (_cameras[0].RaycastTimeMultiplier * 1000);
+            public double Frequency => 1 / TimeBetweenRaycasts;
+            public CameraArray(string id, float maxRaycastDistance)
             {
-                Name = name.ToUpper();
+                ID = id.ToUpper();
                 MaxRaycastDistance = maxRaycastDistance;
 
                 GetBLocks();
@@ -42,11 +47,11 @@ namespace IngameScript
 
             private void GetBLocks()
             {
-                _cameras = AllGridBlocks.Where(b => b is IMyCameraBlock && b.CustomName.ToUpper().Contains(Name)).Cast<IMyCameraBlock>().ToList();
+                _cameras = AllGridBlocks.Where(b => b is IMyCameraBlock && b.CustomName.ToUpper().Contains(ID)).Cast<IMyCameraBlock>().ToList();
                 if (_cameras.Count == 0)
                 {
-                    DebugWrite($"Error: {Name} Camera Array on has no cameras!\n", true);
-                    throw new Exception($"{Name} Camera Array on has no cameras!\n");
+                    DebugWrite($"Error: {ID} Camera Array on has no cameras!\n", true);
+                    throw new Exception($"{ID} Camera Array on has no cameras!\n");
                 }
             }
 
@@ -61,15 +66,21 @@ namespace IngameScript
                 _cameraQueue = new PriorityQueue<IMyCameraBlock, double>(prioritySelector, _cameras);
             }
 
+            public void Update(double time)
+            {
+                Time = time;
+            }
+
             public MyDetectedEntityInfo Raycast(Vector3 raycastTarget)
             {
                 if (CanScan(raycastTarget))
                 {
                     IMyCameraBlock nextCamera = _cameraQueue.Dequeue();
                     var result = nextCamera.Raycast(raycastTarget);
-                    float distanceUsed = Vector3.Distance(raycastTarget, nextCamera.GetPosition());
+                    float raycastDistance = Vector3.Distance(raycastTarget, nextCamera.GetPosition());
+                    _avgRaycastDistance.Add(raycastDistance);
                     _cameraQueue.Enqueue(nextCamera);
-
+                    _timeLastRaycast = Time;
                     return result;
                 }
                 else
@@ -91,7 +102,7 @@ namespace IngameScript
                 IMyCameraBlock nextCamera = _cameraQueue.Peek();
                 float raycastDistance = Vector3.Distance(raycastTarget, nextCamera.GetPosition());
 
-                if (nextCamera.CanScan(raycastTarget) && raycastDistance < MaxRaycastDistance)
+                if (nextCamera.CanScan(raycastTarget) && raycastDistance < MaxRaycastDistance && !Recharging)
                 {
                     return true;
                 }

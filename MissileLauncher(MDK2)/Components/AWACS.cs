@@ -87,6 +87,11 @@ namespace IngameScript
                 }
                 double globalTime = SystemCoordinator.GlobalTime;
 
+                _cameraArray0.Update(time);
+                _cameraArray1.Update(time);
+                _cameraArray2.Update(time);
+                _cameraArray3.Update(time);
+
                 if (_targets.Count != 0)
                 {
                     Quaternion rotation = Quaternion.CreateFromAxisAngle(_spinRotor.RotorBlock.WorldMatrix.Up, _spinRotor.CurrentAngle);
