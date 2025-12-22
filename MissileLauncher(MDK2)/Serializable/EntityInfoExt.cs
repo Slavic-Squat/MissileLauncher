@@ -91,6 +91,12 @@ namespace IngameScript
                 return this;
             }
 
+            public EntityInfoExt MergeKinematics(EntityInfoExt other)
+            {
+                Info = Info.MergeKinematics(other.Info);
+                return this;
+            }
+
             public override string ToString()
             {
                 StringBuilder sb = new StringBuilder($"[{EntityEnumHelper.GetDisplayString(Type)} INFO]\n-----------------------\nTYPE: {EntityEnumHelper.GetDisplayString(Type)}\nSRC: {EntityEnumHelper.GetDisplayString(Source)}\nREL: {EntityEnumHelper.GetDisplayString(Relation)}\n");

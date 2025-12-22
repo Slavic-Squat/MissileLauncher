@@ -166,13 +166,7 @@ namespace IngameScript
 
                 if (!raycastResult.IsEmpty())
                 {
-                    if (HasTarget && raycastResult.EntityId == Target.EntityID)
-                    {
-                        var freshTarget = new EntityInfoExt(raycastResult, globalTime);
-                        Target = Target.Merge(freshTarget);
-                    }
-
-                    else if (!HasTarget)
+                    if (!HasTarget)
                     {
                         if (raycastResult.EntityId == _previouslyDetectedEntity.EntityId)
                         {
@@ -191,6 +185,10 @@ namespace IngameScript
                         {
                             Target = new EntityInfoExt(raycastResult, globalTime);
                         }
+                    }
+                    else if (raycastResult.EntityId == Target.EntityID)
+                    {
+                        Target = new EntityInfoExt(raycastResult, globalTime);
                     }
                 }
             }

@@ -124,6 +124,10 @@ namespace IngameScript
                         }
 
                         long targetID = _targetQueue.Dequeue();
+                        if (!_targets.ContainsKey(targetID))
+                        {
+                            continue;
+                        }
                         EntityInfoExt target = _targets[targetID];
                         MyDetectedEntityInfo raycastResult = default(MyDetectedEntityInfo);
                         double timeSinceLastDetection = globalTime - target.TimeRecorded;
@@ -151,9 +155,9 @@ namespace IngameScript
 
                         if (raycastResult.EntityId == targetID)
                         {
-                            EntityInfoExt updatedTarget = new EntityInfoExt(raycastResult, globalTime);
-                            AddTarget(updatedTarget);
+                            _targets[targetID] = new EntityInfoExt(raycastResult, globalTime);
                         }
+                        _targetQueue.Enqueue(targetID);
                     }
                 }
                 Time = time;
@@ -165,8 +169,19 @@ namespace IngameScript
                 {
                     return;
                 }
-                _targets[target.EntityID] = target;
-                _targetQueue.Enqueue(target.EntityID);
+                if (!_targets.ContainsKey(target.EntityID))
+                {
+                    EntityInfo temp0 = new EntityInfo(target.EntityID, target.Position, target.Velocity, target.TimeRecorded);
+                    EntityInfoExt temp1 = new EntityInfoExt(temp0, EntitySource.None, EntityRelation.Neutral, target.EntityID);
+
+                    _targets.Add(target.EntityID, temp1);
+                    _targetQueue.Enqueue(target.EntityID);
+                }
+                else
+                {
+                    var original = _targets[target.EntityID];
+                    _targets[target.EntityID] = original.MergeKinematics(target);
+                }
             }
 
             public void RemoveTarget(long targetID)
