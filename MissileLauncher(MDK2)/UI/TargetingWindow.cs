@@ -256,7 +256,7 @@ namespace IngameScript
 
                 Dictionary<long, MyEntitySprite> filtered = _entitySprites.Where(kvp => EntityFilterEnumHelper.Matches(kvp.Value.EntityInfo, NavTypeFilter, NavRelationFilter, NavSourceFilter)).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
 
-                if (filtered.Count() == 0)
+                if (!filtered.Any())
                 {
                     UnselectEntity();
                     return;
