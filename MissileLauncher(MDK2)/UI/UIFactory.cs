@@ -80,12 +80,13 @@ namespace IngameScript
 
                 buttonPos.X += buttonSize.X + spacing;
                 getText = () => "BAY SELCT";
+                canPress = () => station.HasFireControl;
                 action = () =>
                 {
                     Menu bayMenu = CreateBayMenu(window.Center, window, true, true);
                     window.OpenMenu(bayMenu);
                 };
-                button = new Button(buttonPos, buttonSize, 5f, 3f, 2f, getText, action);
+                button = new Button(buttonPos, buttonSize, 5f, 3f, 2f, getText, action, canPress: canPress);
                 panel.AddButton(button, -1);
 
                 return panel;

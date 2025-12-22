@@ -62,8 +62,12 @@ namespace IngameScript
                     bay.MissileRegistered += () => RegisterMissileAddress(bay.MissileAddress, bay.MissileID);
                     bay.MissileUnregistered += () => DeselectBay(bay);
                     bay.MissileLaunched += (long targetID) => RegisterMissileTarget(bay.MissileAddress, targetID);
-                    _missileBays.Add(bay);
 
+                    if (bay.Status == BayStatus.Ready)
+                    {
+                        RegisterMissileAddress(bay.MissileAddress, bay.MissileID);
+                    }
+                    _missileBays.Add(bay);
                 }
 
                 CommunicationHandler0.RegisterTag("MY_MISSILE_INFO", true);
