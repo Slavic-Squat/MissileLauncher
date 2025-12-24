@@ -42,8 +42,6 @@ namespace IngameScript
             private float _AR = 1;
             private float _n = 100;
             private float _f = 100000;
-            private float _minScale = 0.8f;
-            private float _maxScale = 1.2f;
             private float _zoom = 1f;
             private Vector3 _localCameraPos = new Vector3(31334, 30557, 63764);
 
@@ -67,11 +65,12 @@ namespace IngameScript
                 Matrix cameraTargetWorld = SystemCoordinator.ReferenceWorldMatrix;
                 Vector3 cameraPositionWorld = Vector3.Transform(_localCameraPos, cameraTargetWorld);
 
-                Vector3 TargetToCamera = cameraPositionWorld - cameraTargetWorld.Translation;
-                float TargetToCameraDist = TargetToCamera.Length();
-                Vector3 TargetToCameraDir = TargetToCamera / TargetToCameraDist;
+                Vector3 targetToCamera = cameraPositionWorld - cameraTargetWorld.Translation;
+                float targetToCameraDist = targetToCamera.Length();
+                Vector3 targetToCameraDir = targetToCamera / targetToCameraDist;
 
-                cameraPositionWorld = cameraTargetWorld.Translation + TargetToCameraDir * (TargetToCameraDist / _zoom);
+                cameraPositionWorld = cameraTargetWorld.Translation + targetToCameraDir * (targetToCameraDist / _zoom);
+                targetToCameraDist /= _zoom;
 
                 Matrix viewMatrix = Matrix.CreateLookAt(cameraPositionWorld, cameraTargetWorld.Translation, cameraTargetWorld.Up);
                 Matrix totalMatrix = viewMatrix * _projectionMatrix;
@@ -99,8 +98,9 @@ namespace IngameScript
                 Vector3 basePosWorld = selfPosWorld - (Vector3.Dot(gridPlaneWorld.Normal, selfPosWorld) + gridPlaneWorld.D) * gridPlaneWorld.Normal;
                 Vector3 basePosNDC = Vector3.Transform(basePosWorld, totalMatrix);
                 Vector2 basePosPixel = new Vector2((1 + basePosNDC.X) * 511, (1 - basePosNDC.Y) * 511);
-                float basePosZView = -(_f * _n) / (_f - basePosNDC.Z * (_f - _n));
-                float baseDepthScale = _maxScale + (_minScale - _maxScale) * (-basePosZView - _n) / (_f - _n);
+                //float basePosZView = -(_f * _n) / (_f - basePosNDC.Z * (_f - _n));
+                float basePosZView = Vector3.Dot(basePosWorld - cameraPositionWorld, targetToCameraDir);
+                float baseDepthScale = targetToCameraDist / (-basePosZView);
 
                 tempSprite = new MySprite()
                 {
@@ -213,11 +213,12 @@ namespace IngameScript
                 Matrix cameraTargetWorld = SystemCoordinator.ReferenceWorldMatrix;
                 Vector3 cameraPositionWorld = Vector3.Transform(_localCameraPos, cameraTargetWorld);
 
-                Vector3 TargetToCamera = cameraPositionWorld - cameraTargetWorld.Translation;
-                float TargetToCameraDist = TargetToCamera.Length();
-                Vector3 TargetToCameraDir = TargetToCamera / TargetToCameraDist;
+                Vector3 targetToCamera = cameraPositionWorld - cameraTargetWorld.Translation;
+                float targetToCameraDist = targetToCamera.Length();
+                Vector3 targetToCameraDir = targetToCamera / targetToCameraDist;
 
-                cameraPositionWorld = cameraTargetWorld.Translation + TargetToCameraDir * (TargetToCameraDist / _zoom);
+                cameraPositionWorld = cameraTargetWorld.Translation + targetToCameraDir * (targetToCameraDist / _zoom);
+                targetToCameraDist /= _zoom;
 
                 Matrix viewMatrix = Matrix.CreateLookAt(cameraPositionWorld, cameraTargetWorld.Translation, cameraTargetWorld.Up);
                 Matrix totalMatrix = viewMatrix * _projectionMatrix;
@@ -241,9 +242,9 @@ namespace IngameScript
                     Vector3 entityPosWorld = entityInfo.Position;
                     Vector3 entityPosNDC = Vector3.Transform(entityPosWorld, totalMatrix);
                     Vector2 entityPosPixel = new Vector2((1 + entityPosNDC.X) * 511, (1 - entityPosNDC.Y) * 511);
-                    float entityPosZView = -(_f * _n) / (_f - entityPosNDC.Z * (_f - _n));
-
-                    float entityDepthScale = _maxScale + (_minScale - _maxScale) * (-entityPosZView - _n) / (_f - _n);
+                    //float entityPosZView = -(_f * _n) / (_f - entityPosNDC.Z * (_f - _n));
+                    float entityPosZView = Vector3.Dot(entityPosWorld - cameraPositionWorld, targetToCameraDir);
+                    float entityDepthScale = targetToCameraDist / -entityPosZView;
 
                     string spriteName = default(string);
                     Vector2 spriteSize = default(Vector2);
@@ -333,9 +334,9 @@ namespace IngameScript
                     Vector3 basePosWorld = entityPosWorld - (Vector3.Dot(gridPlaneWorld.Normal, entityPosWorld) + gridPlaneWorld.D) * gridPlaneWorld.Normal;
                     Vector3 basePosNDC = Vector3.Transform(basePosWorld, totalMatrix);
                     Vector2 basePosPixel = new Vector2((1 + basePosNDC.X) * 511, (1 - basePosNDC.Y) * 511);
-                    float basePosZView = -(_f * _n) / (_f - basePosNDC.Z * (_f - _n));
-
-                    float baseDepthScale = _maxScale + (_minScale - _maxScale) * (-basePosZView - _n) / (_f + _n);
+                    //float basePosZView = -(_f * _n) / (_f - basePosNDC.Z * (_f - _n));
+                    float basePosZView = Vector3.Dot(basePosWorld - cameraPositionWorld, targetToCameraDir);
+                    float baseDepthScale = targetToCameraDist / -basePosZView;
 
                     tempSprite = new MySprite()
                     {
