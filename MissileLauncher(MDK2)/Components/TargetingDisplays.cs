@@ -29,11 +29,10 @@ namespace IngameScript
             private IReadOnlyDictionary<long, EntityInfoExt> _entityInfo = new Dictionary<long, EntityInfoExt>();
             public TargetingDisplays(IReadOnlyDictionary<long, EntityInfoExt> entityInfo)
             {
-                _spriteBuilder = new TargetingSpriteBuilderSimple();
+                _spriteBuilder = new TargetingSpriteBuilderSimple(new RectangleF(0, 0, 1024f, 1024f));
                 _entityInfo = entityInfo;
 
                 GetBlocks();
-                Init();
             }
 
             private void GetBlocks()
@@ -52,16 +51,6 @@ namespace IngameScript
                 }
             }
 
-            private void Init()
-            {
-                foreach (var display in _displays)
-                {
-                    display.ContentType = ContentType.SCRIPT;
-                    display.Script = "";
-                    display.ScriptBackgroundColor = Color.Black;
-                }
-            }
-
             public void Draw()
             {
                 Dictionary<long, MyEntitySprite> dump = new Dictionary<long, MyEntitySprite>();
@@ -77,6 +66,11 @@ namespace IngameScript
 
             public void AddDisplay(IMyTextSurface display)
             {
+                if (_displays.Contains(display)) return;
+
+                display.ContentType = ContentType.SCRIPT;
+                display.Script = "";
+                display.ScriptBackgroundColor = Color.Black;
                 _displays.Add(display);
             }
         }

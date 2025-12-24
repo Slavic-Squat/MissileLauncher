@@ -66,7 +66,7 @@ namespace IngameScript
             {
                 _allEntities = UI.UICoordinator.AllEntities;
 
-                _targetingSpriteBuilder = new TargetingSpriteBuilder();
+                _targetingSpriteBuilder = new TargetingSpriteBuilder(new RectangleF(0, 0, 1024f, 1024f));
                 _targetingSpriteBuilder.Zoom = MiscEnumHelper.GetValue(ScopeScale);
 
                 Vector2 targetInfoPanelSize = new Vector2(150, 200);

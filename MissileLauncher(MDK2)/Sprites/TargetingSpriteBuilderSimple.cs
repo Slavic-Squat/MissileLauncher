@@ -31,12 +31,14 @@ namespace IngameScript
             }
 
             private float _range = 12000f;
+            private RectangleF _screenBounds;
 
             private List<MySpriteExt> _sprites = new List<MySpriteExt>();
             private List<MySpriteExt> _staticSprites = new List<MySpriteExt>();
 
-            public TargetingSpriteBuilderSimple()
+            public TargetingSpriteBuilderSimple(RectangleF screenBounds)
             {
+                _screenBounds = screenBounds;
                 BuildStaticSprites();
             }
 
@@ -46,7 +48,7 @@ namespace IngameScript
                 {
                     Type = SpriteType.TEXTURE,
                     Data = "Self_1",
-                    Position = new Vector2(511, 511),
+                    Position = _screenBounds.Center,
                     Size = new Vector2(128, 128),
                     Color = Color.White,
                     Alignment = TextAlignment.CENTER,
@@ -59,8 +61,8 @@ namespace IngameScript
                 {
                     Type = SpriteType.TEXTURE,
                     Data = "Radial_Grid_1",
-                    Position = new Vector2(511, 511),
-                    Size = new Vector2(1024, 1024),
+                    Position = _screenBounds.Center,
+                    Size = _screenBounds.Size,
                     Color = new Color(128, 128, 128, 255),
                     Alignment = TextAlignment.CENTER,
                     RotationOrScale = 0f
@@ -72,8 +74,8 @@ namespace IngameScript
                 {
                     Type = SpriteType.TEXTURE,
                     Data = "Radial_Grad_1",
-                    Position = new Vector2(511, 511),
-                    Size = new Vector2(1024, 1024),
+                    Position = _screenBounds.Center,
+                    Size = _screenBounds.Size,
                     Color = new Color(1, 89, 68, 255),
                     Alignment = TextAlignment.CENTER,
                     RotationOrScale = 0f
@@ -85,8 +87,8 @@ namespace IngameScript
                 {
                     Type = SpriteType.TEXTURE,
                     Data = "StarryBackground",
-                    Position = new Vector2(511, 511),
-                    Size = new Vector2(1024, 1024),
+                    Position = _screenBounds.Center,
+                    Size = _screenBounds.Size,
                     Color = new Color(200, 200, 200, 255),
                     Alignment = TextAlignment.CENTER,
                     RotationOrScale = 0f
@@ -98,8 +100,8 @@ namespace IngameScript
                 {
                     Type = SpriteType.TEXTURE,
                     Data = "SquareSimple",
-                    Position = new Vector2(511, 511),
-                    Size = new Vector2(1024, 1024),
+                    Position = _screenBounds.Center,
+                    Size = _screenBounds.Size,
                     Color = Color.Black,
                     Alignment = TextAlignment.CENTER,
                     RotationOrScale = 0f
@@ -123,7 +125,7 @@ namespace IngameScript
                 _sprites.Clear();
 
                 Matrix referenceWorldMatrix = SystemCoordinator.ReferenceWorldMatrix;
-                float pixelsPerMeter = 512f / _range;
+                float pixelsPerMeter = _screenBounds.Width / (2f * _range);
 
                 foreach (var entityInfoExtKVP in entityInfoExts)
                 {
@@ -141,7 +143,7 @@ namespace IngameScript
 
                     Vector3 entityPosWorld = entityInfo.Position;
                     Vector3 entityPosLocal = Vector3.TransformNormal(entityPosWorld - referenceWorldMatrix.Translation, Matrix.Transpose(referenceWorldMatrix.GetOrientation()));
-                    Vector2 entityPosPixel = new Vector2(511 + entityPosLocal.X * pixelsPerMeter, 511 + entityPosLocal.Z * pixelsPerMeter);
+                    Vector2 entityPosPixel = _screenBounds.Center + new Vector2(entityPosLocal.X * pixelsPerMeter, entityPosLocal.Z * pixelsPerMeter);
 
                     string spriteName = default(string);
                     Vector2 spriteSize = default(Vector2);
