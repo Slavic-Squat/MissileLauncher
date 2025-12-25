@@ -110,7 +110,7 @@ namespace IngameScript
                         Vector3D estimatedTargetDirLocal = estimatedTargetDistance == 0 ? Vector3D.Zero : estimatedTargetPosLocal / estimatedTargetDistance;
                         double targetElevation = MathHelper.ToDegrees(Math.Asin(estimatedTargetDirLocal.Y));
 
-                        if (timeSinceLastDetection > 5 || estimatedTargetDistance >= MaxRaycastDistance * 0.8f || targetElevation >= 45)
+                        if (timeSinceLastDetection > 5 || estimatedTargetDistance >= MaxRaycastDistance * 0.8 || targetElevation >= 45)
                         {
                             RemoveTarget(targetID);
                         }

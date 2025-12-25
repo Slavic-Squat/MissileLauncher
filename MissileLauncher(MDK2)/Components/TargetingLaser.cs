@@ -30,7 +30,7 @@ namespace IngameScript
             private CameraArray _cameraArray;
 
             private float _maxRaycastDistance;
-            private Matrix _referenceMatrix;
+            private MatrixD _referenceMatrix;
             private double _lastUniqueDetectionTime;
             private int _matchingDetectionCounter;
             private MyDetectedEntityInfo _previouslyDetectedEntity;
@@ -121,22 +121,22 @@ namespace IngameScript
                 double globalTime = SystemCoordinator.GlobalTime;
 
                 double timeSinceLastDetection = globalTime - Target.TimeRecorded;
-                Vector3 estimatedTargetPosition = Target.Position + Target.Velocity * (float)timeSinceLastDetection;
-                float estimatedTargetDistance = (estimatedTargetPosition - _referenceMatrix.Translation).Length();
+                Vector3D estimatedTargetPosition = Target.Position + Target.Velocity * timeSinceLastDetection;
+                double estimatedTargetDistance = (estimatedTargetPosition - _referenceMatrix.Translation).Length();
 
-                if (estimatedTargetDistance > MaxRaycastDistance * 0.8f || timeSinceLastDetection > 5f)
+                if (estimatedTargetDistance > MaxRaycastDistance * 0.8 || timeSinceLastDetection > 5)
                 {
                     ForgetTarget();
                 }
 
                 if (HasTarget)
                 {
-                    Vector3 estimatedTargetPosLocal = Vector3.TransformNormal(estimatedTargetPosition - _referenceMatrix.Translation, Matrix.Transpose(_referenceMatrix));
-                    Vector3 estimatedTargetDirLocal = estimatedTargetDistance == 0 ? Vector3.Zero : estimatedTargetPosLocal / estimatedTargetDistance;
-                    float azimuthError = (float)Math.Atan2(-estimatedTargetDirLocal.X, -estimatedTargetDirLocal.Z);
-                    float elevationError = (float)Math.Asin(estimatedTargetDirLocal.Y);
-                    var azimuthInput = _azimuthPID.Run(azimuthError, (float)timeDeltaSeconds) / Sensitivity;
-                    var elevationInput = _elevationPID.Run(elevationError, (float)timeDeltaSeconds) / Sensitivity;
+                    Vector3D estimatedTargetPosLocal = Vector3D.TransformNormal(estimatedTargetPosition - _referenceMatrix.Translation, MatrixD.Transpose(_referenceMatrix));
+                    Vector3D estimatedTargetDirLocal = estimatedTargetDistance == 0 ? Vector3D.Zero : estimatedTargetPosLocal / estimatedTargetDistance;
+                    double azimuthError = Math.Atan2(-estimatedTargetDirLocal.X, -estimatedTargetDirLocal.Z);
+                    double elevationError = Math.Asin(estimatedTargetDirLocal.Y);
+                    float azimuthInput = _azimuthPID.Run((float)azimuthError, (float)timeDeltaSeconds) / Sensitivity;
+                    float elevationInput = _elevationPID.Run((float)elevationError, (float)timeDeltaSeconds) / Sensitivity;
 
                     MoveLaser(azimuthInput, elevationInput);
                     FireLaser(estimatedTargetPosition, 0.1f);
@@ -155,7 +155,7 @@ namespace IngameScript
                 _matchingDetectionCounter = 0;
             }
 
-            private void FireLaser(Vector3 raycastTarget, float overshoot)
+            private void FireLaser(Vector3D raycastTarget, float overshoot)
             {
                 double globalTime = SystemCoordinator.GlobalTime;
 
@@ -180,8 +180,8 @@ namespace IngameScript
 
                         _previouslyDetectedEntity = raycastResult;
 
-                        float timeSinceLastUniqueDetection = (float)(Time - _lastUniqueDetectionTime);
-                        if (timeSinceLastUniqueDetection > 2f && _matchingDetectionCounter >= 3)
+                        double timeSinceLastUniqueDetection = Time - _lastUniqueDetectionTime;
+                        if (timeSinceLastUniqueDetection > 2 && _matchingDetectionCounter >= 3)
                         {
                             Target = new EntityInfoExt(raycastResult, globalTime);
                         }
@@ -209,7 +209,7 @@ namespace IngameScript
 
                     if (input.SpacePress)
                     {
-                        Vector3 raycastTarget = _referenceMatrix.Forward * MaxRaycastDistance * 0.9f + _referenceMatrix.Translation;
+                        Vector3D raycastTarget = _referenceMatrix.Forward * MaxRaycastDistance * 0.9f + _referenceMatrix.Translation;
                         FireLaser(raycastTarget, 0f);
                     }
                 }
