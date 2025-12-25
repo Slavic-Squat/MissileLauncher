@@ -96,10 +96,10 @@ namespace IngameScript
 
                 _cameraArray.Update(time);
 
-                Matrix H0 = _azimuthRotor.RotorBlock.WorldMatrix;
-                Matrix H1 = Matrix.CreateRotationY(_azimuthRotor.CurrentAngle);
-                Matrix H2 = Matrix.CreateRotationX(_elevationRotor.CurrentAngle);
-                H2.Translation = new Vector3(0, 3, 0);
+                MatrixD H0 = _azimuthRotor.RotorBlock.WorldMatrix;
+                MatrixD H1 = MatrixD.CreateRotationY(_azimuthRotor.CurrentAngle);
+                MatrixD H2 = MatrixD.CreateRotationX(_elevationRotor.CurrentAngle);
+                H2.Translation = new Vector3D(0, 3, 0);
 
                 _referenceMatrix = H2 * H1 * H0;
 
