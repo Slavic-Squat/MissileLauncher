@@ -81,8 +81,8 @@ namespace IngameScript
 
                 Vector3D selfPosLocal = new Vector3D(0, 200, 0);
                 Vector3D selfPosWorld = Vector3D.Transform(selfPosLocal, cameraTargetWorld);
-                Vector4D selfPosView = Vector4D.Transform(new Vector4D(selfPosWorld, 1), viewMatrix);
-                Vector4D selfPosClip = Vector4D.Transform(selfPosView, _projectionMatrix);
+                Vector3D selfPosView = Vector3D.Transform(selfPosWorld, viewMatrix);
+                Vector4D selfPosClip = Vector4D.Transform(new Vector4D(selfPosView, 1), _projectionMatrix);
                 Vector3 selfPosNDC = new Vector3(selfPosClip.X / selfPosClip.W, selfPosClip.Y / selfPosClip.W, selfPosClip.Z / selfPosClip.W);
                 Vector2 selfPosPixel = new Vector2((1 + selfPosNDC.X) * _screenBounds.Width / 2f, (1 - selfPosNDC.Y) * _screenBounds.Height / 2f);
 
@@ -100,8 +100,8 @@ namespace IngameScript
                 MySpriteExt selfSpriteExt = new MySpriteExt(tempSprite, selfPosNDC.Z);
 
                 Vector3D basePosWorld = selfPosWorld - (Vector3D.Dot(gridPlaneWorld.Normal, selfPosWorld) + gridPlaneWorld.D) * gridPlaneWorld.Normal;
-                Vector4D basePosView = Vector4D.Transform(new Vector4D(basePosWorld, 1), viewMatrix);
-                Vector4D basePosClip = Vector4D.Transform(basePosView, _projectionMatrix);
+                Vector3D basePosView = Vector3D.Transform(basePosWorld, viewMatrix);
+                Vector4D basePosClip = Vector4D.Transform(new Vector4D(basePosView, 1), _projectionMatrix);
                 Vector3 basePosNDC = new Vector3(basePosClip.X / basePosClip.W, basePosClip.Y / basePosClip.W, basePosClip.Z / basePosClip.W);
                 Vector2 basePosPixel = new Vector2((1 + basePosNDC.X) * _screenBounds.Width / 2f, (1 - basePosNDC.Y) * _screenBounds.Height / 2f);
                 float baseDepthScale = (float)(targetToCameraDist / -basePosView.Z);
@@ -120,8 +120,8 @@ namespace IngameScript
                 MySpriteExt baseSpriteExt = new MySpriteExt(tempSprite, basePosNDC.Z);
 
                 Vector3D stemPosWorld = 0.5f * (selfPosWorld + basePosWorld);
-                Vector4D stemPosView = Vector4D.Transform(new Vector4D(stemPosWorld, 1), viewMatrix);
-                Vector4D stemPosClip = Vector4D.Transform(stemPosView, _projectionMatrix);
+                Vector3D stemPosView = Vector3D.Transform(stemPosWorld, viewMatrix);
+                Vector4D stemPosClip = Vector4D.Transform(new Vector4D(stemPosView, 1), _projectionMatrix);
                 Vector3 stemPosNDC = new Vector3(stemPosClip.X / stemPosClip.W, stemPosClip.Y / stemPosClip.W, stemPosClip.Z / stemPosClip.W);
                 Vector2 stemPosPixel = new Vector2((1 + stemPosNDC.X) * _screenBounds.Width / 2f, (1 - stemPosNDC.Y) * _screenBounds.Height / 2f);
 
@@ -142,8 +142,8 @@ namespace IngameScript
 
                 MySpriteExt stemSpriteExt = new MySpriteExt(tempSprite, stemPosNDC.Z);
 
-                Vector4D cameraTargetView = Vector4D.Transform(new Vector4D(cameraTargetWorld.Translation, 1), viewMatrix);
-                Vector4D cameraTargetClip = Vector4D.Transform(cameraTargetView, _projectionMatrix);
+                Vector3D cameraTargetView = Vector3D.Transform(cameraTargetWorld.Translation, viewMatrix);
+                Vector4D cameraTargetClip = Vector4D.Transform(new Vector4D(cameraTargetView, 1), _projectionMatrix);
                 Vector3 cameraTargetNDC = new Vector3(cameraTargetClip.X / cameraTargetClip.W, cameraTargetClip.Y / cameraTargetClip.W, cameraTargetClip.Z / cameraTargetClip.W);
 
                 tempSprite = new MySprite()
@@ -247,8 +247,8 @@ namespace IngameScript
                     EntityInfo entityInfo = entityInfoExt.Info;
 
                     Vector3D entityPosWorld = entityInfo.Position;
-                    Vector4D entityPosView = Vector4D.Transform(new Vector4D(entityPosWorld, 1), viewMatrix);
-                    Vector4D entityPosClip = Vector4D.Transform(entityPosView, _projectionMatrix);
+                    Vector3D entityPosView = Vector3D.Transform(entityPosWorld, viewMatrix);
+                    Vector4D entityPosClip = Vector4D.Transform(new Vector4D(entityPosView, 1), _projectionMatrix);
                     Vector3 entityPosNDC = new Vector3(entityPosClip.X / entityPosClip.W, entityPosClip.Y / entityPosClip.W, entityPosClip.Z / entityPosClip.W);
                     Vector2 entityPosPixel = new Vector2((1 + entityPosNDC.X) * _screenBounds.Width / 2f, (1 - entityPosNDC.Y) * _screenBounds.Height / 2f);
                     float entityDepthScale = (float)(targetToCameraDist / -entityPosView.Z);
@@ -339,8 +339,8 @@ namespace IngameScript
                     }
 
                     Vector3D basePosWorld = entityPosWorld - (Vector3D.Dot(gridPlaneWorld.Normal, entityPosWorld) + gridPlaneWorld.D) * gridPlaneWorld.Normal;
-                    Vector4D basePosView = Vector4D.Transform(new Vector4D(basePosWorld, 1), viewMatrix);
-                    Vector4D basePosClip = Vector4D.Transform(basePosView, _projectionMatrix);
+                    Vector3D basePosView = Vector3D.Transform(basePosWorld, viewMatrix);
+                    Vector4D basePosClip = Vector4D.Transform(new Vector4D(basePosView, 1), _projectionMatrix);
                     Vector3 basePosNDC = new Vector3(basePosClip.X / basePosClip.W, basePosClip.Y / basePosClip.W, basePosClip.Z / basePosClip.W);
                     Vector2 basePosPixel = new Vector2((1 + basePosNDC.X) * _screenBounds.Width / 2f, (1 - basePosNDC.Y) * _screenBounds.Height / 2f);
                     float baseDepthScale = (float)(targetToCameraDist / -basePosView.Z);
@@ -359,8 +359,8 @@ namespace IngameScript
                     MySpriteExt baseSpriteExt = new MySpriteExt(tempSprite, basePosNDC.Z);
 
                     Vector3D stemPosWorld = 0.5f * (entityPosWorld + basePosWorld);
-                    Vector4D stemPosView = Vector4D.Transform(new Vector4D(stemPosWorld, 1), viewMatrix);
-                    Vector4D stemPosClip = Vector4D.Transform(stemPosView, _projectionMatrix);
+                    Vector3D stemPosView = Vector3D.Transform(stemPosWorld, viewMatrix);
+                    Vector4D stemPosClip = Vector4D.Transform(new Vector4D(stemPosView, 1), _projectionMatrix);
                     Vector3 stemPosNDC = new Vector3(stemPosClip.X / stemPosClip.W, stemPosClip.Y / stemPosClip.W, stemPosClip.Z / stemPosClip.W);
                     Vector2 stemPosPixel = new Vector2((1 + stemPosNDC.X) * _screenBounds.Width / 2f, (1 - stemPosNDC.Y) * _screenBounds.Height / 2f);
 
