@@ -28,9 +28,9 @@ namespace IngameScript
         {
             public static double GlobalTime { get; private set; }
             public static IMyShipController ReferenceController { get; private set; }
-            public static Matrix ReferenceWorldMatrix => ReferenceController.WorldMatrix;
-            public static Vector3 ReferencePosition => ReferenceController.GetPosition();
-            public static Vector3 ReferenceVelocity => ReferenceController.GetShipVelocities().LinearVelocity;
+            public static MatrixD ReferenceWorldMatrix => ReferenceController.WorldMatrix;
+            public static Vector3D ReferencePosition => ReferenceController.GetPosition();
+            public static Vector3D ReferenceVelocity => ReferenceController.GetShipVelocities().LinearVelocity;
             public static long SelfID => ReferenceController.CubeGrid.EntityId;
             public static EntityInfo SelfInfo { get; private set; }
 

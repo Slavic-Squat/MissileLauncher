@@ -124,7 +124,7 @@ namespace IngameScript
 
                 _sprites.Clear();
 
-                Matrix referenceWorldMatrix = SystemCoordinator.ReferenceWorldMatrix;
+                MatrixD referenceWorldMatrix = SystemCoordinator.ReferenceWorldMatrix;
                 float pixelsPerMeter = _screenBounds.Width / (2f * _range);
 
                 foreach (var entityInfoExtKVP in entityInfoExts)
@@ -132,7 +132,7 @@ namespace IngameScript
                     EntityInfoExt entityInfoExt = entityInfoExtKVP.Value;
                     long key = entityInfoExtKVP.Key;
 
-                    float distance = Vector3.Distance(referenceWorldMatrix.Translation, entityInfoExt.Position);
+                    double distance = Vector3D.Distance(referenceWorldMatrix.Translation, entityInfoExt.Position);
 
                     if (distance > _range)
                     {
@@ -141,9 +141,9 @@ namespace IngameScript
 
                     EntityInfo entityInfo = entityInfoExt.Info;
 
-                    Vector3 entityPosWorld = entityInfo.Position;
-                    Vector3 entityPosLocal = Vector3.TransformNormal(entityPosWorld - referenceWorldMatrix.Translation, Matrix.Transpose(referenceWorldMatrix.GetOrientation()));
-                    Vector2 entityPosPixel = _screenBounds.Center + new Vector2(entityPosLocal.X * pixelsPerMeter, entityPosLocal.Z * pixelsPerMeter);
+                    Vector3D entityPosWorld = entityInfo.Position;
+                    Vector3D entityPosLocal = Vector3D.TransformNormal(entityPosWorld - referenceWorldMatrix.Translation, MatrixD.Transpose(referenceWorldMatrix.GetOrientation()));
+                    Vector2 entityPosPixel = _screenBounds.Center + new Vector2((float)entityPosLocal.X * pixelsPerMeter, (float)entityPosLocal.Z * pixelsPerMeter);
 
                     string spriteName = default(string);
                     Vector2 spriteSize = default(Vector2);
@@ -207,7 +207,7 @@ namespace IngameScript
                         RotationOrScale = 0f,
                     };
 
-                    MySpriteExt MySpriteExtEntity = new MySpriteExt(tempSprite, entityPosLocal.Y);
+                    MySpriteExt MySpriteExtEntity = new MySpriteExt(tempSprite, (float)entityPosLocal.Y);
                     MyEntitySprite entitySprite = new MyEntitySprite(entityInfoExt, MySpriteExtEntity);
 
                     entitySprites.Add(key, entitySprite);
@@ -227,7 +227,7 @@ namespace IngameScript
                             RotationOrScale = 0f,
                         };
 
-                        selectorSpriteExt = new MySpriteExt(tempSprite, entityPosLocal.Y + 0.001f);
+                        selectorSpriteExt = new MySpriteExt(tempSprite, (float)entityPosLocal.Y + 0.001f);
                     }
 
                     _sprites.Add(MySpriteExtEntity);

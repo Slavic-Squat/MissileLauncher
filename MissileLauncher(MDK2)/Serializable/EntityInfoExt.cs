@@ -27,8 +27,8 @@ namespace IngameScript
         {
             public EntityInfo Info { get; private set; }
             public long EntityID => Info.EntityID;
-            public Vector3 Position => Info.Position;
-            public Vector3 Velocity => Info.Velocity;
+            public Vector3D Position => Info.Position;
+            public Vector3D Velocity => Info.Velocity;
             public double TimeRecorded => Info.TimeRecorded;
             public EntityType Type => Info.Type;
             public EntityInfoSubType SubType => Info.SubType;
@@ -101,7 +101,7 @@ namespace IngameScript
             {
                 StringBuilder sb = new StringBuilder($"[{EntityEnumHelper.GetDisplayString(Type)} INFO]\n-----------------------\nTYPE: {EntityEnumHelper.GetDisplayString(Type)}\nSRC: {EntityEnumHelper.GetDisplayString(Source)}\nREL: {EntityEnumHelper.GetDisplayString(Relation)}\n");
 
-                float distance = Vector3.Distance(SystemCoordinator.ReferencePosition, Position);
+                double distance = Vector3D.Distance(SystemCoordinator.ReferencePosition, Position);
                 if (distance > 1000f)
                 {
                     distance /= 1000f;
@@ -112,7 +112,7 @@ namespace IngameScript
                     sb.Append($"DIST: {distance:0} m\n");
                 }
 
-                float speed = Info.Velocity.Length();
+                double speed = Info.Velocity.Length();
                 if (speed > 1000f)
                 {
                     speed /= 1000f;
@@ -123,7 +123,7 @@ namespace IngameScript
                     sb.Append($"SPD: {speed:0} m/s\n");
                 }
 
-                float age = (float)(SystemCoordinator.GlobalTime - Info.TimeRecorded) * 1000;
+                double age = (SystemCoordinator.GlobalTime - Info.TimeRecorded) * 1000;
                 if (age > 1000f)
                 {
                     age /= 1000f;

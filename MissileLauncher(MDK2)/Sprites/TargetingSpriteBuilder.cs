@@ -43,7 +43,7 @@ namespace IngameScript
             private float _n = 100;
             private float _f = 100000;
             private float _zoom = 1f;
-            private Vector3 _localCameraPos = new Vector3(31334, 30557, 63764);
+            private Vector3D _localCameraPos = new Vector3D(31334, 30557, 63764);
 
             private List<MySpriteExt> _spritesPrePlane = new List<MySpriteExt>();
             private List<MySpriteExt> _planeSprites = new List<MySpriteExt>();
@@ -65,24 +65,25 @@ namespace IngameScript
 
             private void BuildStaticSprites()
             {
-                Matrix cameraTargetWorld = SystemCoordinator.ReferenceWorldMatrix;
-                Vector3 cameraPositionWorld = Vector3.Transform(_localCameraPos, cameraTargetWorld);
+                MatrixD cameraTargetWorld = SystemCoordinator.ReferenceWorldMatrix;
+                Vector3D cameraPositionWorld = Vector3D.Transform(_localCameraPos, cameraTargetWorld);
 
-                Vector3 targetToCamera = cameraPositionWorld - cameraTargetWorld.Translation;
-                float targetToCameraDist = targetToCamera.Length();
-                Vector3 targetToCameraDir = targetToCamera / targetToCameraDist;
+                Vector3D targetToCamera = cameraPositionWorld - cameraTargetWorld.Translation;
+                double targetToCameraDist = targetToCamera.Length();
+                Vector3D targetToCameraDir = targetToCamera / targetToCameraDist;
 
                 cameraPositionWorld = cameraTargetWorld.Translation + targetToCameraDir * (targetToCameraDist / _zoom);
                 targetToCameraDist /= _zoom;
 
-                Matrix viewMatrix = Matrix.CreateLookAt(cameraPositionWorld, cameraTargetWorld.Translation, cameraTargetWorld.Up);
-                Matrix totalMatrix = viewMatrix * _projectionMatrix;
+                MatrixD viewMatrix = MatrixD.CreateLookAt(cameraPositionWorld, cameraTargetWorld.Translation, cameraTargetWorld.Up);
 
-                Plane gridPlaneWorld = new Plane(cameraTargetWorld.Translation, cameraTargetWorld.Up);
+                PlaneD gridPlaneWorld = new PlaneD(cameraTargetWorld.Translation, cameraTargetWorld.Up);
 
-                Vector3 selfPosLocal = new Vector3(0, 200, 0);
-                Vector3 selfPosWorld = Vector3.Transform(selfPosLocal, cameraTargetWorld);
-                Vector3 selfPosNDC = Vector3.Transform(selfPosWorld, totalMatrix);
+                Vector3D selfPosLocal = new Vector3(0, 200, 0);
+                Vector3D selfPosWorld = Vector3.Transform(selfPosLocal, cameraTargetWorld);
+                Vector4D selfPosView = Vector4D.Transform(new Vector4D(selfPosWorld, 1), viewMatrix);
+                Vector4 selfPosClip = Vector4.Transform(selfPosView, _projectionMatrix);
+                Vector3 selfPosNDC = new Vector3(selfPosClip.X / selfPosClip.W, selfPosClip.Y / selfPosClip.W, selfPosClip.Z / selfPosClip.W);
                 Vector2 selfPosPixel = new Vector2((1 + selfPosNDC.X) * _screenBounds.Width / 2f, (1 - selfPosNDC.Y) * _screenBounds.Height / 2f);
 
                 MySprite tempSprite = new MySprite()
@@ -98,12 +99,12 @@ namespace IngameScript
 
                 MySpriteExt selfSpriteExt = new MySpriteExt(tempSprite, selfPosNDC.Z);
 
-                Vector3 basePosWorld = selfPosWorld - (Vector3.Dot(gridPlaneWorld.Normal, selfPosWorld) + gridPlaneWorld.D) * gridPlaneWorld.Normal;
-                Vector3 basePosNDC = Vector3.Transform(basePosWorld, totalMatrix);
+                Vector3D basePosWorld = selfPosWorld - (Vector3D.Dot(gridPlaneWorld.Normal, selfPosWorld) + gridPlaneWorld.D) * gridPlaneWorld.Normal;
+                Vector4D basePosView = Vector4D.Transform(new Vector4D(basePosWorld, 1), viewMatrix);
+                Vector4 basePosClip = Vector4.Transform(basePosView, _projectionMatrix);
+                Vector3 basePosNDC = new Vector3(basePosClip.X / basePosClip.W, basePosClip.Y / basePosClip.W, basePosClip.Z / basePosClip.W);
                 Vector2 basePosPixel = new Vector2((1 + basePosNDC.X) * _screenBounds.Width / 2f, (1 - basePosNDC.Y) * _screenBounds.Height / 2f);
-                //float basePosZView = -(_f * _n) / (_f - basePosNDC.Z * (_f - _n));
-                float basePosZView = Vector3.Dot(basePosWorld - cameraPositionWorld, targetToCameraDir);
-                float baseDepthScale = targetToCameraDist / (-basePosZView);
+                float baseDepthScale = (float)(targetToCameraDist / -basePosView.Z);
 
                 tempSprite = new MySprite()
                 {
@@ -118,8 +119,10 @@ namespace IngameScript
 
                 MySpriteExt baseSpriteExt = new MySpriteExt(tempSprite, basePosNDC.Z);
 
-                Vector3 stemPosWorld = 0.5f * (selfPosWorld + basePosWorld);
-                Vector3 stemPosNDC = Vector3.Transform(stemPosWorld, totalMatrix);
+                Vector3D stemPosWorld = 0.5f * (selfPosWorld + basePosWorld);
+                Vector4D stemPosView = Vector4D.Transform(new Vector4D(stemPosWorld, 1), viewMatrix);
+                Vector4 stemPosClip = Vector4.Transform(stemPosView, _projectionMatrix);
+                Vector3 stemPosNDC = new Vector3(stemPosClip.X / stemPosClip.W, stemPosClip.Y / stemPosClip.W, stemPosClip.Z / stemPosClip.W);
                 Vector2 stemPosPixel = new Vector2((1 + stemPosNDC.X) * _screenBounds.Width / 2f, (1 - stemPosNDC.Y) * _screenBounds.Height / 2f);
 
                 Vector2 stemVector = new Vector2(selfPosPixel.X - basePosPixel.X, selfPosPixel.Y - basePosPixel.Y);
@@ -139,7 +142,9 @@ namespace IngameScript
 
                 MySpriteExt stemSpriteExt = new MySpriteExt(tempSprite, stemPosNDC.Z);
 
-                Vector3 cameraTargetNDC = Vector3.Transform(cameraTargetWorld.Translation, totalMatrix);
+                Vector4D cameraTargetView = Vector4D.Transform(new Vector4D(cameraTargetWorld.Translation, 1), viewMatrix);
+                Vector4 cameraTargetClip = Vector4.Transform(cameraTargetView, _projectionMatrix);
+                Vector3 cameraTargetNDC = new Vector3(cameraTargetClip.X / cameraTargetClip.W, cameraTargetClip.Y / cameraTargetClip.W, cameraTargetClip.Z / cameraTargetClip.W);
 
                 tempSprite = new MySprite()
                 {
@@ -213,27 +218,26 @@ namespace IngameScript
                 _spritesPrePlane.Clear();
                 _spritesPostPlane.Clear();
 
-                Matrix cameraTargetWorld = SystemCoordinator.ReferenceWorldMatrix;
-                Vector3 cameraPositionWorld = Vector3.Transform(_localCameraPos, cameraTargetWorld);
+                MatrixD cameraTargetWorld = SystemCoordinator.ReferenceWorldMatrix;
+                Vector3D cameraPositionWorld = Vector3D.Transform(_localCameraPos, cameraTargetWorld);
 
-                Vector3 targetToCamera = cameraPositionWorld - cameraTargetWorld.Translation;
-                float targetToCameraDist = targetToCamera.Length();
-                Vector3 targetToCameraDir = targetToCamera / targetToCameraDist;
+                Vector3D targetToCamera = cameraPositionWorld - cameraTargetWorld.Translation;
+                double targetToCameraDist = targetToCamera.Length();
+                Vector3D targetToCameraDir = targetToCamera / targetToCameraDist;
 
                 cameraPositionWorld = cameraTargetWorld.Translation + targetToCameraDir * (targetToCameraDist / _zoom);
                 targetToCameraDist /= _zoom;
 
-                Matrix viewMatrix = Matrix.CreateLookAt(cameraPositionWorld, cameraTargetWorld.Translation, cameraTargetWorld.Up);
-                Matrix totalMatrix = viewMatrix * _projectionMatrix;
+                MatrixD viewMatrix = MatrixD.CreateLookAt(cameraPositionWorld, cameraTargetWorld.Translation, cameraTargetWorld.Up);
 
-                Plane gridPlaneWorld = new Plane(cameraTargetWorld.Translation, cameraTargetWorld.Up);
+                PlaneD gridPlaneWorld = new PlaneD(cameraTargetWorld.Translation, cameraTargetWorld.Up);
 
                 foreach (var entityInfoExtKVP in entityInfoExts)
                 {
                     EntityInfoExt entityInfoExt = entityInfoExtKVP.Value;
                     long key = entityInfoExtKVP.Key;
 
-                    float distance = Vector3.Distance(cameraTargetWorld.Translation, entityInfoExt.Position);
+                    double distance = Vector3D.Distance(cameraTargetWorld.Translation, entityInfoExt.Position);
 
                     if (distance > 12000f / _zoom)
                     {
@@ -242,12 +246,12 @@ namespace IngameScript
 
                     EntityInfo entityInfo = entityInfoExt.Info;
 
-                    Vector3 entityPosWorld = entityInfo.Position;
-                    Vector3 entityPosNDC = Vector3.Transform(entityPosWorld, totalMatrix);
+                    Vector3D entityPosWorld = entityInfo.Position;
+                    Vector4D entityPosView = Vector4D.Transform(new Vector4D(entityPosWorld, 1), viewMatrix);
+                    Vector4 entityPosClip = Vector4.Transform(entityPosView, _projectionMatrix);
+                    Vector3 entityPosNDC = new Vector3(entityPosClip.X / entityPosClip.W, entityPosClip.Y / entityPosClip.W, entityPosClip.Z / entityPosClip.W);
                     Vector2 entityPosPixel = new Vector2((1 + entityPosNDC.X) * _screenBounds.Width / 2f, (1 - entityPosNDC.Y) * _screenBounds.Height / 2f);
-                    //float entityPosZView = -(_f * _n) / (_f - entityPosNDC.Z * (_f - _n));
-                    float entityPosZView = Vector3.Dot(entityPosWorld - cameraPositionWorld, targetToCameraDir);
-                    float entityDepthScale = targetToCameraDist / -entityPosZView;
+                    float entityDepthScale = (float)(targetToCameraDist / -entityPosView.Z);
 
                     string spriteName = default(string);
                     Vector2 spriteSize = default(Vector2);
@@ -335,11 +339,11 @@ namespace IngameScript
                     }
 
                     Vector3 basePosWorld = entityPosWorld - (Vector3.Dot(gridPlaneWorld.Normal, entityPosWorld) + gridPlaneWorld.D) * gridPlaneWorld.Normal;
-                    Vector3 basePosNDC = Vector3.Transform(basePosWorld, totalMatrix);
+                    Vector4D basePosView = Vector4D.Transform(new Vector4D(basePosWorld, 1), viewMatrix);
+                    Vector4 basePosClip = Vector4.Transform(basePosView, _projectionMatrix);
+                    Vector3 basePosNDC = new Vector3(basePosClip.X / basePosClip.W, basePosClip.Y / basePosClip.W, basePosClip.Z / basePosClip.W);
                     Vector2 basePosPixel = new Vector2((1 + basePosNDC.X) * _screenBounds.Width / 2f, (1 - basePosNDC.Y) * _screenBounds.Height / 2f);
-                    //float basePosZView = -(_f * _n) / (_f - basePosNDC.Z * (_f - _n));
-                    float basePosZView = Vector3.Dot(basePosWorld - cameraPositionWorld, targetToCameraDir);
-                    float baseDepthScale = targetToCameraDist / -basePosZView;
+                    float baseDepthScale = (float)(targetToCameraDist / -basePosView.Z);
 
                     tempSprite = new MySprite()
                     {
@@ -355,7 +359,9 @@ namespace IngameScript
                     MySpriteExt baseSpriteExt = new MySpriteExt(tempSprite, basePosNDC.Z);
 
                     Vector3 stemPosWorld = 0.5f * (entityPosWorld + basePosWorld);
-                    Vector3 stemPosNDC = Vector3.Transform(stemPosWorld, totalMatrix);
+                    Vector4D stemPosView = Vector4D.Transform(new Vector4D(stemPosWorld, 1), viewMatrix);
+                    Vector4 stemPosClip = Vector4.Transform(stemPosView, _projectionMatrix);
+                    Vector3 stemPosNDC = new Vector3(stemPosClip.X / stemPosClip.W, stemPosClip.Y / stemPosClip.W, stemPosClip.Z / stemPosClip.W);
                     Vector2 stemPosPixel = new Vector2((1 + stemPosNDC.X) * _screenBounds.Width / 2f, (1 - stemPosNDC.Y) * _screenBounds.Height / 2f);
 
                     Vector2 stemVector = new Vector2(entityPosPixel.X - basePosPixel.X, entityPosPixel.Y - basePosPixel.Y);
@@ -375,7 +381,7 @@ namespace IngameScript
 
                     MySpriteExt stemSpriteExt = new MySpriteExt(tempSprite, stemPosNDC.Z);
 
-                    if ((Vector3.Dot(cameraPositionWorld, gridPlaneWorld.Normal) + gridPlaneWorld.D) * (Vector3.Dot(entityPosWorld, gridPlaneWorld.Normal) + gridPlaneWorld.D) > 0)
+                    if ((Vector3D.Dot(cameraPositionWorld, gridPlaneWorld.Normal) + gridPlaneWorld.D) * (Vector3D.Dot(entityPosWorld, gridPlaneWorld.Normal) + gridPlaneWorld.D) > 0)
                     {
                         _spritesPostPlane.Add(MySpriteExtEntity);
                         _spritesPostPlane.Add(baseSpriteExt);

@@ -71,13 +71,13 @@ namespace IngameScript
                 Time = time;
             }
 
-            public MyDetectedEntityInfo Raycast(Vector3 raycastTarget)
+            public MyDetectedEntityInfo Raycast(Vector3D raycastTarget)
             {
                 if (CanScan(raycastTarget))
                 {
                     IMyCameraBlock nextCamera = _cameraQueue.Dequeue();
                     var result = nextCamera.Raycast(raycastTarget);
-                    float raycastDistance = Vector3.Distance(raycastTarget, nextCamera.GetPosition());
+                    double raycastDistance = Vector3D.Distance(raycastTarget, nextCamera.GetPosition());
                     _avgRaycastDistance.Add(raycastDistance);
                     _cameraQueue.Enqueue(nextCamera);
                     _timeLastRaycast = Time;
@@ -89,18 +89,18 @@ namespace IngameScript
                 }
             }
 
-            public MyDetectedEntityInfo Raycast(Vector3 raycastTarget, float overshoot)
+            public MyDetectedEntityInfo Raycast(Vector3D raycastTarget, float overshoot)
             {
-                Vector3 raycastOvershoot = (raycastTarget - GetCameraPosition()) * overshoot;
+                Vector3D raycastOvershoot = (raycastTarget - GetCameraPosition()) * overshoot;
                 raycastTarget += raycastOvershoot;
 
                 return Raycast(raycastTarget);
             }
 
-            public bool CanScan(Vector3 raycastTarget)
+            public bool CanScan(Vector3D raycastTarget)
             {
                 IMyCameraBlock nextCamera = _cameraQueue.Peek();
-                float raycastDistance = Vector3.Distance(raycastTarget, nextCamera.GetPosition());
+                double raycastDistance = Vector3D.Distance(raycastTarget, nextCamera.GetPosition());
 
                 if (nextCamera.CanScan(raycastTarget) && raycastDistance < MaxRaycastDistance && !Recharging)
                 {
@@ -112,15 +112,15 @@ namespace IngameScript
                 }
             }
 
-            public bool CanScan(Vector3 raycastTarget, float overshoot)
+            public bool CanScan(Vector3D raycastTarget, float overshoot)
             {
-                Vector3 raycastOvershoot = (raycastTarget - GetCameraPosition()) * overshoot;
+                Vector3D raycastOvershoot = (raycastTarget - GetCameraPosition()) * overshoot;
                 raycastTarget += raycastOvershoot;
 
                 return CanScan(raycastTarget);
             }
 
-            public Vector3 GetCameraPosition() => _cameraQueue.Peek().GetPosition();
+            public Vector3D GetCameraPosition() => _cameraQueue.Peek().GetPosition();
         }
     }
 }

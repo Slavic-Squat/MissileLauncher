@@ -30,7 +30,7 @@ namespace IngameScript
             private CameraArray _cameraArray2;
             private CameraArray _cameraArray3;
 
-            private Matrix _referenceMatrix;
+            private MatrixD _referenceMatrix;
             
             private Dictionary<long, EntityInfoExt> _targets = new Dictionary<long, EntityInfoExt>();
             private PriorityQueue<long, double> _targetQueue;
@@ -96,7 +96,7 @@ namespace IngameScript
                 {
                     Quaternion rotation = Quaternion.CreateFromAxisAngle(_spinRotor.RotorBlock.WorldMatrix.Up, _spinRotor.CurrentAngle);
 
-                    _referenceMatrix = Matrix.Transform(_spinRotor.RotorBlock.WorldMatrix, rotation);
+                    _referenceMatrix = MatrixD.Transform(_spinRotor.RotorBlock.WorldMatrix, rotation);
 
                     _referenceMatrix.Translation = _spinRotor.RotorBlock.GetPosition();
 
@@ -104,11 +104,11 @@ namespace IngameScript
                     {
                         EntityInfoExt target = _targets[targetID];
                         double timeSinceLastDetection = globalTime - target.TimeRecorded;
-                        Vector3 estimatedTargetPos = target.Position + target.Velocity * (float)timeSinceLastDetection;
-                        Vector3 estimatedTargetPosLocal = Vector3.TransformNormal(estimatedTargetPos - _referenceMatrix.Translation, Matrix.Transpose(_referenceMatrix));
-                        float estimatedTargetDistance = estimatedTargetPosLocal.Length();
-                        Vector3 estimatedTargetDirLocal = estimatedTargetDistance == 0 ? Vector3.Zero : estimatedTargetPosLocal / estimatedTargetDistance;
-                        float targetElevation = MathHelper.ToDegrees((float)Math.Asin(estimatedTargetDirLocal.Y));
+                        Vector3D estimatedTargetPos = target.Position + target.Velocity * timeSinceLastDetection;
+                        Vector3D estimatedTargetPosLocal = Vector3D.TransformNormal(estimatedTargetPos - _referenceMatrix.Translation, MatrixD.Transpose(_referenceMatrix));
+                        double estimatedTargetDistance = estimatedTargetPosLocal.Length();
+                        Vector3D estimatedTargetDirLocal = estimatedTargetDistance == 0 ? Vector3D.Zero : estimatedTargetPosLocal / estimatedTargetDistance;
+                        double targetElevation = MathHelper.ToDegrees(Math.Asin(estimatedTargetDirLocal.Y));
 
                         if (timeSinceLastDetection > 5 || estimatedTargetDistance >= MaxRaycastDistance * 0.8f || targetElevation >= 45)
                         {
@@ -131,10 +131,10 @@ namespace IngameScript
                         EntityInfoExt target = _targets[targetID];
                         MyDetectedEntityInfo raycastResult = default(MyDetectedEntityInfo);
                         double timeSinceLastDetection = globalTime - target.TimeRecorded;
-                        Vector3 estimatedTargetPos = target.Position + target.Velocity * (float)timeSinceLastDetection;
-                        Vector3 estimatedTargetPosLocal = Vector3.TransformNormal(estimatedTargetPos - _referenceMatrix.Translation, Matrix.Transpose(_referenceMatrix));
-                        Vector3 estimatedTargetDirLocal = estimatedTargetPosLocal == Vector3.Zero ? Vector3.Zero : Vector3.Normalize(estimatedTargetPosLocal);
-                        float targetAzimuth = MathHelper.ToDegrees((float)Math.Atan2(-estimatedTargetDirLocal.X, -estimatedTargetDirLocal.Z));
+                        Vector3D estimatedTargetPos = target.Position + target.Velocity * timeSinceLastDetection;
+                        Vector3D estimatedTargetPosLocal = Vector3D.TransformNormal(estimatedTargetPos - _referenceMatrix.Translation, MatrixD.Transpose(_referenceMatrix));
+                        Vector3D estimatedTargetDirLocal = estimatedTargetPosLocal == Vector3D.Zero ? Vector3D.Zero : Vector3D.Normalize(estimatedTargetPosLocal);
+                        double targetAzimuth = MathHelper.ToDegrees(Math.Atan2(-estimatedTargetDirLocal.X, -estimatedTargetDirLocal.Z));
 
                         if (targetAzimuth > -45 && targetAzimuth < 45)
                         {
