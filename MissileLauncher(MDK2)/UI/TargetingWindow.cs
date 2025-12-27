@@ -94,12 +94,12 @@ namespace IngameScript
                 ControlPanel actionsPanel = UIFactory.CreateTargetingActionsPanel(actionsPanelPos, this);
                 AddControlPanel(actionsPanel);
 
-                Vector2 targetingInfoPanelSize = new Vector2(200, 130f);
+                Vector2 targetingInfoPanelSize = new Vector2(200, 200f);
                 Vector2 targetingInfoPanelPos = Pos + new Vector2(Size.X - targetingInfoPanelSize.X, 0);
 
                 MissileCoordinator coordinator = UI.UICoordinator.MissileCoordinator;
                 AWACS awacs = UI.UICoordinator.AWACS;
-                Func<string> targetingInfoGetter = () => coordinator.GetOverview() + (awacs == null ? "" : $"\n{awacs.GetOverview()}");
+                Func<string> targetingInfoGetter = () => coordinator.GetOverview() + (awacs == null ? "" : $"\n{awacs.GetOverview().TrimEnd(' ', '\n')}");
                 InfoPanel targetingInfoPanel = new InfoPanel(targetingInfoPanelPos, targetingInfoPanelSize, 5f, 10f, targetingInfoGetter);
                 AddInfoPanel(targetingInfoPanel);
 
