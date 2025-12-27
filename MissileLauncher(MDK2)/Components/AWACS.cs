@@ -188,6 +188,15 @@ namespace IngameScript
             {
                 _targets.Remove(targetID);
             }
+
+            public string GetOverview()
+            {
+                StringBuilder sb = new StringBuilder();
+                sb.AppendLine("[AWACS]");
+                sb.AppendLine($"  TRGTS: {_targets.Count}");
+                sb.AppendLine($"  RNG: {_maxRaycastDistance:F0} m");
+                return sb.ToString();
+            }
         }
     }
 }

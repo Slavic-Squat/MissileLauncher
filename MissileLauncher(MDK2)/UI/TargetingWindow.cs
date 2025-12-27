@@ -99,7 +99,7 @@ namespace IngameScript
 
                 MissileCoordinator coordinator = UI.UICoordinator.MissileCoordinator;
                 AWACS awacs = UI.UICoordinator.AWACS;
-                Func<string> targetingInfoGetter = () => coordinator.ToString() + $"\nAWACS TRGTS: {(awacs == null ? "N/A" : awacs.TargetCount.ToString())}";
+                Func<string> targetingInfoGetter = () => coordinator.GetOverview() + (awacs == null ? "" : $"\n{awacs.GetOverview()}");
                 InfoPanel targetingInfoPanel = new InfoPanel(targetingInfoPanelPos, targetingInfoPanelSize, 5f, 10f, targetingInfoGetter);
                 AddInfoPanel(targetingInfoPanel);
 

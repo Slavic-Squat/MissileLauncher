@@ -52,7 +52,7 @@ namespace IngameScript
                 display.Script = "";
                 display.ScriptBackgroundColor = Color.Black;
 
-                Bounds = new RectangleF(new Vector2(0, (TextureSize.Y - SurfaceSize.Y) * 0.5f), SurfaceSize);
+                Bounds = new RectangleF((TextureSize - SurfaceSize) * 0.5f, SurfaceSize);
 
                 TargetingWindow targetingWindow = new TargetingWindow(this, 5f);
                 OpenWindow(targetingWindow);

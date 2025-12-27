@@ -268,9 +268,15 @@ namespace IngameScript
                 IsControlPaused = false;
             }
 
-            public override string ToString()
+            public string GetOverview()
             {
-                return $"LASER [{ID}]\n----------------\nSTATUS: {(IsUnderControl ? "CONTROLLED" : "FREE")}\nLOCKED: {(HasTarget ? "YES" : "NO")}\nMAX DIST: {MaxRaycastDistance:0} m";
+                StringBuilder sb = new StringBuilder();
+                sb.AppendLine($"[LASER {ID}]");
+                sb.AppendLine($"  STATUS: {(IsUnderControl ? "CONTROLLED" : "FREE")}");
+                sb.AppendLine($"  LOCKED: {(HasTarget ? "YES" : "NO")}");
+                sb.AppendLine($"  RNG: {MaxRaycastDistance:F0} m");
+
+                return sb.ToString();
             }
         }
     }

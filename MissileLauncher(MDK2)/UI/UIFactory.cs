@@ -389,7 +389,7 @@ namespace IngameScript
                             if (bayIndex >= numBays) break;
                             var bay = bays[bayIndex];
                             panelPos.X = menu.Pos.X + padding + (panelSize.X + spacing) * k;
-                            Func<string> getText = () => bay.ToString();
+                            Func<string> getText = () => bay.GetOverview();
                             InfoPanel panel = new InfoPanel(panelPos, panelSize, 5f, 10f, getText);
                             menu.AddInfoPanel(panel, i);
 
@@ -523,7 +523,7 @@ namespace IngameScript
                             if (laserIndex >= numLasers) break;
                             var laser = lasers[laserIndex];
                             panelPos.X = menu.Pos.X + padding + (panelSize.X + spacing) * k;
-                            Func<string> getText = () => laser.ToString();
+                            Func<string> getText = () => laser.GetOverview();
                             InfoPanel panel = new InfoPanel(panelPos, panelSize, 5f, 10f, getText);
                             menu.AddInfoPanel(panel, i);
 

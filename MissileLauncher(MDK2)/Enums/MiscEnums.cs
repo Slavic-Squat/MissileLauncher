@@ -86,40 +86,40 @@ namespace IngameScript
                 }
             }
 
-            public static readonly NavMode[] NavModeCycles = new NavMode[] { NavMode.UI, NavMode.Targeting };
+            public static readonly NavMode[] _navModeCycles = new NavMode[] { NavMode.UI, NavMode.Targeting };
 
             public static NavMode NextNavMode(NavMode mode)
             {
-                int index = Array.IndexOf(NavModeCycles, mode);
-                if (index < 0) return NavModeCycles[0];
-                index = (index + 1) % NavModeCycles.Length;
-                return NavModeCycles[index];
+                int index = Array.IndexOf(_navModeCycles, mode);
+                if (index < 0) return _navModeCycles[0];
+                index = (index + 1) % _navModeCycles.Length;
+                return _navModeCycles[index];
             }
 
             public static NavMode PreviousNavMode(NavMode mode)
             {
-                int index = Array.IndexOf(NavModeCycles, mode);
-                if (index < 0) return NavModeCycles[0];
-                index = (index - 1 + NavModeCycles.Length) % NavModeCycles.Length;
-                return NavModeCycles[index];
+                int index = Array.IndexOf(_navModeCycles, mode);
+                if (index < 0) return _navModeCycles[0];
+                index = (index - 1 + _navModeCycles.Length) % _navModeCycles.Length;
+                return _navModeCycles[index];
             }
 
-            public static readonly ScopeScale[] ScopeScaleCycles = new ScopeScale[] { ScopeScale.Close, ScopeScale.Medium, ScopeScale.Far };
+            public static readonly ScopeScale[] _scopeScaleCycles = new ScopeScale[] { ScopeScale.Close, ScopeScale.Medium, ScopeScale.Far };
 
             public static ScopeScale NextScopeScale(ScopeScale scale)
             {
-                int index = Array.IndexOf(ScopeScaleCycles, scale);
-                if (index < 0) return ScopeScaleCycles[0];
-                index = (index + 1) % ScopeScaleCycles.Length;
-                return ScopeScaleCycles[index];
+                int index = Array.IndexOf(_scopeScaleCycles, scale);
+                if (index < 0) return _scopeScaleCycles[0];
+                index = (index + 1) % _scopeScaleCycles.Length;
+                return _scopeScaleCycles[index];
             }
 
             public static ScopeScale PreviousScopeScale(ScopeScale scale)
             {
-                int index = Array.IndexOf(ScopeScaleCycles, scale);
-                if (index < 0) return ScopeScaleCycles[0];
-                index = (index - 1 + ScopeScaleCycles.Length) % ScopeScaleCycles.Length;
-                return ScopeScaleCycles[index];
+                int index = Array.IndexOf(_scopeScaleCycles, scale);
+                if (index < 0) return _scopeScaleCycles[0];
+                index = (index - 1 + _scopeScaleCycles.Length) % _scopeScaleCycles.Length;
+                return _scopeScaleCycles[index];
             }
         }
     }

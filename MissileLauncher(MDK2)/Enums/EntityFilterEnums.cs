@@ -79,62 +79,58 @@ namespace IngameScript
                 }
             }
 
-            private static readonly EntityTypeFilter[] EntityTypeFilterCycles = new EntityTypeFilter[] { EntityTypeFilter.Targets, EntityTypeFilter.Missiles, EntityTypeFilter.All };
+            private static readonly EntityTypeFilter[] _entityTypeFilterCycles = new EntityTypeFilter[] { EntityTypeFilter.Targets, EntityTypeFilter.Missiles, EntityTypeFilter.All };
 
             public static EntityTypeFilter NextEntityTypeFilter(EntityTypeFilter filter)
             {
-                int index = Array.IndexOf(EntityTypeFilterCycles, filter);
-                if (index < 0) return EntityTypeFilterCycles[0];
-                index = (index + 1) % EntityTypeFilterCycles.Length;
-                return EntityTypeFilterCycles[index];
+                int index = Array.IndexOf(_entityTypeFilterCycles, filter);
+                if (index < 0) return _entityTypeFilterCycles[0];
+                index = (index + 1) % _entityTypeFilterCycles.Length;
+                return _entityTypeFilterCycles[index];
             }
 
             public static EntityTypeFilter PreviousEntityTypeFilter(EntityTypeFilter filter)
             {
-                int index = Array.IndexOf(EntityTypeFilterCycles, filter);
-                if (index < 0) return EntityTypeFilterCycles[0];
-                index = (index - 1 + EntityTypeFilterCycles.Length) % EntityTypeFilterCycles.Length;
-                return EntityTypeFilterCycles[index];
+                int index = Array.IndexOf(_entityTypeFilterCycles, filter);
+                if (index < 0) return _entityTypeFilterCycles[0];
+                index = (index - 1 + _entityTypeFilterCycles.Length) % _entityTypeFilterCycles.Length;
+                return _entityTypeFilterCycles[index];
             }
 
-            
-
-            private static readonly EntityRelationFilter[] EntityRelationFilterCycles = new EntityRelationFilter[] { EntityRelationFilter.Hostile, EntityRelationFilter.Neutral, EntityRelationFilter.Friendly, EntityRelationFilter.Me, EntityRelationFilter.All };
+            private static readonly EntityRelationFilter[] _entityRelationFilterCycles = new EntityRelationFilter[] { EntityRelationFilter.Hostile, EntityRelationFilter.Neutral, EntityRelationFilter.Friendly, EntityRelationFilter.Me, EntityRelationFilter.All };
 
             public static EntityRelationFilter NextEntityRelationFilter(EntityRelationFilter filter)
             {
-                int index = Array.IndexOf(EntityRelationFilterCycles, filter);
-                if (index < 0) return EntityRelationFilterCycles[0];
-                index = (index + 1) % EntityRelationFilterCycles.Length;
-                return EntityRelationFilterCycles[index];
+                int index = Array.IndexOf(_entityRelationFilterCycles, filter);
+                if (index < 0) return _entityRelationFilterCycles[0];
+                index = (index + 1) % _entityRelationFilterCycles.Length;
+                return _entityRelationFilterCycles[index];
             }
 
             public static EntityRelationFilter PreviousEntityRelationFilter(EntityRelationFilter filter)
             {
-                int index = Array.IndexOf(EntityRelationFilterCycles, filter);
-                if (index < 0) return EntityRelationFilterCycles[0];
-                index = (index - 1 + EntityRelationFilterCycles.Length) % EntityRelationFilterCycles.Length;
-                return EntityRelationFilterCycles[index];
+                int index = Array.IndexOf(_entityRelationFilterCycles, filter);
+                if (index < 0) return _entityRelationFilterCycles[0];
+                index = (index - 1 + _entityRelationFilterCycles.Length) % _entityRelationFilterCycles.Length;
+                return _entityRelationFilterCycles[index];
             }
 
-            
-
-            private static readonly EntitySourceFilter[] EntitySourceFilterCycles = new EntitySourceFilter[] { EntitySourceFilter.Local, EntitySourceFilter.Remote, EntitySourceFilter.Both };
+            private static readonly EntitySourceFilter[] _entitySourceFilterCycles = new EntitySourceFilter[] { EntitySourceFilter.Local, EntitySourceFilter.Remote, EntitySourceFilter.Both };
 
             public static EntitySourceFilter NextEntitySourceFilter(EntitySourceFilter filter)
             {
-                int index = Array.IndexOf(EntitySourceFilterCycles, filter);
-                if (index < 0) return EntitySourceFilterCycles[0];
-                index = (index + 1) % EntitySourceFilterCycles.Length;
-                return EntitySourceFilterCycles[index];
+                int index = Array.IndexOf(_entitySourceFilterCycles, filter);
+                if (index < 0) return _entitySourceFilterCycles[0];
+                index = (index + 1) % _entitySourceFilterCycles.Length;
+                return _entitySourceFilterCycles[index];
             }
 
             public static EntitySourceFilter PreviousEntitySourceFilter(EntitySourceFilter filter)
             {
-                int index = Array.IndexOf(EntitySourceFilterCycles, filter);
-                if (index < 0) return EntitySourceFilterCycles[0];
-                index = (index - 1 + EntitySourceFilterCycles.Length) % EntitySourceFilterCycles.Length;
-                return EntitySourceFilterCycles[index];
+                int index = Array.IndexOf(_entitySourceFilterCycles, filter);
+                if (index < 0) return _entitySourceFilterCycles[0];
+                index = (index - 1 + _entitySourceFilterCycles.Length) % _entitySourceFilterCycles.Length;
+                return _entitySourceFilterCycles[index];
             }
 
             private static EntityTypeFilter ToMask(EntityType type)

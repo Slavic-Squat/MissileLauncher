@@ -361,9 +361,16 @@ namespace IngameScript
                 Station = null;
             }
 
-            public override string ToString()
+            public string GetOverview()
             {
-                return $"SLCTD BAYS: {NumSelectedBays}/{NumBays}\nRDY BAYS: {NumReadyBays}/{NumBays}\nTRCKD MISLS: {NumMissiles}\nFIRE CTRL: {(FireControlAvail ? "AVAIL" : "IN USE")}";
+                StringBuilder sb = new StringBuilder();
+                sb.AppendLine("[MISL COORDINATOR]");
+                sb.AppendLine($"  SLCTD BAYS: {NumSelectedBays}/{NumBays}");
+                sb.AppendLine($"  RDY BAYS: {NumReadyBays}/{NumBays}");
+                sb.AppendLine($"  TRCKD MISLS: {NumMissiles}");
+                sb.AppendLine($"  FIRE CTRL: {(FireControlAvail ? "AVAIL" : "IN USE")}");
+
+                return sb.ToString();
             }
         }
     }

@@ -181,9 +181,16 @@ namespace IngameScript
                 }
             }
 
-            public override string ToString()
+            public string GetOverview()
             {
-                return $"Bay [{ID}]\n----------------\nSTATUS: {MiscEnumHelper.GetDisplayString(Status)}\nMISL TYPE: {MissileEnumHelper.GetDisplayString(MissileType)}\nMISL GUIDANCE: {MissileEnumHelper.GetDisplayString(MissileGuidanceType)}\nMISL PAYLOAD: {MissileEnumHelper.GetDisplayString(MissilePayload)}\n";
+                StringBuilder sb = new StringBuilder();
+                sb.AppendLine($"[BAY {ID}]");
+                sb.AppendLine($"  STATUS: {MiscEnumHelper.GetDisplayString(Status)}");
+                sb.AppendLine($"  MISL TYPE: {MissileEnumHelper.GetDisplayString(MissileType)}");
+                sb.AppendLine($"  MISL GUIDANCE: {MissileEnumHelper.GetDisplayString(MissileGuidanceType)}");
+                sb.AppendLine($"  MISL PAYLOAD: {MissileEnumHelper.GetDisplayString(MissilePayload)}");
+
+                return sb.ToString();
             }
         }
     }
