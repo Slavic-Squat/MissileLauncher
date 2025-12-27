@@ -48,8 +48,8 @@ namespace IngameScript
 
             public void Run()
             {
-                _runCounter++;
                 if (_runCounter >= int.MaxValue) _runCounter = 0;
+                _runCounter++;
 
                 _allEntities.Clear();
                 foreach (var target in AllTargets)

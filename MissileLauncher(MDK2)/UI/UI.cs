@@ -59,8 +59,8 @@ namespace IngameScript
 
             public void Run(double time)
             {
-                _runCounter++;
                 if (_runCounter >= int.MaxValue) _runCounter = 0;
+                _runCounter++;
 
                 if (Time == 0)
                 {
