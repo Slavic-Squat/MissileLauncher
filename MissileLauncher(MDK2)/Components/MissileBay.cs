@@ -76,7 +76,7 @@ namespace IngameScript
             private void Init()
             {
                 _connector.IsParkingEnabled = false;
-                _connector.PullStrength = 1f;
+                _connector.PullStrength = 0.00015f;
             }
 
             private void RegisterMissile()
