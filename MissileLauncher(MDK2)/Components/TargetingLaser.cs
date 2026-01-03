@@ -38,7 +38,7 @@ namespace IngameScript
             private PIDControl _azimuthPID;
             private PIDControl _elevationPID;
 
-            public int ID { get; private set; }
+            public string ID { get; private set; }
             public double Time { get; private set; }
             public IController Controller { get; private set; }
             public bool IsControlPaused { get; private set; } = true;
@@ -62,9 +62,9 @@ namespace IngameScript
             public event Action<TargetingLaser> SyncRequested;
             public event Action<IControllable> RequestRelease;
 
-            public TargetingLaser(int id, float sensitivity = 0.05f, float maxRaycastDistance = 5000, bool manualOverride = false)
+            public TargetingLaser(string id, float sensitivity = 0.05f, float maxRaycastDistance = 5000, bool manualOverride = false)
             {
-                ID = id;
+                ID = id.ToUpper();
                 Sensitivity = sensitivity;
                 _maxRaycastDistance = maxRaycastDistance;
                 ManualOverride = manualOverride;

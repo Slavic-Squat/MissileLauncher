@@ -31,10 +31,10 @@ namespace IngameScript
             public IReadOnlyDictionary<long, EntityInfoExt> AllMyMissiles => _systemCoordinator.MissileCoordinator.MyMissilesExt;
             public IReadOnlyDictionary<long, EntityInfoExt> AllEntities => _allEntities;
 
-            public IReadOnlyList<TargetingLaser> TargetingLasers => _systemCoordinator.TargetingLasers;
+            public IReadOnlyDictionary<string, TargetingLaser> TargetingLasers => _systemCoordinator.TargetingLasers;
             public MissileCoordinator MissileCoordinator => _systemCoordinator.MissileCoordinator;
             public TargetCoordinator TargetCoordinator => _systemCoordinator.TargetCoordinator;
-            public IReadOnlyList<MissileBay> MissileBays => _systemCoordinator.MissileCoordinator.MissileBays;
+            public IReadOnlyDictionary<string, MissileBay> MissileBays => _systemCoordinator.MissileCoordinator.MissileBays;
             public AWACS AWACS => _systemCoordinator.AWACS;
             public TargetingDisplays TargetingDisplays { get; private set; }
 

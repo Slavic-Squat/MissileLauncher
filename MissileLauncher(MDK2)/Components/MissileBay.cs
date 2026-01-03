@@ -28,7 +28,7 @@ namespace IngameScript
             private IMyShipConnector _connector;
             private bool _isSelected = false;
 
-            public int ID {  get; private set; }
+            public string ID {  get; private set; }
             public double Time { get; private set; }
             public BayStatus Status { get; private set; } = BayStatus.Empty;
             public MissileType MissileType { get; private set; } = MissileType.Unknown;
@@ -55,9 +55,9 @@ namespace IngameScript
             public event Action MissileUnregistered;
             public event Action<long> MissileLaunched;
 
-            public MissileBay(int id)
+            public MissileBay(string id)
             {
-                ID = id;
+                ID = id.ToUpper();
 
                 GetBlocks();
                 Init();

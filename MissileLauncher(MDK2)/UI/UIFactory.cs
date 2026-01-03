@@ -336,7 +336,7 @@ namespace IngameScript
                 UICoordinator uiCoordinator = window.UI.UICoordinator;
                 ControlStation station = window.UI.Station;
 
-                var bays = uiCoordinator.MissileBays;
+                var bays = uiCoordinator.MissileBays.Values.ToList();
 
                 int numBays = bays.Count;
                 int numColumns = 5;
@@ -471,7 +471,7 @@ namespace IngameScript
                 RectangleF screenBounds = window.UI.Bounds;
                 UICoordinator uiCoordinator = window.UI.UICoordinator;
 
-                var lasers = uiCoordinator.TargetingLasers;
+                var lasers = uiCoordinator.TargetingLasers.Values.ToList();
                 var ctrlStation = window.UI.Station;
 
                 int numLasers = lasers.Count;

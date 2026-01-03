@@ -34,15 +34,15 @@ namespace IngameScript
             public static long SelfID => ReferenceController.CubeGrid.EntityId;
             public static EntityInfo SelfInfo { get; private set; }
 
-            private List<ControlStation> _controlStations = new List<ControlStation>();
-            private List<TargetingLaser> _targetingLasers = new List<TargetingLaser>();
+            private Dictionary<string, ControlStation> _controlStations = new Dictionary<string, ControlStation>();
+            private Dictionary<string, TargetingLaser> _targetingLasers = new Dictionary<string, TargetingLaser>();
 
             private bool _isMainClock = true;
             private double _lastClockSync;
             private double _globalTimeOffset;
 
             public AWACS AWACS { get; private set; }
-            public IReadOnlyList<TargetingLaser> TargetingLasers => _targetingLasers;
+            public IReadOnlyDictionary<string, TargetingLaser> TargetingLasers => _targetingLasers;
             public TargetCoordinator TargetCoordinator { get; private set; }
             public MissileCoordinator MissileCoordinator { get; private set; }
             public UICoordinator UICoordinator { get; private set; }
@@ -73,13 +73,14 @@ namespace IngameScript
                 Config.Set("Targeting", "NumLasers", numLasers);
                 for (int i = 0; i < numLasers; i++)
                 {
-                    float maxLaserDist = Config.Get("Targeting", $"Laser{i}MaxDistance").ToSingle(5000);
-                    Config.Set("Targeting", $"Laser{i}MaxDistance", maxLaserDist);
-                    float sensitivity = Config.Get("Targeting", $"Laser{i}Sensitivity").ToSingle(0.05f);
-                    Config.Set("Targeting", $"Laser{i}Sensitivity", sensitivity);
-                    TargetingLaser laser = new TargetingLaser(i, sensitivity, maxLaserDist);
+                    string id = i.ToString().ToUpper();
+                    float maxLaserDist = Config.Get("Targeting", $"Laser{id}MaxDistance").ToSingle(5000);
+                    Config.Set("Targeting", $"Laser{id}MaxDistance", maxLaserDist);
+                    float sensitivity = Config.Get("Targeting", $"Laser{id}Sensitivity").ToSingle(0.05f);
+                    Config.Set("Targeting", $"Laser{id}Sensitivity", sensitivity);
+                    TargetingLaser laser = new TargetingLaser(id, sensitivity, maxLaserDist);
                     laser.SyncRequested += SyncTarget;
-                    _targetingLasers.Add(laser);
+                    _targetingLasers[id] = laser;
                 }
 
                 bool hasAWACS = Config.Get("AWACS", "Enabled").ToBoolean(true);
@@ -103,8 +104,9 @@ namespace IngameScript
                 Config.Set("Config", "NumControlStations", numControlStations);
                 for (int i = 0; i < numControlStations; i++)
                 {
-                    ControlStation controlStation = new ControlStation(i, UICoordinator);
-                    _controlStations.Add(controlStation);
+                    string id = i.ToString().ToUpper();
+                    ControlStation controlStation = new ControlStation(id, UICoordinator);
+                    _controlStations[id] = controlStation;
                 }
 
                 CommunicationHandler0.RegisterBroadcastListener("FRIENDLY_COMMANDS", true);
@@ -130,7 +132,7 @@ namespace IngameScript
 
                 CommunicationHandler0.SendBroadcast(selfInfoBytes, "FRIENDLY_INFO", true);
 
-                foreach (var targetingLaser in _targetingLasers)
+                foreach (var targetingLaser in _targetingLasers.Values)
                 {
                     targetingLaser.Run(time);
                     TargetCoordinator.AddLocalTarget(targetingLaser.Target);
@@ -149,7 +151,7 @@ namespace IngameScript
                 MissileCoordinator.Run(time);
                 UICoordinator.Run();
 
-                foreach (var controlStation in _controlStations)
+                foreach (var controlStation in _controlStations.Values)
                 {
                     controlStation.Run(time);
                 }
@@ -204,28 +206,18 @@ namespace IngameScript
                 _globalTimeOffset = time - Time;
             }
 
-            private void PauseControlStation(string idString)
+            private void PauseControlStation(string id)
             {
-                int id;
-                if (!int.TryParse(idString, out id))
-                {
-                    return;
-                }
-                if (id < 0 || id >= _controlStations.Count)
+                if (!_controlStations.ContainsKey(id))
                 {
                     return;
                 }
                 _controlStations[id].PauseControl();
             }
 
-            private void ResumeControlStation(string idString)
+            private void ResumeControlStation(string id)
             {
-                int id;
-                if (!int.TryParse(idString, out id))
-                {
-                    return;
-                }
-                if (id < 0 || id >= _controlStations.Count)
+                if (!_controlStations.ContainsKey(id))
                 {
                     return;
                 }

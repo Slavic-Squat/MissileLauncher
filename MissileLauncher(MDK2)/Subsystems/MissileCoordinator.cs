@@ -26,7 +26,7 @@ namespace IngameScript
         {
             public double Time { get; private set; }
             
-            private List<MissileBay> _missileBays = new List<MissileBay>();
+            private Dictionary<string, MissileBay> _missileBays = new Dictionary<string, MissileBay>();
             private HashSet<MissileBay> _selectedBays = new HashSet<MissileBay>();
             private Dictionary<long, long> _addressMissileIDMap = new Dictionary<long, long>();
             private Dictionary<long, long> _addressTargetIDMap = new Dictionary<long, long>();
@@ -38,12 +38,12 @@ namespace IngameScript
             private double _lastLaunch;
 
             public IReadOnlyDictionary<long, EntityInfoExt> MyMissilesExt => _myMissilesExt;
-            public IReadOnlyList<MissileBay> MissileBays => _missileBays;
+            public IReadOnlyDictionary<string, MissileBay> MissileBays => _missileBays;
             public ControlStation Station { get; private set; }
             public bool FireControlAvail => Station == null;
             public int NumBays { get; private set; }
             public int NumSelectedBays => _selectedBays.Count;
-            public int NumReadyBays => _missileBays.Count(bay => bay.Status == BayStatus.Ready || bay.Status == BayStatus.Active);
+            public int NumReadyBays => _missileBays.Count(bay => bay.Value.Status == BayStatus.Ready || bay.Value.Status == BayStatus.Active);
             public bool IsLaunching => _launchCoroutine != null;
             public int NumMissiles => _addressTargetIDMap.Count;
 
@@ -58,7 +58,8 @@ namespace IngameScript
             {
                 for (int i = 0; i < NumBays; i++)
                 {
-                    MissileBay bay = new MissileBay(i);
+                    string id = i.ToString().ToUpper();
+                    MissileBay bay = new MissileBay(id);
                     bay.MissileRegistered += () => RegisterMissileAddress(bay.MissileAddress, bay.MissileID);
                     bay.MissileUnregistered += () => DeselectBay(bay);
                     bay.MissileLaunched += (long targetID) => RegisterMissileTarget(bay.MissileAddress, targetID);
@@ -67,7 +68,7 @@ namespace IngameScript
                     {
                         RegisterMissileAddress(bay.MissileAddress, bay.MissileID);
                     }
-                    _missileBays.Add(bay);
+                    _missileBays[id] = bay;
                 }
 
                 CommunicationHandler0.RegisterTag("MY_MISSILE_INFO", true);
@@ -81,7 +82,7 @@ namespace IngameScript
                     return;
                 }
 
-                foreach (var bay in _missileBays)
+                foreach (var bay in _missileBays.Values)
                 {
                     bay.Run(time);
                 }
@@ -260,7 +261,10 @@ namespace IngameScript
 
             private void SelectAllBays()
             {
-                _missileBays.ForEach(bay => SelectBay(bay));
+                foreach (var bay in _missileBays.Values)
+                {
+                    SelectBay(bay);
+                }
             }
 
             public void LaunchMissile(long targetID, object caller)

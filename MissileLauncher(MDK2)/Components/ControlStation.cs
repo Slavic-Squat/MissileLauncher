@@ -24,7 +24,7 @@ namespace IngameScript
     {
         public class ControlStation : IController
         {
-            public int ID { get; private set; }
+            public string ID { get; private set; }
             public double Time { get; private set; }
             public bool HasFireControl { get; private set; }
             public IControllable Controllable { get; private set; }
@@ -37,9 +37,9 @@ namespace IngameScript
             private UI _ui;
             private UICoordinator _uiCoordinator;
             private bool _isPaused = false;
-            public ControlStation(int iD, UICoordinator uiCoordinator)
+            public ControlStation(string id, UICoordinator uiCoordinator)
             {
-                ID = iD;
+                ID = id.ToUpper();
                 _uiCoordinator = uiCoordinator;
 
                 GetBlocks();
