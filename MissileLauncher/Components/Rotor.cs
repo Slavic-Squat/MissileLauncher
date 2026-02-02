@@ -24,86 +24,51 @@ namespace IngameScript
     {
         public class Rotor
         {
-            public bool IsInverted { get; private set; }
-            public float MinAngle
+            public bool Inverted { get; private set; }
+            public float OffsetDeg { get; private set; }
+            public float OffsetRad => MathHelper.ToRadians(OffsetDeg);
+            public float MinAngleRad => MathHelper.WrapAngle((Inverted ? RotorBlock.LowerLimitRad : -RotorBlock.UpperLimitRad) + OffsetRad);
+            public float MinAngleDeg => MathHelper.ToDegrees(MinAngleRad);
+            public float MaxAngleRad => MathHelper.WrapAngle((Inverted ? RotorBlock.UpperLimitRad : -RotorBlock.LowerLimitRad) + OffsetRad);
+            public float MaxAngleDeg => MathHelper.ToDegrees(MaxAngleRad);
+            public float RangeRad => MaxAngleRad - MinAngleRad;
+            public float RangeDeg => MathHelper.ToDegrees(RangeRad);
+            public float AngleRad => MathHelper.WrapAngle((Inverted ? RotorBlock.Angle : -RotorBlock.Angle) + OffsetRad);
+            public float AngleDeg => MathHelper.ToDegrees(AngleRad);
+            public float VelocityRad
             {
                 get
                 {
-                    float minAngle;
-                    if (IsInverted)
-                    {
-                        minAngle = RotorBlock.LowerLimitRad;
-                    }
-                    else
-                    {
-                        minAngle = -RotorBlock.UpperLimitRad;
-                    }
-                    return minAngle;
+                    return Inverted ? RotorBlock.TargetVelocityRad : -RotorBlock.TargetVelocityRad;
                 }
                 set
                 {
-                    if (IsInverted)
-                    {
-                        RotorBlock.LowerLimitRad = value;
-                    }
-                    else
-                    {
-                        RotorBlock.UpperLimitRad = -value;
-                    }
+                    RotorBlock.TargetVelocityRad = Inverted ? value : -value;
                 }
             }
-            public float MaxAngle
+            public float VelocityDeg
             {
                 get
                 {
-                    float maxAngle;
-                    if (IsInverted)
-                    {
-                        maxAngle = RotorBlock.UpperLimitRad;
-                    }
-                    else
-                    {
-                        maxAngle = -RotorBlock.LowerLimitRad;
-                    }
-                    return maxAngle;
+                    return MathHelper.ToDegrees(VelocityRad);
                 }
                 set
                 {
-                    if (IsInverted)
-                    {
-                        RotorBlock.UpperLimitRad = value;
-                    }
-                    else
-                    {
-                        RotorBlock.LowerLimitRad = -value;
-                    }
-                }
-            }
-            public float Range => MaxAngle - MinAngle;
-            public float CurrentAngle => IsInverted ? RotorBlock.Angle : -RotorBlock.Angle;
-            public float Velocity
-            {
-                get
-                {
-                    return IsInverted ? RotorBlock.TargetVelocityRad : -RotorBlock.TargetVelocityRad;
-                }
-                set
-                {
-                    RotorBlock.TargetVelocityRad = IsInverted ? value : -value;
+                    VelocityRad = MathHelper.ToRadians(value);
                 }
             }
 
-            public bool IsMaxed => CurrentAngle >= MaxAngle - 0.05f;
-            public bool IsMinned => CurrentAngle <= MinAngle + 0.05f;
+            public bool IsMaxed => AngleRad >= MaxAngleRad - 0.05f;
+            public bool IsMinned => AngleRad <= MinAngleRad + 0.05f;
             public bool IsSaturated
             {
                 get
                 {
-                    if (Velocity > 0)
+                    if (VelocityRad > 0)
                     {
                         return IsMaxed;
                     }
-                    else if (Velocity < 0)
+                    else if (VelocityRad < 0)
                     {
                         return IsMinned;
                     }
@@ -114,6 +79,8 @@ namespace IngameScript
                 }
             }
             public IMyMotorStator RotorBlock { get; private set; }
+
+            private MyIni _config;
             public Rotor(string blockName)
             {
                 blockName = blockName.ToUpper();
@@ -122,9 +89,8 @@ namespace IngameScript
                 {
                     DebugWrite($"Error: Rotor block '{blockName}' not found!\n", true);
                     throw new ArgumentException($"Rotor block '{blockName}' not found!\n");
-                }                    
-
-                IsInverted = RotorBlock.CustomData.ToUpper().Contains("-INVERTED");
+                }
+                Init();
             }
 
             public Rotor(IMyMotorStator rotorBlock)
@@ -134,9 +100,25 @@ namespace IngameScript
                     DebugWrite($"Error: Rotor block is null!\n", true);
                     throw new ArgumentException($"Rotor block is null!\n");
                 }
-                    
                 RotorBlock = rotorBlock;
-                IsInverted = RotorBlock.CustomData.ToUpper().Contains("-INVERTED");
+                Init();
+            }
+
+            private void Init()
+            {
+                _config = new MyIni();
+
+                if (!_config.TryParse(RotorBlock.CustomData))
+                {
+                    _config.Clear();
+                }
+
+                Inverted = _config.Get("Config", "Inverted").ToBoolean(false);
+                _config.Set("Config", "Inverted", Inverted);
+                OffsetDeg = _config.Get("Config", "OffsetDeg").ToSingle(0);
+                _config.Set("Config", "OffsetDeg", OffsetDeg);
+
+                RotorBlock.CustomData = _config.ToString();
             }
         }
     }

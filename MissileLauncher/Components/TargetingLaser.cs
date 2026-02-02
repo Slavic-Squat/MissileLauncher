@@ -97,8 +97,8 @@ namespace IngameScript
                 _cameraArray.Update(time);
 
                 MatrixD H0 = _azimuthRotor.RotorBlock.WorldMatrix;
-                MatrixD H1 = MatrixD.CreateRotationY(_azimuthRotor.CurrentAngle);
-                MatrixD H2 = MatrixD.CreateRotationX(_elevationRotor.CurrentAngle);
+                MatrixD H1 = MatrixD.CreateRotationY(_azimuthRotor.AngleRad);
+                MatrixD H2 = MatrixD.CreateRotationX(_elevationRotor.AngleRad);
                 H2.Translation = new Vector3D(0, 3, 0);
 
                 _referenceMatrix = H2 * H1 * H0;
@@ -145,8 +145,8 @@ namespace IngameScript
 
             private void MoveLaser(float azimuthInput, float elevationInput)
             {
-                _elevationRotor.Velocity = elevationInput * Sensitivity;
-                _azimuthRotor.Velocity = azimuthInput * Sensitivity;
+                _elevationRotor.VelocityRad = elevationInput * Sensitivity;
+                _azimuthRotor.VelocityRad = azimuthInput * Sensitivity;
             }
 
             private void ForgetTarget()

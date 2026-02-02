@@ -94,7 +94,7 @@ namespace IngameScript
 
                 if (_targets.Count != 0)
                 {
-                    Quaternion rotation = Quaternion.CreateFromAxisAngle(_spinRotor.RotorBlock.WorldMatrix.Up, _spinRotor.CurrentAngle);
+                    Quaternion rotation = Quaternion.CreateFromAxisAngle(_spinRotor.RotorBlock.WorldMatrix.Up, _spinRotor.AngleRad);
 
                     _referenceMatrix = MatrixD.Transform(_spinRotor.RotorBlock.WorldMatrix, rotation);
 
