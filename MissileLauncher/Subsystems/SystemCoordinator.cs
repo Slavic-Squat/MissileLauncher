@@ -110,10 +110,11 @@ namespace IngameScript
                 }
 
                 CommunicationHandler0.RegisterBroadcastListener("FRIENDLY_COMMANDS", true);
-                CommandHandler0.RegisterCommand("SET_MAIN_CLOCK", (args) => SetMainClock(args[0]));
-                CommandHandler0.RegisterCommand("SYNC_CLOCK", (args) => SyncClock(args[0]));
-                CommandHandler0.RegisterCommand("PAUSE_CONTROL_STATION", (args) => PauseControlStation(args[0]));
-                CommandHandler0.RegisterCommand("RESUME_CONTROL_STATION", (args) => ResumeControlStation(args[0]));
+                CommandHandler0.RegisterCommand("SET_MAIN_CLOCK", (args) => { if (args.Length > 0) SetMainClock(args[0]); });
+                CommandHandler0.RegisterCommand("SYNC_CLOCK", (args) => { if (args.Length > 0) SyncClock(args[0]); });
+                CommandHandler0.RegisterCommand("PAUSE_CONTROL_STATION", (args) => { if (args.Length > 0) PauseControlStation(args[0]); });
+                CommandHandler0.RegisterCommand("RESUME_CONTROL_STATION", (args) => { if (args.Length > 0) ResumeControlStation(args[0]); });
+                CommandHandler0.RegisterCommand("QUICK_LAUNCH", (args) => { if (args.Length > 0) QuickLaunch(args[0]); });
             }
 
             public void Run(double time)
@@ -222,6 +223,26 @@ namespace IngameScript
                     return;
                 }
                 _controlStations[id].ResumeControl();
+            }
+
+            private void QuickLaunch(string controlStationID)
+            {
+                if (!_controlStations.ContainsKey(controlStationID))
+                {
+                    return;
+                }
+                ControlStation controlStation = _controlStations[controlStationID];
+                if (!controlStation.HasFireControl || !(controlStation.Controllable is TargetingLaser))
+                {
+                    return;
+                }
+                TargetingLaser targetingLaser = controlStation.Controllable as TargetingLaser;
+                if (!targetingLaser.HasTarget)
+                {
+                    return;
+                }
+                long targetID = targetingLaser.Target.EntityID;
+                MissileCoordinator.LaunchMissile(targetID, controlStation);
             }
         }
     }
