@@ -187,6 +187,12 @@ namespace IngameScript
             public void RemoveTarget(long targetID)
             {
                 _targets.Remove(targetID);
+                _targetQueue.Clear();
+
+                foreach (var id in _targets.Keys)
+                {
+                    _targetQueue.Enqueue(id);
+                }
             }
 
             public string GetOverview()
