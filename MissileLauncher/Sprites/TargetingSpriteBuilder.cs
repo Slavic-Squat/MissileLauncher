@@ -37,6 +37,8 @@ namespace IngameScript
                     BuildStaticSprites();
                 }
             }
+            public IReadOnlyList<MySpriteExt> FinalSprites => _finalSprites;
+            public IReadOnlyDictionary<long, MyEntitySprite> EntitySprites => _entitySprites;
 
             private float _FOV = 30;
             private float _AR = 1;
@@ -50,6 +52,8 @@ namespace IngameScript
             private List<MySpriteExt> _spritesPostPlane = new List<MySpriteExt>();
             private List<MySpriteExt> _staticSpritesPostPlane = new List<MySpriteExt>();
             private List<MySpriteExt> _staticSpritesPrePlane = new List<MySpriteExt>();
+            private List<MySpriteExt> _finalSprites = new List<MySpriteExt>();
+            private Dictionary<long, MyEntitySprite> _entitySprites = new Dictionary<long, MyEntitySprite>();
 
             private MatrixD _projectionMatrix = MatrixD.Identity;
             private RectangleF _screenBounds;
@@ -210,10 +214,10 @@ namespace IngameScript
                 _staticSpritesPostPlane.Add(stemSpriteExt);
             }
 
-            public List<MySpriteExt> BuildSprites(IReadOnlyDictionary<long, EntityInfoExt> entityInfoExts, out Dictionary<long, MyEntitySprite> entitySprites, long targetedID = -1)
+            public void BuildSprites(IReadOnlyDictionary<long, EntityInfoExt> entityInfoExts, long targetedID = -1)
             {
-                List<MySpriteExt> finalSprites = new List<MySpriteExt>();
-                entitySprites = new Dictionary<long, MyEntitySprite>();
+                _finalSprites.Clear();
+                _entitySprites.Clear();
 
                 _spritesPrePlane.Clear();
                 _spritesPostPlane.Clear();
@@ -318,7 +322,7 @@ namespace IngameScript
                     MySpriteExt MySpriteExtEntity = new MySpriteExt(tempSprite, entityPosNDC.Z);
                     MyEntitySprite entitySprite = new MyEntitySprite(entityInfoExt, MySpriteExtEntity);
 
-                    entitySprites.Add(key, entitySprite);
+                    _entitySprites.Add(key, entitySprite);
 
                     MySpriteExt selectorSpriteExt = default(MySpriteExt);
 
@@ -405,11 +409,9 @@ namespace IngameScript
                     }
                 }
 
-                finalSprites.AddRange(_spritesPrePlane.Concat(_staticSpritesPrePlane).OrderBy(x => -x.Depth));
-                finalSprites.AddRange(_planeSprites);
-                finalSprites.AddRange(_spritesPostPlane.Concat(_staticSpritesPostPlane).OrderBy(x => -x.Depth));
-
-                return finalSprites;
+                _finalSprites.AddRange(_spritesPrePlane.Concat(_staticSpritesPrePlane).OrderBy(x => -x.Depth));
+                _finalSprites.AddRange(_planeSprites);
+                _finalSprites.AddRange(_spritesPostPlane.Concat(_staticSpritesPostPlane).OrderBy(x => -x.Depth));
             }
         }
     }

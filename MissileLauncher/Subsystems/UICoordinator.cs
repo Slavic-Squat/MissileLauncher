@@ -75,7 +75,7 @@ namespace IngameScript
             public void LaunchMissile(long targetID, object caller) => MissileCoordinator.LaunchMissile(targetID, caller);
             public void ForgetTarget(long targetID) => AWACS.RemoveTarget(targetID);
             public void AddTarget(EntityInfoExt target) => AWACS.AddTarget(target);
-            public void AbortMissile(long missileID, object caller) => MissileCoordinator.AbortMissile(missileID, caller);
+            public void AbortMissile(long address, object caller) => MissileCoordinator.AbortMissile(address, caller);
             public void SetRelation(long entityID, EntityRelation relation) => TargetCoordinator.SetTargetRelation(entityID, relation);
         }
     }

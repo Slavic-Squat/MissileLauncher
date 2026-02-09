@@ -29,12 +29,16 @@ namespace IngameScript
                 get { return _range; }
                 set { _range = value; }
             }
+            public IReadOnlyList<MySpriteExt> FinalSprites => _finalSprites;
+            public IReadOnlyDictionary<long, MyEntitySprite> EntitySprites => _entitySprites;
 
             private float _range = 12000f;
             private RectangleF _screenBounds;
 
             private List<MySpriteExt> _sprites = new List<MySpriteExt>();
             private List<MySpriteExt> _staticSprites = new List<MySpriteExt>();
+            private List<MySpriteExt> _finalSprites = new List<MySpriteExt>();
+            private Dictionary<long, MyEntitySprite> _entitySprites = new Dictionary<long, MyEntitySprite>();
 
             public TargetingSpriteBuilderSimple(RectangleF screenBounds)
             {
@@ -117,11 +121,10 @@ namespace IngameScript
                 _staticSprites.Add(selfSpriteExt);
             }
 
-            public List<MySpriteExt> BuildSprites(IReadOnlyDictionary<long, EntityInfoExt> entityInfoExts, out Dictionary<long, MyEntitySprite> entitySprites, long targetedID = -1)
+            public void BuildSprites(IReadOnlyDictionary<long, EntityInfoExt> entityInfoExts, long targetedID = -1)
             {
-                List<MySpriteExt> finalSprites = new List<MySpriteExt>();
-                entitySprites = new Dictionary<long, MyEntitySprite>();
-
+                _finalSprites.Clear();
+                _entitySprites.Clear();
                 _sprites.Clear();
 
                 MatrixD referenceWorldMatrix = SystemCoordinator.ReferenceWorldMatrix;
@@ -210,7 +213,7 @@ namespace IngameScript
                     MySpriteExt MySpriteExtEntity = new MySpriteExt(tempSprite, (float)entityPosLocal.Y);
                     MyEntitySprite entitySprite = new MyEntitySprite(entityInfoExt, MySpriteExtEntity);
 
-                    entitySprites.Add(key, entitySprite);
+                    _entitySprites.Add(key, entitySprite);
 
                     MySpriteExt selectorSpriteExt = default(MySpriteExt);
 
@@ -238,9 +241,7 @@ namespace IngameScript
                     }
                 }
 
-                finalSprites.AddRange(_sprites.Concat(_staticSprites).OrderBy(x => x.Depth));
-
-                return finalSprites;
+                _finalSprites.AddRange(_sprites.Concat(_staticSprites).OrderBy(x => x.Depth));
             }
         }
     }

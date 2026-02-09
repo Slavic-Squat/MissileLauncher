@@ -24,7 +24,7 @@ namespace IngameScript
     {
         public enum BayStatus : byte
         {
-            Empty, Loaded, Ready, Active, Launching
+            Empty, Printing, Fueling, Ready, Active, Launching
         }
         public enum NavMode : byte
         {
@@ -46,7 +46,8 @@ namespace IngameScript
                 switch (status)
                 {
                     case BayStatus.Empty: return "EMPTY";
-                    case BayStatus.Loaded: return "LOADED";
+                    case BayStatus.Printing: return "PRINTING";
+                    case BayStatus.Fueling: return "FUELING";
                     case BayStatus.Ready: return "READY";
                     case BayStatus.Active: return "ACTIVE";
                     case BayStatus.Launching: return "LAUNCHING";

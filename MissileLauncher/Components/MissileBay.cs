@@ -25,7 +25,7 @@ namespace IngameScript
         public class MissileBay
         {
             private IMyProgrammableBlock _missileComputer;
-            private IMyShipConnector _connector;
+            private IMyMechanicalConnectionBlock _attachment;
             private bool _isSelected = false;
 
             public string ID {  get; private set; }
@@ -34,7 +34,6 @@ namespace IngameScript
             public MissileType MissileType { get; private set; } = MissileType.Unknown;
             public MissileGuidanceType MissileGuidanceType { get; private set; } = MissileGuidanceType.Unknown;
             public MissilePayload MissilePayload { get; private set; } = MissilePayload.Unknown;
-            public long MissileID { get; private set; } = -1;
             public long MissileAddress { get; private set; } = -1;
             public bool IsSelected
             {
@@ -60,57 +59,50 @@ namespace IngameScript
                 ID = id.ToUpper();
 
                 GetBlocks();
-                Init();
             }
 
             private void GetBlocks()
             {
-                _connector = AllGridBlocks.Where(b => b is IMyShipConnector && b.CustomName.ToUpper().Contains($"MISSILE BAY {ID} CONNECTOR")).FirstOrDefault() as IMyShipConnector;
-                if (_connector == null)
+                _attachment = AllGridBlocks.Where(b => b is IMyMechanicalConnectionBlock && b.CustomName.ToUpper().Contains($"MISSILE BAY {ID} ATTACHMENT")).FirstOrDefault() as IMyMechanicalConnectionBlock;
+                if (_attachment == null)
                 {
-                    DebugWrite($"Error: No connector found for Missile Bay {ID}!\n", true);
-                    throw new Exception($"No connector found for Missile Bay {ID}!\n");
+                    DebugWrite($"Error: No attachment found for Missile Bay {ID}!\n", true);
+                    throw new Exception($"No attachment found for Missile Bay {ID}!\n");
                 }
-            }
-
-            private void Init()
-            {
-                _connector.IsParkingEnabled = false;
-                _connector.PullStrength = 0.00015f;
             }
 
             private void RegisterMissile()
             {
                 UnregisterMissile();
 
-                if (_connector.Status != MyShipConnectorStatus.Connected)
+                if (_attachment.TopGrid == null)
                 {
                     return;
                 }
-                IMyShipConnector missileConnector = _connector.OtherConnector;
-                List<IMyProgrammableBlock> pbBlocks = new List<IMyProgrammableBlock>();
-                GTS.GetBlocksOfType(pbBlocks, pb => pb.IsSameConstructAs(missileConnector) && pb.CustomName.ToUpper().Contains("MISSILE COMPUTER"));
-                if (pbBlocks.Count == 0)
+                List<IMyProgrammableBlock> temp = new List<IMyProgrammableBlock>();
+                GTS.GetBlocksOfType(temp, pb => pb.CubeGrid.EntityId == _attachment.TopGrid.EntityId && pb.CustomName.ToUpper().Contains("MISSILE COMPUTER"));
+                if (temp.Count == 0)
                 {
                     return;
                 }
-                _missileComputer = pbBlocks[0];
+                _missileComputer = temp[0];
 
                 MyIni missileConfig = new MyIni();
+                bool missileReady = false;
                 if (missileConfig.TryParse(_missileComputer.CustomData))
                 {
-                    MissileID = missileConfig.Get("Config", "MissileID").ToInt64(-1);
                     MissileAddress = missileConfig.Get("Config", "MissileAddress").ToInt64(-1);
                     MissileType = MissileEnumHelper.GetMissileType(missileConfig.Get("Config", "Type").ToString());
                     MissileGuidanceType = MissileEnumHelper.GetMissileGuidanceType(missileConfig.Get("Config", "GuidanceType").ToString());
                     MissilePayload = MissileEnumHelper.GetMissilePayload(missileConfig.Get("Config", "Payload").ToString());
+                    missileReady = missileConfig.Get("Config", "Ready").ToBoolean(false);
                 }
                 else
                 {
                     return;
                 }
                 
-                if (MissileID != -1 && MissileAddress != -1 && MissileType != MissileType.Unknown && MissileGuidanceType != MissileGuidanceType.Unknown && MissilePayload != MissilePayload.Unknown)
+                if (MissileAddress != -1 && MissileType != MissileType.Unknown && MissileGuidanceType != MissileGuidanceType.Unknown && MissilePayload != MissilePayload.Unknown && missileReady)
                 {
                     Status = BayStatus.Ready;
                     MissileRegistered?.Invoke();
@@ -119,7 +111,6 @@ namespace IngameScript
 
             private void UnregisterMissile()
             {
-                MissileID = -1;
                 MissileAddress = -1;
                 MissileType = MissileType.Unknown;
                 MissileGuidanceType = MissileGuidanceType.Unknown;

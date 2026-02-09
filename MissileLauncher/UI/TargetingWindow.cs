@@ -31,9 +31,9 @@ namespace IngameScript
             public ScopeScale ScopeScale { get; private set; } = ScopeScale.Medium;
             public long SelectedEntityID { get; private set; }
 
-            private IReadOnlyDictionary<long, EntityInfoExt> _allEntities = new Dictionary<long, EntityInfoExt>();
-            private Dictionary<long, MyEntitySprite> _entitySprites = new Dictionary<long, MyEntitySprite>();
-            private List<MySpriteExt> _targetingSprites = new List<MySpriteExt>();
+            private IReadOnlyDictionary<long, EntityInfoExt> _allEntities;
+            private IReadOnlyDictionary<long, MyEntitySprite> _entitySprites;
+            private IReadOnlyList<MySpriteExt> _targetingSprites;
             private TargetingSpriteBuilder _targetingSpriteBuilder;
 
 
@@ -68,6 +68,9 @@ namespace IngameScript
 
                 _targetingSpriteBuilder = new TargetingSpriteBuilder(new RectangleF(0, 0, 1024f, 1024f));
                 _targetingSpriteBuilder.Zoom = MiscEnumHelper.GetValue(ScopeScale);
+
+                _entitySprites = _targetingSpriteBuilder.EntitySprites;
+                _targetingSprites = _targetingSpriteBuilder.FinalSprites;
 
                 Vector2 targetInfoPanelSize = new Vector2(150, 200);
                 Vector2 targetInfoPanelPos = Pos + new Vector2(Size.X - targetInfoPanelSize.X, Size.Y * 0.5f - targetInfoPanelSize.Y * 0.5f);
@@ -146,8 +149,8 @@ namespace IngameScript
                 if (!IsOpen) return;
                 BuildSprites();
                 frame.AddRange(_bodySprites);
-
-                _targetingSprites = _targetingSpriteBuilder.BuildSprites(_allEntities, out _entitySprites, targetedID: SelectedEntityID);
+                
+                _targetingSpriteBuilder.BuildSprites(_allEntities, targetedID: SelectedEntityID);
                 foreach (var sprite in _targetingSprites)
                 {
                     sprite.Draw(frame);

@@ -158,8 +158,10 @@ namespace IngameScript
                 float padding = 15f;
                 float spacing = 15f;
 
-                if (entity.Type == EntityType.Missile && entity.Relation == EntityRelation.Me)
+                if (entity.Type == EntityType.Missile && entity.Relation == EntityRelation.Me && entity.Info.MissileInfo.HasValue)
                 {
+                    long address = entity.Info.MissileInfo.Value.Address;
+
                     int numButtons = 1;
                     float totalWidth = numButtons * buttonSize.X + (numButtons - 1) * spacing + 2 * padding;
                     float totalHeight = buttonSize.Y + 2 * padding;
@@ -178,7 +180,7 @@ namespace IngameScript
 
                     Vector2 buttonPos = menu.Pos + padding;
                     Func<string> getText = () => "ABORT";
-                    Action action = () => uiCoordinator.AbortMissile(targetID, station);
+                    Action action = () => uiCoordinator.AbortMissile(address, station);
                     Button button = new Button(buttonPos, buttonSize, 5f, 3f, 1f, getText, action);
                     menu.AddButton(button, -1);
 

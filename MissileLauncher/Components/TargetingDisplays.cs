@@ -53,13 +53,15 @@ namespace IngameScript
 
             public void Draw()
             {
-                Dictionary<long, MyEntitySprite> dump = new Dictionary<long, MyEntitySprite>();
-                List<MySpriteExt> sprites = _spriteBuilder.BuildSprites(_entityInfo, out dump);
+                _spriteBuilder.BuildSprites(_entityInfo);
 
                 foreach (var display in _displays)
                 {
                     var frame = display.DrawFrame();
-                    sprites.ForEach(sprite => sprite.Draw(frame));
+                    foreach (var sprite in _spriteBuilder.FinalSprites)
+                    {
+                        sprite.Draw(frame);
+                    }
                     frame.Dispose();
                 }
             }
