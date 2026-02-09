@@ -1,4 +1,5 @@
-﻿using Sandbox.Game.EntityComponents;
+﻿using Sandbox;
+using Sandbox.Game.EntityComponents;
 using Sandbox.ModAPI.Ingame;
 using Sandbox.ModAPI.Interfaces;
 using SpaceEngineers.Game.ModAPI.Ingame;
@@ -27,6 +28,8 @@ namespace IngameScript
             private IMyProgrammableBlock _missileComputer;
             private IMyMechanicalConnectionBlock _attachment;
             private bool _isSelected = false;
+            private MyIni _missileConfig = new MyIni();
+            private string _missileCustomData = "";
 
             public string ID {  get; private set; }
             public double Time { get; private set; }
@@ -78,33 +81,24 @@ namespace IngameScript
 
                 if (_attachment.TopGrid == null)
                 {
+                    Status = BayStatus.Empty;
                     return;
                 }
                 List<IMyProgrammableBlock> temp = new List<IMyProgrammableBlock>();
                 GTS.GetBlocksOfType(temp, pb => pb.CubeGrid.EntityId == _attachment.TopGrid.EntityId && pb.CustomName.ToUpper().Contains("MISSILE COMPUTER"));
                 if (temp.Count == 0)
                 {
+                    Status = BayStatus.Error;
                     return;
                 }
                 _missileComputer = temp[0];
+                _missileComputer.Enabled = true;
 
-                MyIni missileConfig = new MyIni();
-                if (missileConfig.TryParse(_missileComputer.CustomData))
-                {
-                    MissileAddress = missileConfig.Get("Config", "MissileAddress").ToInt64(-1);
-                    MissileType = MissileEnumHelper.GetMissileType(missileConfig.Get("Config", "Type").ToString());
-                    MissileGuidanceType = MissileEnumHelper.GetMissileGuidanceType(missileConfig.Get("Config", "GuidanceType").ToString());
-                    MissilePayload = MissileEnumHelper.GetMissilePayload(missileConfig.Get("Config", "Payload").ToString());
-                    MissileStage = MissileEnumHelper.GetMissileStage(missileConfig.Get("Config", "Stage").ToString());
-                }
-                else
-                {
-                    return;
-                }
+                Update();
                 
-                if (MissileAddress != -1 && MissileType != MissileType.Unknown && MissileGuidanceType != MissileGuidanceType.Unknown && MissilePayload != MissilePayload.Unknown && MissileStage >= MissileStage.Idle)
+                if (MissileAddress != -1)
                 {
-                    Status = BayStatus.Ready;
+                    Status = BayStatus.Building;
                     MissileRegistered?.Invoke();
                 }
             }
@@ -120,6 +114,44 @@ namespace IngameScript
                 MissileUnregistered?.Invoke();
             }
 
+            private void Update()
+            {
+                if (_missileComputer == null) return;
+                if (_missileComputer.CustomData != _missileCustomData)
+                {
+                    _missileConfig.Clear();
+                    if (_missileConfig.TryParse(_missileComputer.CustomData))
+                    {
+                        MissileAddress = _missileConfig.Get("Config", "MissileAddress").ToInt64(-1);
+                        MissileType = MissileEnumHelper.GetMissileType(_missileConfig.Get("Config", "Type").ToString());
+                        MissileGuidanceType = MissileEnumHelper.GetMissileGuidanceType(_missileConfig.Get("Config", "GuidanceType").ToString());
+                        MissilePayload = MissileEnumHelper.GetMissilePayload(_missileConfig.Get("Config", "Payload").ToString());
+                        MissileStage = MissileEnumHelper.GetMissileStage(_missileConfig.Get("Config", "Stage").ToString());
+                    }
+
+                    switch (MissileStage)
+                    {
+                        case MissileStage.Building:
+                            Status = BayStatus.Building;
+                            break;
+                        case MissileStage.Fueling:
+                            Status = BayStatus.Fueling;
+                            break;
+                        case MissileStage.Idle:
+                            Status = BayStatus.Ready;
+                            break;
+                        default:
+                            Status = BayStatus.Error;
+                            break;
+                    }
+                }
+
+                if (Status > BayStatus.Empty && (!_attachment.IsAttached || !GTS.CanAccess(_missileComputer) || MissileAddress == -1))
+                {
+                    UnregisterMissile();
+                }
+            }
+
             public void Run(double time)
             {
                 if (Time == 0)
@@ -128,14 +160,14 @@ namespace IngameScript
                     return;
                 }
 
-                if (Status == BayStatus.Empty && (time - _timeLastRegister) > 10f)
+                if ((Status == BayStatus.Empty || Status == BayStatus.Error) && (time - _timeLastRegister) > 5f)
                 {
                     RegisterMissile();
                     _timeLastRegister = time;
                 }
-                if (_missileComputer != null && (!_attachment.IsAttached || !GTS.CanAccess(_missileComputer)))
+                else
                 {
-                    UnregisterMissile();
+                    Update();
                 }
                 Time = time;
             }
@@ -145,10 +177,8 @@ namespace IngameScript
                 if (Status == BayStatus.Ready)
                 {
                     double globalTime = SystemCoordinator.GlobalTime;
-                    _missileComputer.Enabled = true;
-                    if (!_missileComputer.TryRun("ON")) return;
+                    if (!_missileComputer.TryRun("TURN_ON")) return;
                     if (!_missileComputer.TryRun($"ACTIVATE {IGCS.Me} {SystemCoordinator.SelfID} {globalTime}")) return;
-                    Status = BayStatus.Active;
                 }
             }
 
@@ -157,8 +187,7 @@ namespace IngameScript
                 if (Status == BayStatus.Active)
                 {
                     if (!_missileComputer.TryRun("DEACTIVATE")) return;
-                    if (!_missileComputer.TryRun("OFF")) return;
-                    Status = BayStatus.Ready;
+                    if (!_missileComputer.TryRun("TURN_OFF")) return;
                 }
             }
 
