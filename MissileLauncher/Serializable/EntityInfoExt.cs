@@ -99,7 +99,7 @@ namespace IngameScript
 
             public override string ToString()
             {
-                StringBuilder sb = new StringBuilder($"[{EntityEnumHelper.GetDisplayString(Type)} INFO]\n-----------------------\nTYPE: {EntityEnumHelper.GetDisplayString(Type)}\nSRC: {EntityEnumHelper.GetDisplayString(Source)}\nREL: {EntityEnumHelper.GetDisplayString(Relation)}\n");
+                StringBuilder sb = new StringBuilder($"[ENTITY INFO]\n-----------------------\nTYPE: {EntityEnumHelper.GetEntityTypeStr(Type)}\nSRC: {EntityEnumHelper.GetEntitySourceStr(Source)}\nREL: {EntityEnumHelper.GetEntityRelationStr(Relation)}\n");
 
                 double distance = Vector3D.Distance(SystemCoordinator.ReferencePosition, Position);
                 if (distance > 1000f)
@@ -137,7 +137,7 @@ namespace IngameScript
                 if (Info.SubType == EntityInfoSubType.MissileInfo)
                 {
                     var missileInfo = Info.MissileInfo.Value;
-                    sb.Append($"MISL TYPE: {MissileEnumHelper.GetDisplayString(missileInfo.Type)}\nPAYLOAD: {MissileEnumHelper.GetDisplayString(missileInfo.Payload)}\nSTAGE: {MissileEnumHelper.GetDisplayString(missileInfo.Stage)}\n");
+                    sb.Append($"MISL TYPE: {MissileEnumHelper.GetMissileTypeStr(missileInfo.Type)}\nPAYLOAD: {MissileEnumHelper.GetMissilePayloadStr(missileInfo.Payload)}\nSTAGE: {MissileEnumHelper.GetMissileStageStr(missileInfo.Stage)}\n");
                 }
 
                 return sb.ToString().TrimEnd('\n');
