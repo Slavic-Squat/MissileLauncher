@@ -37,13 +37,13 @@ namespace IngameScript
 
         private static List<IMyTerminalBlock> _allGridBlocks = new List<IMyTerminalBlock>();
         private const string _programName = "MissileLauncher";
-        private const string _programVersion = "1.14";
+        private const string _programVersion = "1.15";
         private static string _blockTag;
 
         private SystemCoordinator _systemCoordinator;
         private double _maxRunTime;
-
         private HashSet<long> _processedGrids = new HashSet<long>();
+        private bool _isInitialized = false;
 
         public Program()
         {
@@ -64,14 +64,12 @@ namespace IngameScript
             _blockTag = Config.Get("Config", "BlockTag").ToString("NOT_SET");
             Config.Set("Config", "BlockTag", _blockTag);
 
-            GetAllBlocks();
-
             long secureBroadcastPIN = Config.Get("Config", "SecureBroadcastPIN").ToInt64(123456);
             Config.Set("Config", "SecureBroadcastPIN", secureBroadcastPIN);
             CommunicationHandler0 = new CommunicationHandler(0, secureBroadcastPIN);
 
             CommandHandler0 = new CommandHandler();
-            _systemCoordinator = new SystemCoordinator();
+            CommandHandler0.RegisterCommand("INIT", (args) => Init());
 
             MePb.CustomData = Config.ToString();
         }
@@ -102,7 +100,11 @@ namespace IngameScript
                 CommandHandler0.RunCommands(argument);
             }
             CommunicationHandler0.Receive();
-            _systemCoordinator.Run(SystemTime);
+
+            if (_isInitialized)
+            {
+                _systemCoordinator.Run(SystemTime);
+            }
         }
 
         private void GetAllBlocks()
@@ -151,6 +153,14 @@ namespace IngameScript
                     }
                 }
             }
+        }
+
+        private void Init()
+        {
+            GetAllBlocks();
+            _systemCoordinator = new SystemCoordinator();
+            Me.CustomData = Config.ToString();
+            _isInitialized = true;
         }
     }
 }

@@ -24,7 +24,7 @@ namespace IngameScript
     {
         public enum BayStatus : byte
         {
-            Empty, Printing, Fueling, Ready, Active, Launching
+            Empty, Building, Fueling, Ready, Active, Launching
         }
         public enum NavMode : byte
         {
@@ -41,12 +41,12 @@ namespace IngameScript
 
         public static class MiscEnumHelper
         {
-            public static string GetDisplayString(BayStatus status)
+            public static string GetBayStatusStr(BayStatus status)
             {
                 switch (status)
                 {
                     case BayStatus.Empty: return "EMPTY";
-                    case BayStatus.Printing: return "PRINTING";
+                    case BayStatus.Building: return "BUILDING";
                     case BayStatus.Fueling: return "FUELING";
                     case BayStatus.Ready: return "READY";
                     case BayStatus.Active: return "ACTIVE";
@@ -55,7 +55,7 @@ namespace IngameScript
                 }
             }
 
-            public static string GetDisplayString(NavMode mode)
+            public static string GetNavModeStr(NavMode mode)
             {
                 switch (mode)
                 {
@@ -65,7 +65,7 @@ namespace IngameScript
                 }
             }
 
-            public static string GetDisplayString(ScopeScale scale)
+            public static string GetScopeScaleStr(ScopeScale scale)
             {
                 switch (scale)
                 {
@@ -76,7 +76,7 @@ namespace IngameScript
                 }
             }
 
-            public static int GetValue(ScopeScale scale)
+            public static int GetScopeScaleValue(ScopeScale scale)
             {
                 switch (scale)
                 {

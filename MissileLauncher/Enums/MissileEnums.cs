@@ -36,7 +36,7 @@ namespace IngameScript
         }
         public enum MissileStage : byte
         {
-            Unknown, Idle, Active, Launching, Flying, Interception
+            Unknown, Building, Fueling, Idle, Active, Launching, Flying, Interception
         }
         public static class MissileEnumHelper
         {
@@ -50,7 +50,7 @@ namespace IngameScript
                     default: return MissileType.Unknown;
                 }
             }
-            public static string GetDisplayString(MissileType type)
+            public static string GetMissileTypeStr(MissileType type)
             {
                 switch (type)
                 {
@@ -70,7 +70,7 @@ namespace IngameScript
                     default: return MissileGuidanceType.Unknown;
                 }
             }
-            public static string GetDisplayString(MissileGuidanceType type)
+            public static string GetMissileGuidanceStr(MissileGuidanceType type)
             {
                 switch (type)
                 {
@@ -90,7 +90,7 @@ namespace IngameScript
                     default: return MissilePayload.Unknown;
                 }
             }
-            public static string GetDisplayString(MissilePayload payload)
+            public static string GetMissilePayloadStr(MissilePayload payload)
             {
                 switch (payload)
                 {
@@ -102,12 +102,30 @@ namespace IngameScript
                 }
             }
 
-            public static string GetDisplayString(MissileStage stage)
+            public static MissileStage GetMissileStage(string stageStr)
+            {
+                switch (stageStr.ToUpper())
+                {
+                    case "BUILDING": return MissileStage.Building;
+                    case "FUELING": return MissileStage.Fueling;
+                    case "IDLE": return MissileStage.Idle;
+                    case "ACTIVE": return MissileStage.Active;
+                    case "LAUNCHING": return MissileStage.Launching;
+                    case "FLYING": return MissileStage.Flying;
+                    case "INTERCEPTION": return MissileStage.Interception;
+                    default: return MissileStage.Unknown;
+                }
+            }
+
+            public static string GetMissileStageStr(MissileStage stage)
             {
                 switch (stage)
                 {
                     case MissileStage.Unknown: return "N/A";
+                    case MissileStage.Building: return "BUILDING";
+                    case MissileStage.Fueling: return "FUELING";
                     case MissileStage.Idle: return "IDLE";
+                    case MissileStage.Active: return "ACTIVE";
                     case MissileStage.Launching: return "LAUNCHING";
                     case MissileStage.Flying: return "FLYING";
                     case MissileStage.Interception: return "INTERCEPTION";

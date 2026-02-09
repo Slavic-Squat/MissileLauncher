@@ -41,7 +41,7 @@ namespace IngameScript
         }
         public static class EntityFilterEnumHelper
         {
-            public static string GetDisplayString(EntityTypeFilter filter)
+            public static string GetEntityTypeFilterStr(EntityTypeFilter filter)
             {
                 switch (filter)
                 {
@@ -53,7 +53,7 @@ namespace IngameScript
                 }
             }
 
-            public static string GetDisplayString(EntityRelationFilter filter)
+            public static string GetEntityRelationFilterStr(EntityRelationFilter filter)
             {
                 switch (filter)
                 {
@@ -67,7 +67,7 @@ namespace IngameScript
                 }
             }
 
-            public static string GetDisplayString(EntitySourceFilter filter)
+            public static string GetEntitySourceFilterStr(EntitySourceFilter filter)
             {
                 switch (filter)
                 {

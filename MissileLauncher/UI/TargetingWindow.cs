@@ -67,7 +67,7 @@ namespace IngameScript
                 _allEntities = UI.UICoordinator.AllEntities;
 
                 _targetingSpriteBuilder = new TargetingSpriteBuilder(new RectangleF(0, 0, 1024f, 1024f));
-                _targetingSpriteBuilder.Zoom = MiscEnumHelper.GetValue(ScopeScale);
+                _targetingSpriteBuilder.Zoom = MiscEnumHelper.GetScopeScaleValue(ScopeScale);
 
                 _entitySprites = _targetingSpriteBuilder.EntitySprites;
                 _targetingSprites = _targetingSpriteBuilder.FinalSprites;
@@ -108,7 +108,7 @@ namespace IngameScript
 
                 Vector2 navModeInfoPanelSize = new Vector2(180f, 35f);
                 Vector2 navModeInfoPanelPos = Pos + new Vector2(0, Size.Y - navModeInfoPanelSize.Y);
-                Func<string> navModeInfoGetter = () => $"NAV MODE: {MiscEnumHelper.GetDisplayString(NavMode)}";
+                Func<string> navModeInfoGetter = () => $"NAV MODE: {MiscEnumHelper.GetNavModeStr(NavMode)}";
                 InfoPanel navModeInfoPanel = new InfoPanel(navModeInfoPanelPos, navModeInfoPanelSize, 3f, 5f, navModeInfoGetter);
                 AddInfoPanel(navModeInfoPanel);
             }
@@ -198,7 +198,7 @@ namespace IngameScript
             public void CycleScopeScale()
             {
                 ScopeScale = MiscEnumHelper.NextScopeScale(ScopeScale);
-                _targetingSpriteBuilder.Zoom = MiscEnumHelper.GetValue(ScopeScale);
+                _targetingSpriteBuilder.Zoom = MiscEnumHelper.GetScopeScaleValue(ScopeScale);
             }
 
             public void CycleTypeFilter()

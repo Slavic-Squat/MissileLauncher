@@ -44,7 +44,7 @@ namespace IngameScript
         }
         public static class EntityEnumHelper
         {
-            public static string GetDisplayString(EntitySource source)
+            public static string GetEntitySourceStr(EntitySource source)
             {
                 switch (source)
                 {
@@ -56,7 +56,7 @@ namespace IngameScript
                 }
             }
 
-            public static string GetDisplayString(EntityType type)
+            public static string GetEntityTypeStr(EntityType type)
             {
                 switch (type)
                 {
@@ -66,7 +66,7 @@ namespace IngameScript
                 }
             }
 
-            public static string GetDisplayString(EntityRelation relation)
+            public static string GetEntityRelationStr(EntityRelation relation)
             {
                 switch (relation)
                 {

@@ -34,6 +34,7 @@ namespace IngameScript
             public MissileType MissileType { get; private set; } = MissileType.Unknown;
             public MissileGuidanceType MissileGuidanceType { get; private set; } = MissileGuidanceType.Unknown;
             public MissilePayload MissilePayload { get; private set; } = MissilePayload.Unknown;
+            public MissileStage MissileStage { get; private set; } = MissileStage.Unknown;
             public long MissileAddress { get; private set; } = -1;
             public bool IsSelected
             {
@@ -88,21 +89,20 @@ namespace IngameScript
                 _missileComputer = temp[0];
 
                 MyIni missileConfig = new MyIni();
-                bool missileReady = false;
                 if (missileConfig.TryParse(_missileComputer.CustomData))
                 {
                     MissileAddress = missileConfig.Get("Config", "MissileAddress").ToInt64(-1);
                     MissileType = MissileEnumHelper.GetMissileType(missileConfig.Get("Config", "Type").ToString());
                     MissileGuidanceType = MissileEnumHelper.GetMissileGuidanceType(missileConfig.Get("Config", "GuidanceType").ToString());
                     MissilePayload = MissileEnumHelper.GetMissilePayload(missileConfig.Get("Config", "Payload").ToString());
-                    missileReady = missileConfig.Get("Config", "Ready").ToBoolean(false);
+                    MissileStage = MissileEnumHelper.GetMissileStage(missileConfig.Get("Config", "Stage").ToString());
                 }
                 else
                 {
                     return;
                 }
                 
-                if (MissileAddress != -1 && MissileType != MissileType.Unknown && MissileGuidanceType != MissileGuidanceType.Unknown && MissilePayload != MissilePayload.Unknown && missileReady)
+                if (MissileAddress != -1 && MissileType != MissileType.Unknown && MissileGuidanceType != MissileGuidanceType.Unknown && MissilePayload != MissilePayload.Unknown && MissileStage >= MissileStage.Idle)
                 {
                     Status = BayStatus.Ready;
                     MissileRegistered?.Invoke();
@@ -133,7 +133,7 @@ namespace IngameScript
                     RegisterMissile();
                     _timeLastRegister = time;
                 }
-                if (_missileComputer != null && !GTS.CanAccess(_missileComputer))
+                if (_missileComputer != null && (!_attachment.IsAttached || !GTS.CanAccess(_missileComputer)))
                 {
                     UnregisterMissile();
                 }
@@ -168,6 +168,7 @@ namespace IngameScript
                 {
                     if (!_missileComputer.TryRun("LAUNCH")) return;
                     Status = BayStatus.Launching;
+                    _attachment.Detach();
                     MissileLaunched?.Invoke(targetID);
                 }
             }
@@ -176,10 +177,11 @@ namespace IngameScript
             {
                 StringBuilder sb = new StringBuilder();
                 sb.AppendLine($"[BAY {ID}]");
-                sb.AppendLine($"  STATUS: {MiscEnumHelper.GetDisplayString(Status)}");
-                sb.AppendLine($"  MISL TYPE: {MissileEnumHelper.GetDisplayString(MissileType)}");
-                sb.AppendLine($"  MISL GUIDANCE: {MissileEnumHelper.GetDisplayString(MissileGuidanceType)}");
-                sb.AppendLine($"  MISL PAYLOAD: {MissileEnumHelper.GetDisplayString(MissilePayload)}");
+                sb.AppendLine($"  STATUS: {MiscEnumHelper.GetBayStatusStr(Status)}");
+                sb.AppendLine($"  MISL TYPE: {MissileEnumHelper.GetMissileTypeStr(MissileType)}");
+                sb.AppendLine($"  MISL GUIDANCE: {MissileEnumHelper.GetMissileGuidanceStr(MissileGuidanceType)}");
+                sb.AppendLine($"  MISL PAYLOAD: {MissileEnumHelper.GetMissilePayloadStr(MissilePayload)}");
+                sb.AppendLine($"  MISL STAGE: {MissileEnumHelper.GetMissileStageStr(MissileStage)}");
 
                 return sb.ToString();
             }
