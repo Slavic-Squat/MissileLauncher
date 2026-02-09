@@ -34,12 +34,12 @@ namespace IngameScript
             private double _lastUniqueDetectionTime;
             private int _matchingDetectionCounter;
             private MyDetectedEntityInfo _previouslyDetectedEntity;
+            private double _time;
 
             private PIDControl _azimuthPID;
             private PIDControl _elevationPID;
 
             public string ID { get; private set; }
-            public double Time { get; private set; }
             public IController Controller { get; private set; }
             public bool IsControlPaused { get; private set; } = true;
             public bool IsUnderControl => Controller != null;
@@ -88,9 +88,9 @@ namespace IngameScript
 
             public void Run(double time)
             {
-                if (Time == 0)
+                if (_time == 0)
                 {
-                    Time = time;
+                    _time = time;
                     return;
                 }
 
@@ -112,12 +112,12 @@ namespace IngameScript
                 {
                     AutoTrack(time);
                 }
-                Time = time;
+                _time = time;
             }
 
             private void AutoTrack(double time)
             {
-                double timeDeltaSeconds = time - Time;
+                double timeDeltaSeconds = time - _time;
                 double globalTime = SystemCoordinator.GlobalTime;
 
                 double timeSinceLastDetection = globalTime - Target.TimeRecorded;
@@ -174,13 +174,13 @@ namespace IngameScript
                         }
                         else
                         {
-                            _lastUniqueDetectionTime = Time;
+                            _lastUniqueDetectionTime = _time;
                             _matchingDetectionCounter = 0;
                         }
 
                         _previouslyDetectedEntity = raycastResult;
 
-                        double timeSinceLastUniqueDetection = Time - _lastUniqueDetectionTime;
+                        double timeSinceLastUniqueDetection = _time - _lastUniqueDetectionTime;
                         if (timeSinceLastUniqueDetection > 2 && _matchingDetectionCounter >= 3)
                         {
                             Target = new EntityInfoExt(raycastResult, globalTime);

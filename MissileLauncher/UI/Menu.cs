@@ -26,7 +26,6 @@ namespace IngameScript
         public class Menu : IMenu
         {
             public object Parent { get; private set; }
-            public double Time { get; private set; }
             public RectangleF Bounds => _bounds;
             public Vector2 Pos => _bounds.Position;
             public Vector2 Size => _bounds.Size;
@@ -37,6 +36,7 @@ namespace IngameScript
             public event Action<IMenu> RequestClose;
             public event Action<INavigable> RequestStopNavigation;
 
+            protected double _time;
             protected bool _canUserClose;
             protected Func<bool> _autoClose;
             protected RectangleF _bounds;
@@ -267,9 +267,9 @@ namespace IngameScript
 
             public virtual void Update(double time)
             {
-                if (Time == 0)
+                if (_time == 0)
                 {
-                    Time = time;
+                    _time = time;
                     return;
                 }
 
@@ -289,7 +289,7 @@ namespace IngameScript
                 {
                     page.Updateables.ForEach(u => u.Update(time));
                 }
-                Time = time;
+                _time = time;
             }
 
             protected virtual void ActivateButton(IButton button)

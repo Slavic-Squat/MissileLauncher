@@ -26,7 +26,6 @@ namespace IngameScript
         public class ControlPanel : IPanel, INavigable, IUpdatable, IHighlightable
         {
             public object Parent { get; private set; }
-            public double Time { get; private set; }
             public RectangleF Bounds => _bounds;
             public Vector2 Pos => _bounds.Position;
             public Vector2 Size => _bounds.Size;
@@ -36,7 +35,7 @@ namespace IngameScript
             public bool IsPaused { get; private set; } = true;
             public event Action<INavigable> RequestStopNavigation;
 
-
+            private double _time;
             private RectangleF _bounds;
             private float _borderThickness;
             private float _highlightThickness;
@@ -233,9 +232,9 @@ namespace IngameScript
 
             public void Update(double time)
             {
-                if (Time == 0)
+                if (_time == 0)
                 {
-                    Time = time;
+                    _time = time;
                     return;
                 }
 
@@ -248,7 +247,7 @@ namespace IngameScript
                 {
                     page.Updateables.ForEach(u => u.Update(time));
                 }
-                Time = time;
+                _time = time;
             }
 
             private void ActivateButton(IButton button)

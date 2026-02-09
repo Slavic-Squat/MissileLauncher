@@ -25,14 +25,15 @@ namespace IngameScript
     {
         public class MissileBay
         {
+            private double _time;
             private IMyProgrammableBlock _missileComputer;
             private IMyMechanicalConnectionBlock _attachment;
             private bool _isSelected = false;
             private MyIni _missileConfig = new MyIni();
             private string _missileCustomData = "";
+            private double _timeLastRegister;
 
             public string ID {  get; private set; }
-            public double Time { get; private set; }
             public BayStatus Status { get; private set; } = BayStatus.Empty;
             public MissileType MissileType { get; private set; } = MissileType.Unknown;
             public MissileGuidanceType MissileGuidanceType { get; private set; } = MissileGuidanceType.Unknown;
@@ -51,8 +52,6 @@ namespace IngameScript
                 }
             }
             public bool IsSelectable => Status == BayStatus.Ready || Status == BayStatus.Active;
-
-            private double _timeLastRegister;
 
             public event Action MissileRegistered;
             public event Action MissileUnregistered;
@@ -88,11 +87,16 @@ namespace IngameScript
                 GTS.GetBlocksOfType(temp, pb => pb.CubeGrid.EntityId == _attachment.TopGrid.EntityId && pb.CustomName.ToUpper().Contains("MISSILE COMPUTER"));
                 if (temp.Count == 0)
                 {
-                    Status = BayStatus.Error;
+                    Status = BayStatus.Empty;
                     return;
                 }
                 _missileComputer = temp[0];
                 _missileComputer.Enabled = true;
+                if (!_missileComputer.TryRun("INIT"))
+                {
+                    Status = BayStatus.Empty;
+                    return;
+                }
 
                 Update();
                 
@@ -105,6 +109,7 @@ namespace IngameScript
 
             private void UnregisterMissile()
             {
+                _missileConfig.Clear();
                 MissileAddress = -1;
                 MissileType = MissileType.Unknown;
                 MissileGuidanceType = MissileGuidanceType.Unknown;
@@ -116,8 +121,7 @@ namespace IngameScript
 
             private void Update()
             {
-                if (_missileComputer == null) return;
-                if (_missileComputer.CustomData != _missileCustomData)
+                if (_missileComputer != null && _missileComputer.CustomData != _missileCustomData)
                 {
                     _missileConfig.Clear();
                     if (_missileConfig.TryParse(_missileComputer.CustomData))
@@ -140,13 +144,16 @@ namespace IngameScript
                         case MissileStage.Idle:
                             Status = BayStatus.Ready;
                             break;
-                        default:
-                            Status = BayStatus.Error;
+                        case MissileStage.Active:
+                            Status = BayStatus.Active;
+                            break;
+                        case MissileStage.Launching:
+                            Status = BayStatus.Launching;
                             break;
                     }
                 }
 
-                if (Status > BayStatus.Empty && (!_attachment.IsAttached || !GTS.CanAccess(_missileComputer) || MissileAddress == -1))
+                if (Status > BayStatus.Empty && (!_attachment.IsAttached || _missileComputer == null || !GTS.CanAccess(_missileComputer) || MissileAddress == -1))
                 {
                     UnregisterMissile();
                 }
@@ -154,13 +161,13 @@ namespace IngameScript
 
             public void Run(double time)
             {
-                if (Time == 0)
+                if (_time == 0)
                 {
-                    Time = time;
+                    _time = time;
                     return;
                 }
 
-                if ((Status == BayStatus.Empty || Status == BayStatus.Error) && (time - _timeLastRegister) > 5f)
+                if (Status == BayStatus.Empty && (time - _timeLastRegister) > 5f)
                 {
                     RegisterMissile();
                     _timeLastRegister = time;
@@ -169,7 +176,7 @@ namespace IngameScript
                 {
                     Update();
                 }
-                Time = time;
+                _time = time;
             }
 
             public void ActivateMissile()
@@ -177,8 +184,9 @@ namespace IngameScript
                 if (Status == BayStatus.Ready)
                 {
                     double globalTime = SystemCoordinator.GlobalTime;
+                    long selfID = SystemCoordinator.SelfID;
                     if (!_missileComputer.TryRun("TURN_ON")) return;
-                    if (!_missileComputer.TryRun($"ACTIVATE {IGCS.Me} {SystemCoordinator.SelfID} {globalTime}")) return;
+                    if (!_missileComputer.TryRun($"ACTIVATE {IGCS.Me} {selfID} {globalTime}")) return;
                 }
             }
 

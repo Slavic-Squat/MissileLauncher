@@ -24,7 +24,6 @@ namespace IngameScript
     {
         public class ToggleButton : IButton
         {
-            public double Time { get; private set; }
             public RectangleF Bounds => _bounds;
             public Vector2 Pos => Bounds.Position;
             public Vector2 Size => Bounds.Size;
@@ -51,6 +50,7 @@ namespace IngameScript
                 None = 0, Highlighted = 1, Pressed = 1 << 1, Disabled = 1 << 2
             }
 
+            private double _time;
             private RectangleF _bounds;
 
             private float _padding;
@@ -143,7 +143,7 @@ namespace IngameScript
                     return;
                 }
 
-                _timePressed = Time;
+                _timePressed = _time;
 
                 if (_state.HasFlag(ButtonState.Pressed))
                 {
@@ -167,9 +167,9 @@ namespace IngameScript
 
             public void Update(double time)
             {
-                if (Time == 0)
+                if (_time == 0)
                 {
-                    Time = time;
+                    _time = time;
                     return;
                 }
 
@@ -190,7 +190,7 @@ namespace IngameScript
                 {
                     _state |= ButtonState.Disabled;
                 }
-                Time = time;
+                _time = time;
             }
 
             public void Draw(MySpriteDrawFrame frame)

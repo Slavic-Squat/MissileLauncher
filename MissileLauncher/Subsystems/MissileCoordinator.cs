@@ -24,8 +24,6 @@ namespace IngameScript
     {
         public class MissileCoordinator
         {
-            public double Time { get; private set; }
-            
             private Dictionary<string, MissileBay> _missileBays = new Dictionary<string, MissileBay>();
             private HashSet<MissileBay> _selectedBays = new HashSet<MissileBay>();
             private HashSet<long> _registeredAddresses = new HashSet<long>();
@@ -35,6 +33,7 @@ namespace IngameScript
             private IEnumerator<int> _launchCoroutine;
             private double _lastClockSync;
             private double _lastLaunch;
+            private double _time;
 
             public IReadOnlyDictionary<long, EntityInfoExt> MyMissilesExt => _myMissilesExt;
             public IReadOnlyDictionary<string, MissileBay> MissileBays => _missileBays;
@@ -75,15 +74,19 @@ namespace IngameScript
 
             public void Run(double time)
             {
-                if (Time == 0)
+                if (_time == 0)
                 {
-                    Time = time;
+                    _time = time;
                     return;
                 }
 
                 foreach (var bay in _missileBays.Values)
                 {
                     bay.Run(time);
+                    if (!bay.IsSelectable && _selectedBays.Contains(bay))
+                    {
+                        DeselectBay(bay);
+                    }
                 }
 
                 while (CommunicationHandler0.HasMessage("MY_MISSILE_INFO", true))
@@ -135,7 +138,7 @@ namespace IngameScript
                 {
                     _launchCoroutine = null;
                 }
-                Time = time;
+                _time = time;
             }
 
             private void AddMissile(EntityInfo entityInfo)
@@ -280,10 +283,10 @@ namespace IngameScript
 
             private void LaunchMissile(MissileBay bay, long targetID)
             {
-                if ((Time - _lastLaunch) < 1f || !_selectedBays.Contains(bay)) return;
+                if ((_time - _lastLaunch) < 1f || !_selectedBays.Contains(bay)) return;
 
                 bay.Launch(targetID);
-                _lastLaunch = Time;
+                _lastLaunch = _time;
             }
 
             public void LaunchMissiles(long targetID, object caller)
@@ -307,7 +310,7 @@ namespace IngameScript
                 foreach (var bay in _selectedBays.ToList())
                 {
                     LaunchMissile(bay, targetID);
-                    while ((Time - _lastLaunch) < 1f)
+                    while ((_time - _lastLaunch) < 1f)
                     {
                         yield return loopCounter++;
                     }
@@ -317,7 +320,7 @@ namespace IngameScript
 
             private void SyncClocks()
             {
-                _lastClockSync = Time;
+                _lastClockSync = _time;
                 double globalTime = SystemCoordinator.GlobalTime;
 
                 foreach (long address in _registeredAddresses)

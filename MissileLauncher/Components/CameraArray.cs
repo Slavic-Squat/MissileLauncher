@@ -29,10 +29,10 @@ namespace IngameScript
             private PriorityQueue<IMyCameraBlock, double> _cameraQueue;
             private MovingAverage _avgRaycastDistance = new MovingAverage(10);
             private double _timeLastRaycast;
-            public double Time { get; private set; }
+            private double _time;
             public string ID { get; private set; }
             public float MaxRaycastDistance { get; set; }
-            public bool Recharging => Time - _timeLastRaycast < Period;
+            public bool Recharging => _time - _timeLastRaycast < Period;
             public int CameraCount => _cameras.Count;
             public double Period => _avgRaycastDistance.Average / (_cameras[0].RaycastTimeMultiplier * 1000 * CameraCount);
             public double Frequency => 1 / Period;
@@ -68,7 +68,7 @@ namespace IngameScript
 
             public void Update(double time)
             {
-                Time = time;
+                _time = time;
             }
 
             public MyDetectedEntityInfo Raycast(Vector3D raycastTarget)
@@ -80,7 +80,7 @@ namespace IngameScript
                     double raycastDistance = Vector3D.Distance(raycastTarget, nextCamera.GetPosition());
                     _avgRaycastDistance.Add(raycastDistance);
                     _cameraQueue.Enqueue(nextCamera);
-                    _timeLastRaycast = Time;
+                    _timeLastRaycast = _time;
                     return result;
                 }
                 else

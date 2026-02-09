@@ -25,7 +25,6 @@ namespace IngameScript
         public class UI
         {
             public ControlStation Station { get; private set; }
-            public double Time { get; private set; }
             public bool HasActiveWindow => _activeWindow != null;
             public IMyTextSurface Display { get; private set; }
             public Vector2 SurfaceSize => Display.SurfaceSize;
@@ -36,6 +35,7 @@ namespace IngameScript
             public Vector2 Size => Bounds.Size;
             public Vector2 Pos => Bounds.Position;
 
+            private double _time;
             private IWindow _activeWindow = null;
             private IPopUp _activePopUp = null;
             private bool _isPaused = false;
@@ -62,9 +62,9 @@ namespace IngameScript
                 if (_runCounter >= int.MaxValue) _runCounter = 0;
                 _runCounter++;
 
-                if (Time == 0)
+                if (_time == 0)
                 {
-                    Time = time;
+                    _time = time;
                     return;
                 }
 
@@ -74,8 +74,8 @@ namespace IngameScript
                 {
                     Draw();
                 }
-                
-                Time = time;
+
+                _time = time;
             }
 
             public void OpenWindow(IWindow window)

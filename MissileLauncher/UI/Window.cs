@@ -25,7 +25,6 @@ namespace IngameScript
         public class Window : IWindow
         {
             public UI UI { get; private set; }
-            public double Time { get; private set; }
             public object Parent { get; private set; }
             public RectangleF Bounds => _bounds;
             public Vector2 Pos => _bounds.Position;
@@ -36,6 +35,8 @@ namespace IngameScript
             public bool IsPaused { get; private set; } = true;
             public event Action<IWindow> RequestClose;
             public event Action<INavigable> RequestStopNavigation;
+
+            protected double _time;
 
             protected bool _canUserClose;
 
@@ -284,9 +285,9 @@ namespace IngameScript
 
             public virtual void Update(double time)
             {
-                if (Time == 0)
+                if (_time == 0)
                 {
-                    Time = time;
+                    _time = time;
                     return;
                 }
 
@@ -295,7 +296,7 @@ namespace IngameScript
                 {
                     updatable.Update(time);
                 }
-                Time = time;
+                _time = time;
             }
 
             public virtual void Draw(MySpriteDrawFrame frame)

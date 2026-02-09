@@ -24,7 +24,6 @@ namespace IngameScript
     {
         public interface IUpdatable
         {
-            double Time { get; }
             void Update(double time);
         }
     }

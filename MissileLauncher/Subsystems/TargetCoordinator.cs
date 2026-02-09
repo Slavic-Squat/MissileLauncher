@@ -24,8 +24,7 @@ namespace IngameScript
     {
         public class TargetCoordinator
         {
-            public double Time { get; private set; }
-
+            private double _time;
             private Dictionary<long, EntityInfoExt> _targetsLocal = new Dictionary<long, EntityInfoExt>();
             private Dictionary<long, EntityInfoExt> _targetsRemote = new Dictionary<long, EntityInfoExt>();
             private Dictionary<long, EntityInfoExt> _allTargetsExt = new Dictionary<long, EntityInfoExt>();
@@ -49,9 +48,9 @@ namespace IngameScript
 
             public void Run(double time)
             {
-                if (Time == 0)
+                if (_time == 0)
                 {
-                    Time = time;
+                    _time = time;
                     return;
                 }
                 double globalTime = SystemCoordinator.GlobalTime;
@@ -113,7 +112,7 @@ namespace IngameScript
                         RemoveRemoteTarget(targetKey);
                     }
                 }
-                Time = time;
+                _time = time;
             }
 
             private void AddRemoteTarget(EntityInfo entityInfo, bool friendly)

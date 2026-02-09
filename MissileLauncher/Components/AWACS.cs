@@ -35,8 +35,7 @@ namespace IngameScript
             private Dictionary<long, EntityInfoExt> _targets = new Dictionary<long, EntityInfoExt>();
             private PriorityQueue<long, double> _targetQueue;
             private float _maxRaycastDistance;
-
-            public double Time { get; private set; }
+            private double _time;
             public float MaxRaycastDistance
             {
                 get
@@ -80,9 +79,9 @@ namespace IngameScript
 
             public void Run(double time)
             {
-                if (Time == 0)
+                if (_time == 0)
                 {
-                    Time = time;
+                    _time = time;
                     return;
                 }
                 double globalTime = SystemCoordinator.GlobalTime;
@@ -160,7 +159,7 @@ namespace IngameScript
                         _targetQueue.Enqueue(targetID);
                     }
                 }
-                Time = time;
+                _time = time;
             }
 
             public void AddTarget(EntityInfoExt target)

@@ -25,7 +25,6 @@ namespace IngameScript
         public class ControlStation : IController
         {
             public string ID { get; private set; }
-            public double Time { get; private set; }
             public bool HasFireControl { get; private set; }
             public IControllable Controllable { get; private set; }
             public UserInput UserInput { get; private set; }
@@ -37,6 +36,7 @@ namespace IngameScript
             private UI _ui;
             private UICoordinator _uiCoordinator;
             private bool _isPaused = false;
+            private double _time;
             public ControlStation(string id, UICoordinator uiCoordinator)
             {
                 ID = id.ToUpper();
@@ -77,9 +77,9 @@ namespace IngameScript
 
             public void Run(double time)
             {
-                if (Time == 0)
+                if (_time == 0)
                 {
-                    Time = time;
+                    _time = time;
                     return;
                 }
 
@@ -94,7 +94,7 @@ namespace IngameScript
                 {
                     Controllable.Control(UserInput, this);
                 }
-                Time = time;
+                _time = time;
             }
 
             public void TakeFireControl(MissileCoordinator coordinator)

@@ -40,13 +40,13 @@ namespace IngameScript
             private bool _isMainClock = true;
             private double _lastClockSync;
             private double _globalTimeOffset;
+            private double _time;
 
             public AWACS AWACS { get; private set; }
             public IReadOnlyDictionary<string, TargetingLaser> TargetingLasers => _targetingLasers;
             public TargetCoordinator TargetCoordinator { get; private set; }
             public MissileCoordinator MissileCoordinator { get; private set; }
             public UICoordinator UICoordinator { get; private set; }
-            public double Time { get; private set; }
 
             public SystemCoordinator()
             {
@@ -119,9 +119,9 @@ namespace IngameScript
 
             public void Run(double time)
             {
-                if (Time == 0)
+                if (_time == 0)
                 {
-                    Time = time;
+                    _time = time;
                     return;
                 }
 
@@ -174,7 +174,7 @@ namespace IngameScript
                     }
                 }
 
-                Time = time;
+                _time = time;
             }
 
             private void SyncTarget(TargetingLaser laser)
@@ -204,7 +204,7 @@ namespace IngameScript
                 {
                     return;
                 }
-                _globalTimeOffset = time - Time;
+                _globalTimeOffset = time - _time;
             }
 
             private void PauseControlStation(string id)
