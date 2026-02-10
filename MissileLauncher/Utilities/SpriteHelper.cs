@@ -89,12 +89,10 @@ namespace IngameScript
                 return referenceSurface.MeasureStringInPixels(sb, font, scale);
             }
 
-            public static MySprite[] CreateBoxFilled(RectangleF bounds, Color borderColor, Color fillColor, float borderThickness)
+            public static void CreateBoxFilled(List<MySprite> sprites, RectangleF bounds, Color borderColor, Color fillColor, float borderThickness)
             {
-                MySprite[] sprites = new MySprite[2];
-
                 // Border
-                sprites[0] = new MySprite()
+                sprites.Add(new MySprite()
                 {
                     Type = SpriteType.TEXTURE,
                     Data = "SquareSimple",
@@ -102,9 +100,9 @@ namespace IngameScript
                     Size = bounds.Size,
                     Color = borderColor,
                     Alignment = TextAlignment.CENTER,
-                };
+                });
                 // Fill
-                sprites[1] = new MySprite()
+                sprites.Add(new MySprite()
                 {
                     Type = SpriteType.TEXTURE,
                     Data = "SquareSimple",
@@ -112,17 +110,13 @@ namespace IngameScript
                     Size = bounds.Size - 2 * borderThickness,
                     Color = fillColor,
                     Alignment = TextAlignment.CENTER,
-                };
-
-                return sprites;
+                });
             }
 
-            public static MySprite[] CreateBoxHollow(RectangleF bounds, Color borderColor, float borderThickness)
+            public static void CreateBoxHollow(List<MySprite> sprites, RectangleF bounds, Color borderColor, float borderThickness)
             {
-                MySprite[] sprites = new MySprite[4];
-
                 // Top
-                sprites[0] = new MySprite()
+                sprites.Add(new MySprite()
                 {
                     Type = SpriteType.TEXTURE,
                     Data = "SquareSimple",
@@ -130,9 +124,9 @@ namespace IngameScript
                     Size = new Vector2(bounds.Width, borderThickness),
                     Color = borderColor,
                     Alignment = TextAlignment.CENTER,
-                };
+                });
                 // Bottom
-                sprites[1] = new MySprite()
+                sprites.Add(new MySprite()
                 {
                     Type = SpriteType.TEXTURE,
                     Data = "SquareSimple",
@@ -140,9 +134,9 @@ namespace IngameScript
                     Size = new Vector2(bounds.Width, borderThickness),
                     Color = borderColor,
                     Alignment = TextAlignment.CENTER,
-                };
+                });
                 // Left
-                sprites[2] = new MySprite()
+                sprites.Add(new MySprite()
                 {
                     Type = SpriteType.TEXTURE,
                     Data = "SquareSimple",
@@ -150,9 +144,9 @@ namespace IngameScript
                     Size = new Vector2(borderThickness, bounds.Height),
                     Color = borderColor,
                     Alignment = TextAlignment.CENTER,
-                };
+                });
                 // Right
-                sprites[3] = new MySprite()
+                sprites.Add(new MySprite()
                 {
                     Type = SpriteType.TEXTURE,
                     Data = "SquareSimple",
@@ -160,9 +154,7 @@ namespace IngameScript
                     Size = new Vector2(borderThickness, bounds.Height),
                     Color = borderColor,
                     Alignment = TextAlignment.CENTER,
-                };
-
-                return sprites;
+                });
             }
         }
     }

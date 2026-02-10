@@ -69,8 +69,8 @@ namespace IngameScript
                 _attachment = AllGridBlocks.Where(b => b is IMyMechanicalConnectionBlock && b.CustomName.ToUpper().Contains($"MISSILE BAY {ID} ATTACHMENT")).FirstOrDefault() as IMyMechanicalConnectionBlock;
                 if (_attachment == null)
                 {
-                    DebugWrite($"Error: No attachment found for Missile Bay {ID}!\n", true);
-                    throw new Exception($"No attachment found for Missile Bay {ID}!\n");
+                    DebugEcho($"Error: No attachment found for Missile Bay {ID}!");
+                    throw new Exception($"No attachment found for Missile Bay {ID}!");
                 }
             }
 
@@ -210,17 +210,14 @@ namespace IngameScript
                 }
             }
 
-            public string GetOverview()
+            public void AppendOverview(StringBuilder sb)
             {
-                StringBuilder sb = new StringBuilder();
                 sb.AppendLine($"[BAY {ID}]");
-                sb.AppendLine($"  STATUS: {MiscEnumHelper.GetBayStatusStr(Status)}");
-                sb.AppendLine($"  MISL TYPE: {MissileEnumHelper.GetMissileTypeStr(MissileType)}");
-                sb.AppendLine($"  MISL GUIDANCE: {MissileEnumHelper.GetMissileGuidanceStr(MissileGuidanceType)}");
-                sb.AppendLine($"  MISL PAYLOAD: {MissileEnumHelper.GetMissilePayloadStr(MissilePayload)}");
-                sb.AppendLine($"  MISL STAGE: {MissileEnumHelper.GetMissileStageStr(MissileStage)}");
-
-                return sb.ToString();
+                sb.Append("  STATUS: ").AppendLine(MiscEnumHelper.GetBayStatusStr(Status));
+                sb.Append("  MISL TYPE: ").AppendLine(MissileEnumHelper.GetMissileTypeStr(MissileType));
+                sb.Append("  MISL GUIDANCE: ").AppendLine(MissileEnumHelper.GetMissileGuidanceStr(MissileGuidanceType));
+                sb.Append("  MISL PAYLOAD: ").AppendLine(MissileEnumHelper.GetMissilePayloadStr(MissilePayload));
+                sb.Append("  MISL STAGE: ").Append(MissileEnumHelper.GetMissileStageStr(MissileStage));
             }
         }
     }

@@ -31,7 +31,6 @@ namespace IngameScript
             public Vector3D Velocity => Info.Velocity;
             public double TimeRecorded => Info.TimeRecorded;
             public EntityType Type => Info.Type;
-            public EntityInfoSubType SubType => Info.SubType;
             public EntitySource Source { get; private set; }
             public EntityRelation Relation { get; private set; }
             public long RelationID { get; private set; }
@@ -97,50 +96,30 @@ namespace IngameScript
                 return this;
             }
 
-            public override string ToString()
+            public void AppendInfo(StringBuilder sb)
             {
-                StringBuilder sb = new StringBuilder($"[ENTITY INFO]\n-----------------------\nTYPE: {EntityEnumHelper.GetEntityTypeStr(Type)}\nSRC: {EntityEnumHelper.GetEntitySourceStr(Source)}\nREL: {EntityEnumHelper.GetEntityRelationStr(Relation)}\n");
-
+                sb.AppendLine("[ENTITY INFO]");
+                sb.AppendLine("-----------------------");
+                sb.Append("  TYPE: ").AppendLine(EntityEnumHelper.GetEntityTypeStr(Type));
+                sb.Append("  SRC: ").AppendLine(EntityEnumHelper.GetEntitySourceStr(Source));
+                sb.Append("  REL: ").AppendLine(EntityEnumHelper.GetEntityRelationStr(Relation));
                 double distance = Vector3D.Distance(SystemCoordinator.ReferencePosition, Position);
-                if (distance > 1000f)
-                {
-                    distance /= 1000f;
-                    sb.Append($"DIST: {distance:0.0} km\n");
-                }
-                else
-                {
-                    sb.Append($"DIST: {distance:0} m\n");
-                }
-
+                UIUtilities.AppendDistance(sb, distance);
+                sb.AppendLine();
                 double speed = Info.Velocity.Length();
-                if (speed > 1000f)
-                {
-                    speed /= 1000f;
-                    sb.Append($"SPD: {speed:0.0} km/s\n");
-                }
-                else
-                {
-                    sb.Append($"SPD: {speed:0} m/s\n");
-                }
-
+                UIUtilities.AppendDistance(sb, speed);
+                sb.AppendLine("/s");
                 double age = (SystemCoordinator.GlobalTime - Info.TimeRecorded) * 1000;
-                if (age > 1000f)
-                {
-                    age /= 1000f;
-                    sb.Append($"AGE: {age:0.0} s\n");
-                }
-                else
-                {
-                    sb.Append($"AGE: {age:0} ms\n");
-                }
+                UIUtilities.AppendTime(sb, age);
 
-                if (Info.SubType == EntityInfoSubType.MissileInfo)
+                if (Info.Type == EntityType.Missile && Info.MissileInfo.IsValid)
                 {
-                    var missileInfo = Info.MissileInfo.Value;
-                    sb.Append($"MISL TYPE: {MissileEnumHelper.GetMissileTypeStr(missileInfo.Type)}\nPAYLOAD: {MissileEnumHelper.GetMissilePayloadStr(missileInfo.Payload)}\nSTAGE: {MissileEnumHelper.GetMissileStageStr(missileInfo.Stage)}\n");
+                    var missileInfo = Info.MissileInfo;
+                    sb.AppendLine();
+                    sb.Append("  MISL TYPE: ").AppendLine(MissileEnumHelper.GetMissileTypeStr(missileInfo.Type));
+                    sb.Append("  PAYLOAD: ").AppendLine(MissileEnumHelper.GetMissilePayloadStr(missileInfo.Payload));
+                    sb.Append("  STAGE: ").Append(MissileEnumHelper.GetMissileStageStr(missileInfo.Stage));
                 }
-
-                return sb.ToString().TrimEnd('\n');
             }
         }
     }

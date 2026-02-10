@@ -27,11 +27,6 @@ namespace IngameScript
             Target, Missile
         }
 
-        public enum EntityInfoSubType : byte
-        {
-            None, MissileInfoLite, MissileInfo,
-        }
-
         public enum EntityRelation : byte
         {
             Neutral, Hostile, Friendly, Me

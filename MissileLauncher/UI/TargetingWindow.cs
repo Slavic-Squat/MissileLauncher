@@ -35,6 +35,7 @@ namespace IngameScript
             private IReadOnlyDictionary<long, MyEntitySprite> _entitySprites;
             private IReadOnlyList<MySpriteExt> _targetingSprites;
             private TargetingSpriteBuilder _targetingSpriteBuilder;
+            private Dictionary<long, MyEntitySprite> _filteredEntitySprites = new Dictionary<long, MyEntitySprite>();
 
 
             public TargetingWindow(UI ui, Vector2 pos, Vector2 size, float borderThickness) : base(ui, pos, size, borderThickness, canUserClose: false)
@@ -52,18 +53,19 @@ namespace IngameScript
                 _additionalSprites.Clear();
                 base.BuildSprites();
 
-                MySprite[] borderSprite = SpriteHelper.CreateBoxHollow(Bounds, UIConfig.WindowBorderColor, _borderThickness);
-                _additionalSprites.AddRange(borderSprite);
+                SpriteHelper.CreateBoxHollow(_additionalSprites, Bounds, UIConfig.WindowBorderColor, _borderThickness);
 
                 RectangleF labelBounds = new RectangleF(Pos.X, Pos.Y, 250f, 100f);
-                MySprite[] labelBox = SpriteHelper.CreateBoxFilled(labelBounds, UIConfig.WindowBorderColor, UIConfig.WindowFillColor, _borderThickness);
-                _additionalSprites.AddRange(labelBox);
+                SpriteHelper.CreateBoxFilled(_additionalSprites, labelBounds, UIConfig.WindowBorderColor, UIConfig.WindowFillColor, _borderThickness);
+
                 MySprite labelTextSprite = SpriteHelper.CreateText(labelBounds, "-TARGETING-", Color.White, alignment: TextAlignment.CENTER, vertCentered: true, padding: _borderThickness + 10f);
                 _additionalSprites.Add(labelTextSprite);
             }
 
             private void Init()
             {
+                StringBuilder sb = new StringBuilder();
+
                 _allEntities = UI.UICoordinator.AllEntities;
 
                 _targetingSpriteBuilder = new TargetingSpriteBuilder(new RectangleF(0, 0, 1024f, 1024f));
@@ -76,9 +78,11 @@ namespace IngameScript
                 Vector2 targetInfoPanelPos = Pos + new Vector2(Size.X - targetInfoPanelSize.X, Size.Y * 0.5f - targetInfoPanelSize.Y * 0.5f);
                 Func<string> targetInfoGetter = () =>
                 {
-                    if (_entitySprites.Keys.Contains(SelectedEntityID))
+                    if (_entitySprites.ContainsKey(SelectedEntityID))
                     {
-                        return _entitySprites[SelectedEntityID].EntityInfo.ToString();
+                        sb.Clear();
+                        _entitySprites[SelectedEntityID].EntityInfo.AppendInfo(sb);
+                        return sb.ToString();
                     }
                     else
                     {
@@ -100,9 +104,19 @@ namespace IngameScript
                 Vector2 targetingInfoPanelSize = new Vector2(200, 200f);
                 Vector2 targetingInfoPanelPos = Pos + new Vector2(Size.X - targetingInfoPanelSize.X, 0);
 
-                MissileCoordinator coordinator = UI.UICoordinator.MissileCoordinator;
+                MissileCoordinator missileCoordinator = UI.UICoordinator.MissileCoordinator;
                 AWACS awacs = UI.UICoordinator.AWACS;
-                Func<string> targetingInfoGetter = () => coordinator.GetOverview() + (awacs == null ? "" : $"\n{awacs.GetOverview().TrimEnd(' ', '\n')}");
+                Func<string> targetingInfoGetter = () =>
+                {
+                    sb.Clear();
+                    missileCoordinator.AppendOverview(sb);
+                    if (awacs != null)
+                    {
+                        sb.AppendLine();
+                        awacs.AppendOverview(sb);
+                    }
+                    return sb.ToString();
+                };
                 InfoPanel targetingInfoPanel = new InfoPanel(targetingInfoPanelPos, targetingInfoPanelSize, 5f, 10f, targetingInfoGetter);
                 AddInfoPanel(targetingInfoPanel);
 
@@ -125,6 +139,7 @@ namespace IngameScript
 
             private void SelectEntity(long entityID)
             {
+                if (entityID == -1) return;
                 SelectedEntityID = entityID;
             }
 
@@ -257,38 +272,57 @@ namespace IngameScript
                     return;
                 }
 
-                Dictionary<long, MyEntitySprite> filtered = _entitySprites.Where(kvp => EntityFilterEnumHelper.Matches(kvp.Value.EntityInfo, NavTypeFilter, NavRelationFilter, NavSourceFilter)).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+                _filteredEntitySprites.Clear();
+                foreach (var kvp in _entitySprites)
+                {
+                    EntityInfoExt entityInfo = kvp.Value.EntityInfo;
+                    if (EntityFilterEnumHelper.Matches(entityInfo, NavTypeFilter, NavRelationFilter, NavSourceFilter))
+                    {
+                        _filteredEntitySprites.Add(kvp.Key, kvp.Value);
+                    }
+                }
 
-                if (!filtered.Any())
+                if (!_filteredEntitySprites.Any())
                 {
                     UnselectEntity();
                     return;
                 }
-                else if (!filtered.Keys.Contains(SelectedEntityID))
+                else if (!_filteredEntitySprites.ContainsKey(SelectedEntityID))
                 {
                     UnselectEntity();
-                    long firstEntityID = filtered.Keys.OrderBy(id => filtered[id].EntityInfo.Position.X + filtered[id].EntityInfo.Position.Y).FirstOrDefault();
+                    long firstEntityID = -1;
+                    double min = double.MaxValue;
+                    foreach (var kvp in _filteredEntitySprites)
+                    {
+                        Vector2 Pos = kvp.Value.Pos;
+                        double value = Pos.X + Pos.Y;
+                        if (value < min)
+                        {
+                            min = value;
+                            firstEntityID = kvp.Key;
+                        }
+                    }
                     SelectEntity(firstEntityID);
                 }
 
                 if (input.WRelease)
                 {
-                    long nextEntityID = UIUtilities.Navigate(filtered, SelectedEntityID, Direction.Up);
+                    long nextEntityID = UIUtilities.Navigate(_filteredEntitySprites, SelectedEntityID, Direction.Up);
                     SelectEntity(nextEntityID);
                 }
                 else if (input.SRelease)
                 {
-                    long nextEntityID = UIUtilities.Navigate(filtered, SelectedEntityID, Direction.Down);
+                    long nextEntityID = UIUtilities.Navigate(_filteredEntitySprites, SelectedEntityID, Direction.Down);
                     SelectEntity(nextEntityID);
                 }
                 else if (input.ARelease)
                 {
-                    long nextEntityID = UIUtilities.Navigate(filtered, SelectedEntityID, Direction.Left);
+                    long nextEntityID = UIUtilities.Navigate(_filteredEntitySprites, SelectedEntityID, Direction.Left);
                     SelectEntity(nextEntityID);
                 }
                 else if (input.DRelease)
                 {
-                    long nextEntityID = UIUtilities.Navigate(filtered, SelectedEntityID, Direction.Right);
+                    long nextEntityID = UIUtilities.Navigate(_filteredEntitySprites, SelectedEntityID, Direction.Right);
                     SelectEntity(nextEntityID);
                 }
                 else if (input.SpaceRelease)

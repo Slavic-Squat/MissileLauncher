@@ -51,7 +51,7 @@ namespace IngameScript
             protected bool _obscure;
             protected RectangleF _screenBounds;
 
-            protected MySprite[] _bodySprites;
+            protected List<MySprite> _bodySprites = new List<MySprite>();
             protected MySprite _obscureSprite;
 
             protected List<MySprite> _commonSprites = new List<MySprite>();
@@ -102,7 +102,9 @@ namespace IngameScript
                         Alignment = TextAlignment.CENTER,
                     };
                 }
-                _bodySprites = SpriteHelper.CreateBoxFilled(Bounds, borderColor, fillColor, _borderThickness);
+
+                _bodySprites.Clear();
+                SpriteHelper.CreateBoxFilled(_bodySprites, Bounds, borderColor, fillColor, _borderThickness);
             }
 
             public virtual void Open(object caller)

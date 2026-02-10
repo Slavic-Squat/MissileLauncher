@@ -50,8 +50,8 @@ namespace IngameScript
                 _cameras = AllGridBlocks.Where(b => b is IMyCameraBlock && b.CustomName.ToUpper().Contains(ID)).Cast<IMyCameraBlock>().ToList();
                 if (_cameras.Count == 0)
                 {
-                    DebugWrite($"Error: {ID} Camera Array on has no cameras!\n", true);
-                    throw new Exception($"{ID} Camera Array on has no cameras!\n");
+                    DebugEcho($"Error: {ID} Camera Array on has no cameras!");
+                    throw new Exception($"{ID} Camera Array on has no cameras!");
                 }
             }
 

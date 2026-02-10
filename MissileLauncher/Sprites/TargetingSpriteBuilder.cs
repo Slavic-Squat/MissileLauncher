@@ -212,6 +212,8 @@ namespace IngameScript
                 _staticSpritesPostPlane.Add(selfSpriteExt);
                 _staticSpritesPostPlane.Add(baseSpriteExt);
                 _staticSpritesPostPlane.Add(stemSpriteExt);
+
+                _planeSprites.SortNoAlloc((a, b) => b.Depth.CompareTo(a.Depth));
             }
 
             public void BuildSprites(IReadOnlyDictionary<long, EntityInfoExt> entityInfoExts, long targetedID = -1)
@@ -409,9 +411,15 @@ namespace IngameScript
                     }
                 }
 
-                _finalSprites.AddRange(_spritesPrePlane.Concat(_staticSpritesPrePlane).OrderBy(x => -x.Depth));
+                _spritesPrePlane.AddRange(_staticSpritesPrePlane);
+                _spritesPrePlane.SortNoAlloc((a, b) => b.Depth.CompareTo(a.Depth));
+
+                _spritesPostPlane.AddRange(_staticSpritesPostPlane);
+                _spritesPostPlane.SortNoAlloc((a, b) => b.Depth.CompareTo(a.Depth));
+
+                _finalSprites.AddRange(_spritesPrePlane);
                 _finalSprites.AddRange(_planeSprites);
-                _finalSprites.AddRange(_spritesPostPlane.Concat(_staticSpritesPostPlane).OrderBy(x => -x.Depth));
+                _finalSprites.AddRange(_spritesPostPlane);
             }
         }
     }

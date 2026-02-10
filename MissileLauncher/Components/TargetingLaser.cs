@@ -268,15 +268,12 @@ namespace IngameScript
                 IsControlPaused = false;
             }
 
-            public string GetOverview()
+            public void AppendOverview(StringBuilder sb)
             {
-                StringBuilder sb = new StringBuilder();
                 sb.AppendLine($"[LASER {ID}]");
-                sb.AppendLine($"  STATUS: {(IsUnderControl ? "CONTROLLED" : "FREE")}");
-                sb.AppendLine($"  LOCKED: {(HasTarget ? "YES" : "NO")}");
-                sb.AppendLine($"  RNG: {MaxRaycastDistance:F0} m");
-
-                return sb.ToString();
+                sb.Append("  STATUS: ").AppendLine(IsUnderControl ? "CONTROLLED" : "FREE");
+                sb.Append("  LOCKED: ").AppendLine(HasTarget ? "YES" : "NO");
+                sb.Append("  RNG: ").AppendFormat("{0:F0} m", MaxRaycastDistance);
             }
         }
     }

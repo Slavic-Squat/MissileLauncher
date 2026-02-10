@@ -33,39 +33,72 @@ namespace IngameScript
                 }
 
                 T next = default(T);
+                float min = float.MaxValue;
                 switch (direction)
                 {
                     case Direction.Left:
-                        next = source.Where(element => element.Pos.X < current.Pos.X - epsilon).OrderBy(element =>
+                        foreach (var element in source)
                         {
-                            float dx = Math.Abs(element.Pos.X - current.Pos.X);
-                            float dy = Math.Abs(element.Pos.Y - current.Pos.Y);
-                            return dx + 10 * dy;
-                        }).FirstOrDefault();
+                            if (element.Pos.X < current.Pos.X - epsilon)
+                            {
+                                float dx = Math.Abs(element.Pos.X - current.Pos.X);
+                                float dy = Math.Abs(element.Pos.Y - current.Pos.Y);
+                                float distance = dx + 10 * dy;
+                                if (distance < min)
+                                {
+                                    min = distance;
+                                    next = element;
+                                }
+                            }
+                        }
                         break;
                     case Direction.Right:
-                        next = source.Where(element => element.Pos.X > current.Pos.X + epsilon).OrderBy(element =>
+                        foreach (var element in source)
                         {
-                            float dx = Math.Abs(element.Pos.X - current.Pos.X);
-                            float dy = Math.Abs(element.Pos.Y - current.Pos.Y);
-                            return dx + 10 * dy;
-                        }).FirstOrDefault();
+                            if (element.Pos.X > current.Pos.X + epsilon)
+                            {
+                                float dx = Math.Abs(element.Pos.X - current.Pos.X);
+                                float dy = Math.Abs(element.Pos.Y - current.Pos.Y);
+                                float distance = dx + 10 * dy;
+                                if (distance < min)
+                                {
+                                    min = distance;
+                                    next = element;
+                                }
+                            }
+                        }
                         break;
                     case Direction.Up:
-                        next = source.Where(element => element.Pos.Y < current.Pos.Y - epsilon).OrderBy(element =>
+                        foreach (var element in source)
                         {
-                            float dx = Math.Abs(element.Pos.X - current.Pos.X);
-                            float dy = Math.Abs(element.Pos.Y - current.Pos.Y);
-                            return 10 * dx + dy;
-                        }).FirstOrDefault();
+                            if (element.Pos.Y < current.Pos.Y - epsilon)
+                            {
+                                float dx = Math.Abs(element.Pos.X - current.Pos.X);
+                                float dy = Math.Abs(element.Pos.Y - current.Pos.Y);
+                                float distance = 10 * dx + dy;
+                                if (distance < min)
+                                {
+                                    min = distance;
+                                    next = element;
+                                }
+                            }
+                        }
                         break;
                     case Direction.Down:
-                        next = source.Where(element => element.Pos.Y > current.Pos.Y + epsilon).OrderBy(element =>
+                        foreach (var element in source)
                         {
-                            float dx = Math.Abs(element.Pos.X - current.Pos.X);
-                            float dy = Math.Abs(element.Pos.Y - current.Pos.Y);
-                            return 10 * dx + dy;
-                        }).FirstOrDefault();
+                            if (element.Pos.Y > current.Pos.Y + epsilon)
+                            {
+                                float dx = Math.Abs(element.Pos.X - current.Pos.X);
+                                float dy = Math.Abs(element.Pos.Y - current.Pos.Y);
+                                float distance = 10 * dx + dy;
+                                if (distance < min)
+                                {
+                                    min = distance;
+                                    next = element;
+                                }
+                            }
+                        }
                         break;
                 }
 
@@ -85,39 +118,72 @@ namespace IngameScript
                     currentKey = source.Keys.OrderBy(k => source[k].Pos.X + 2 * source[k].Pos.Y).FirstOrDefault();
                 }
                 TKey nextKey = default(TKey);
+                float min = float.MaxValue;
                 switch (direction)
                 {
                     case Direction.Left:
-                        nextKey = source.Keys.Where(k => source[k].Pos.X < source[currentKey].Pos.X - epsilon).OrderBy(k =>
+                        foreach (var kvp in source)
                         {
-                            float dx = Math.Abs(source[k].Pos.X - source[currentKey].Pos.X);
-                            float dy = Math.Abs(source[k].Pos.Y - source[currentKey].Pos.Y);
-                            return dx + 10 * dy;
-                        }).FirstOrDefault();
+                            if (kvp.Value.Pos.X < source[currentKey].Pos.X - epsilon)
+                            {
+                                float dx = Math.Abs(kvp.Value.Pos.X - source[currentKey].Pos.X);
+                                float dy = Math.Abs(kvp.Value.Pos.Y - source[currentKey].Pos.Y);
+                                float distance = dx + 10 * dy;
+                                if (distance < min)
+                                {
+                                    min = distance;
+                                    nextKey = kvp.Key;
+                                }
+                            }
+                        }
                         break;
                     case Direction.Right:
-                        nextKey = source.Keys.Where(k => source[k].Pos.X > source[currentKey].Pos.X + epsilon).OrderBy(k =>
+                        foreach (var kvp in source)
                         {
-                            float dx = Math.Abs(source[k].Pos.X - source[currentKey].Pos.X);
-                            float dy = Math.Abs(source[k].Pos.Y - source[currentKey].Pos.Y);
-                            return dx + 10 * dy;
-                        }).FirstOrDefault();
+                            if (kvp.Value.Pos.X > source[currentKey].Pos.X + epsilon)
+                            {
+                                float dx = Math.Abs(kvp.Value.Pos.X - source[currentKey].Pos.X);
+                                float dy = Math.Abs(kvp.Value.Pos.Y - source[currentKey].Pos.Y);
+                                float distance = dx + 10 * dy;
+                                if (distance < min)
+                                {
+                                    min = distance;
+                                    nextKey = kvp.Key;
+                                }
+                            }
+                        }
                         break;
                     case Direction.Up:
-                        nextKey = source.Keys.Where(k => source[k].Pos.Y < source[currentKey].Pos.Y - epsilon).OrderBy(k =>
+                        foreach (var kvp in source)
                         {
-                            float dx = Math.Abs(source[k].Pos.X - source[currentKey].Pos.X);
-                            float dy = Math.Abs(source[k].Pos.Y - source[currentKey].Pos.Y);
-                            return 10 * dx + dy;
-                        }).FirstOrDefault();
+                            if (kvp.Value.Pos.Y < source[currentKey].Pos.Y - epsilon)
+                            {
+                                float dx = Math.Abs(kvp.Value.Pos.X - source[currentKey].Pos.X);
+                                float dy = Math.Abs(kvp.Value.Pos.Y - source[currentKey].Pos.Y);
+                                float distance = 10 * dx + dy;
+                                if (distance < min)
+                                {
+                                    min = distance;
+                                    nextKey = kvp.Key;
+                                }
+                            }
+                        }
                         break;
                     case Direction.Down:
-                        nextKey = source.Keys.Where(k => source[k].Pos.Y > source[currentKey].Pos.Y + epsilon).OrderBy(k =>
+                        foreach (var kvp in source)
                         {
-                            float dx = Math.Abs(source[k].Pos.X - source[currentKey].Pos.X);
-                            float dy = Math.Abs(source[k].Pos.Y - source[currentKey].Pos.Y);
-                            return 10 * dx + dy;
-                        }).FirstOrDefault();
+                            if (kvp.Value.Pos.Y > source[currentKey].Pos.Y + epsilon)
+                            {
+                                float dx = Math.Abs(kvp.Value.Pos.X - source[currentKey].Pos.X);
+                                float dy = Math.Abs(kvp.Value.Pos.Y - source[currentKey].Pos.Y);
+                                float distance = 10 * dx + dy;
+                                if (distance < min)
+                                {
+                                    min = distance;
+                                    nextKey = kvp.Key;
+                                }
+                            }
+                        }
                         break;
                 }
 
@@ -142,6 +208,105 @@ namespace IngameScript
                 byte b = (byte)(colorA.B + (colorB.B - colorA.B) * t);
                 byte a = (byte)(colorA.A + (colorB.A - colorA.A) * t);
                 return new Color(r, g, b, a);
+            }
+
+            public static void AppendTime(StringBuilder sb, double totalSeconds)
+            {
+                if (double.IsPositiveInfinity(totalSeconds))
+                {
+                    sb.Append("∞");
+                    return;
+                }
+
+                TimeSpan timeSpan = TimeSpan.FromSeconds(totalSeconds);
+                if (timeSpan.Days > 0)
+                {
+                    sb.Append(timeSpan.Days).Append("d, ").Append(timeSpan.Hours).Append("h");
+                }
+                else if (timeSpan.Hours > 0)
+                {
+                    sb.Append(timeSpan.Hours).Append("h, ").Append(timeSpan.Minutes).Append("m");
+                }
+                else if (timeSpan.Minutes > 0)
+                {
+                    sb.Append(timeSpan.Minutes).Append("m, ").Append(timeSpan.Seconds).Append("s");
+                }
+                else if (timeSpan.Seconds > 0)
+                {
+                    sb.Append(timeSpan.Seconds).Append("s");
+                }
+                else
+                {
+                    sb.Append(timeSpan.Milliseconds).Append("ms");
+                }
+            }
+
+            public static void AppendVolume(StringBuilder sb, double volumeM3)
+            {
+                if (Math.Abs(volumeM3) >= 1)
+                {
+                    AppendNumber(sb, volumeM3);
+                    sb.Append(" m³");
+                }
+                else
+                {
+                    AppendNumber(sb, volumeM3 * 1000);
+                    sb.Append(" L");
+                }
+            }
+
+            public static void AppendPower(StringBuilder sb, double powerWatts)
+            {
+                if (Math.Abs(powerWatts) >= 1000000)
+                {
+                    AppendNumber(sb, powerWatts / 1000000);
+                    sb.Append(" MW");
+                }
+                else if (Math.Abs(powerWatts) >= 1000)
+                {
+                    AppendNumber(sb, powerWatts / 1000);
+                    sb.Append(" kW");
+                }
+                else
+                {
+                    AppendNumber(sb, powerWatts);
+                    sb.Append(" W");
+                }
+            }
+
+            public static void AppendDistance(StringBuilder sb, double distanceMeters)
+            {
+                if (Math.Abs(distanceMeters) >= 1000000)
+                {
+                    AppendNumber(sb, distanceMeters / 1000000);
+                    sb.Append(" Mm");
+                }
+                else if (Math.Abs(distanceMeters) >= 1000)
+                {
+                    AppendNumber(sb, distanceMeters / 1000);
+                    sb.Append(" km");
+                }
+                else
+                {
+                    AppendNumber(sb, distanceMeters);
+                    sb.Append(" m");
+                }
+            }
+
+            public static void AppendNumber(StringBuilder sb, double d)
+            {
+                if (Math.Abs(d) >= 1000000)
+                {
+                    sb.AppendFormat("{0:F1}", d / 1000000).Append("M");
+                }
+                else if (Math.Abs(d) >= 1000)
+                {
+                    sb.AppendFormat("{0:F1}", d / 1000).Append("k");
+                }
+                else
+                {
+                    sb.AppendFormat("{0:F1}", d);
+                }
             }
         }
     }

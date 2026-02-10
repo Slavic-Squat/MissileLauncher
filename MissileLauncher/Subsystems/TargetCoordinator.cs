@@ -26,11 +26,16 @@ namespace IngameScript
         {
             private double _time;
             private Dictionary<long, EntityInfoExt> _targetsLocal = new Dictionary<long, EntityInfoExt>();
+            private List<long> _localsToRemove = new List<long>();
             private Dictionary<long, EntityInfoExt> _targetsRemote = new Dictionary<long, EntityInfoExt>();
+            private List<long> _remotesToRemove = new List<long>();
             private Dictionary<long, EntityInfoExt> _allTargetsExt = new Dictionary<long, EntityInfoExt>();
             private HashSet<long> _neutralIDs = new HashSet<long>();
             private HashSet<long> _hostileIDs = new HashSet<long>();
             private HashSet<long> _friendlyIDs = new HashSet<long>();
+            private List<long> _idsToUpdate = new List<long>();
+            private byte[] _targetsBuffer = new byte[1024];
+            private byte[] _selfBuffer = new byte[128];
 
             public IReadOnlyDictionary<long, EntityInfoExt> AllTargetsExt => _allTargetsExt;
 
@@ -55,63 +60,42 @@ namespace IngameScript
                 }
                 double globalTime = SystemCoordinator.GlobalTime;
 
-                while (CommunicationHandler0.HasMessage("TARGET_SHARE", true))
-                {
-                    MyIGCMessage message;
-                    if (CommunicationHandler0.TryRetrieveMessage("TARGET_SHARE", true, out message))
-                    {
-                        byte[] bytes = Convert.FromBase64String(message.Data as string);
-                        EntityInfo entityInfo = EntityInfo.Deserialize(bytes, 0);
-                        AddRemoteTarget(entityInfo, false);
-                    }
-                }
+                Recieve();
 
-                while (CommunicationHandler0.HasMessage("FRIENDLY_INFO", true))
-                {
-                    MyIGCMessage message;
-                    if (CommunicationHandler0.TryRetrieveMessage("FRIENDLY_INFO", true, out message))
-                    {
-                        byte[] bytes = Convert.FromBase64String(message.Data as string);
-                        EntityInfo entityInfo = EntityInfo.Deserialize(bytes, 0);
-                        AddRemoteTarget(entityInfo, true);
-                    }
-                }
-
-                while (CommunicationHandler0.HasMessage("ALL_MISSILE_INFO", false))
-                {
-                    MyIGCMessage message;
-                    if (CommunicationHandler0.TryRetrieveMessage("ALL_MISSILE_INFO", false, out message))
-                    {
-                        byte[] bytes = Convert.FromBase64String(message.Data as string);
-                        EntityInfo entityInfo = EntityInfo.Deserialize(bytes, 0);
-                        AddRemoteTarget(entityInfo, false);
-                    }
-                }
-
-                foreach (var targetKey in _targetsLocal.Keys.ToList())
+                _localsToRemove.Clear();
+                foreach (var targetKey in _targetsLocal.Keys)
                 {
                     double timeSinceLastDetection = globalTime - _targetsLocal[targetKey].TimeRecorded;
 
                     if (timeSinceLastDetection > 5f)
                     {
-                        RemoveLocalTarget(targetKey);
-                        continue;
+                        _localsToRemove.Add(targetKey);
                     }
-
-                    var targetInfo = _targetsLocal[targetKey].Info;
-                    byte[] bytes = targetInfo.Serialize();
-                    CommunicationHandler0.SendBroadcast(bytes, "TARGET_SHARE", true);
                 }
 
-                foreach (var targetKey in _targetsRemote.Keys.ToList())
+                foreach (var targetKey in _localsToRemove)
+                {
+                    RemoveLocalTarget(targetKey);
+                }
+
+                _remotesToRemove.Clear();
+                foreach (var targetKey in _targetsRemote.Keys)
                 {
                     double timeSinceLastDetection = globalTime - _targetsRemote[targetKey].TimeRecorded;
 
                     if (timeSinceLastDetection > 5f)
                     {
-                        RemoveRemoteTarget(targetKey);
+                        _remotesToRemove.Add(targetKey);
                     }
                 }
+
+                foreach (var targetKey in _remotesToRemove)
+                {
+                    RemoveRemoteTarget(targetKey);
+                }
+
+                Transmit();
+
                 _time = time;
             }
 
@@ -126,12 +110,11 @@ namespace IngameScript
 
                 if (entityInfo.Type == EntityType.Missile)
                 {
-                    if (entityInfo.SubType != EntityInfoSubType.MissileInfoLite)
+                    if (!entityInfo.MissileInfo.IsValid)
                     {
                         return;
                     }
-
-                    relationID = entityInfo.MissileInfoLite.Value.LauncherID;
+                    relationID = entityInfo.MissileInfo.LauncherID;
                 }
 
                 if (entityID == SystemCoordinator.SelfID || relationID == SystemCoordinator.SelfID)
@@ -287,13 +270,18 @@ namespace IngameScript
                         break;
                 }
 
-                List<long> idsToUpdate = new List<long>()
-                {
-                    entityID,
-                };
-                idsToUpdate.AddRange(_allTargetsExt.Values.Where(t => t.RelationID == entityID).Select(t => t.EntityID));
+                _idsToUpdate.Clear();
+                _idsToUpdate.Add(entityID);
 
-                foreach (var id in idsToUpdate)
+                foreach (var target in _allTargetsExt.Values)
+                {
+                    if (target.RelationID == entityID)
+                    {
+                        _idsToUpdate.Add(target.EntityID);
+                    }
+                }
+
+                foreach (var id in _idsToUpdate)
                 {
                     if (_allTargetsExt.ContainsKey(id))
                     {
@@ -312,6 +300,111 @@ namespace IngameScript
                         var original = _targetsRemote[id];
                         var newInfo = new EntityInfoExt(original.Info, original.Source, relation, original.RelationID);
                         _targetsRemote[id] = newInfo;
+                    }
+                }
+            }
+
+            private void Transmit()
+            {
+                int index = 0;
+                int count = _targetsLocal.Count;
+                if (count == 0)
+                {
+                    return;
+                }
+
+                _targetsBuffer[index++] = (byte)count;
+
+                int sizeIndex;
+                int bytesWritten;
+
+                foreach (var target in _targetsLocal.Values)
+                {
+                    sizeIndex = index++;
+                    bytesWritten = target.Info.Serialize(_targetsBuffer, index);
+                    index += bytesWritten;
+                    _targetsBuffer[sizeIndex] = (byte)bytesWritten;
+                }
+                if (index > 1)
+                {
+                    ImmutableArray<byte> bytes = ImmutableArray.Create(_targetsBuffer, 0, index);
+                    CommunicationHandler0.SendBroadcast(bytes, "TARGET_SHARE", true);
+                }
+
+                index = 0;
+                sizeIndex = index++;
+
+                EntityInfo selfInfo = new EntityInfo(SystemCoordinator.SelfID, SystemCoordinator.ReferencePosition, SystemCoordinator.ReferenceVelocity, SystemCoordinator.GlobalTime);
+                bytesWritten = selfInfo.Serialize(_selfBuffer, index);
+                _selfBuffer[sizeIndex] = (byte)bytesWritten;
+                index += bytesWritten;
+                if (index > 1)
+                {
+                    ImmutableArray<byte> bytes = ImmutableArray.Create(_selfBuffer, 0, index);
+                    CommunicationHandler0.SendBroadcast(bytes, "FRIENDLY_INFO", true);
+                }
+            }
+
+            private void Recieve()
+            {
+                while (CommunicationHandler0.HasMessage("TARGET_SHARE", true))
+                {
+                    MyIGCMessage message;
+                    if (CommunicationHandler0.TryRetrieveMessage("TARGET_SHARE", true, out message))
+                    {
+                        ImmutableArray<byte> bytes = message.As<ImmutableArray<byte>>();
+                        int index = 0;
+                        int count = bytes[index++];
+
+                        for (int i = 0; i < count; i++)
+                        {
+                            byte size = bytes[index++];
+                            int bytesRead;
+                            EntityInfo entityInfo = EntityInfo.Deserialize(bytes, index, out bytesRead);
+                            if (!entityInfo.IsValid || size != bytesRead)
+                            {
+                                index += size;
+                                continue;
+                            }
+                            index += bytesRead;
+                            AddRemoteTarget(entityInfo, false);
+                        }
+                    }
+                }
+
+                while (CommunicationHandler0.HasMessage("FRIENDLY_INFO", true))
+                {
+                    MyIGCMessage message;
+                    if (CommunicationHandler0.TryRetrieveMessage("FRIENDLY_INFO", true, out message))
+                    {
+                        ImmutableArray<byte> bytes = message.As<ImmutableArray<byte>>();
+                        int index = 0;
+                        byte size = bytes[index++];
+                        int bytesRead;
+                        EntityInfo entityInfo = EntityInfo.Deserialize(bytes, index, out bytesRead);
+                        if (!entityInfo.IsValid || size != bytesRead)
+                        {
+                            continue;
+                        }
+                        AddRemoteTarget(entityInfo, true);
+                    }
+                }
+
+                while (CommunicationHandler0.HasMessage("ALL_MISSILE_INFO", false))
+                {
+                    MyIGCMessage message;
+                    if (CommunicationHandler0.TryRetrieveMessage("ALL_MISSILE_INFO", false, out message))
+                    {
+                        ImmutableArray<byte> bytes = message.As<ImmutableArray<byte>>();
+                        int index = 0;
+                        byte size = bytes[index++];
+                        int bytesRead;
+                        EntityInfo entityInfo = EntityInfo.Deserialize(bytes, index, out bytesRead);
+                        if (!entityInfo.IsValid || size != bytesRead)
+                        {
+                            continue;
+                        }
+                        AddRemoteTarget(entityInfo, false);
                     }
                 }
             }

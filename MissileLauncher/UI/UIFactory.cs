@@ -158,9 +158,9 @@ namespace IngameScript
                 float padding = 15f;
                 float spacing = 15f;
 
-                if (entity.Type == EntityType.Missile && entity.Relation == EntityRelation.Me && entity.Info.MissileInfo.HasValue)
+                if (entity.Type == EntityType.Missile && entity.Relation == EntityRelation.Me && entity.Info.MissileInfo.IsValid)
                 {
-                    long address = entity.Info.MissileInfo.Value.Address;
+                    long address = entity.Info.MissileInfo.Address;
 
                     int numButtons = 1;
                     float totalWidth = numButtons * buttonSize.X + (numButtons - 1) * spacing + 2 * padding;
@@ -337,6 +337,7 @@ namespace IngameScript
                 RectangleF screenBounds = window.UI.Bounds;
                 UICoordinator uiCoordinator = window.UI.UICoordinator;
                 ControlStation station = window.UI.Station;
+                StringBuilder sb = new StringBuilder();
 
                 var bays = uiCoordinator.MissileBays.Values.ToList();
 
@@ -391,7 +392,12 @@ namespace IngameScript
                             if (bayIndex >= numBays) break;
                             var bay = bays[bayIndex];
                             panelPos.X = menu.Pos.X + padding + (panelSize.X + spacing) * k;
-                            Func<string> getText = () => bay.GetOverview();
+                            Func<string> getText = () =>
+                            {
+                                sb.Clear();
+                                bay.AppendOverview(sb);
+                                return sb.ToString();
+                            };
                             InfoPanel panel = new InfoPanel(panelPos, panelSize, 5f, 10f, getText);
                             menu.AddInfoPanel(panel, i);
 
@@ -472,6 +478,7 @@ namespace IngameScript
             {
                 RectangleF screenBounds = window.UI.Bounds;
                 UICoordinator uiCoordinator = window.UI.UICoordinator;
+                StringBuilder sb = new StringBuilder();
 
                 var lasers = uiCoordinator.TargetingLasers.Values.ToList();
                 var ctrlStation = window.UI.Station;
@@ -525,7 +532,12 @@ namespace IngameScript
                             if (laserIndex >= numLasers) break;
                             var laser = lasers[laserIndex];
                             panelPos.X = menu.Pos.X + padding + (panelSize.X + spacing) * k;
-                            Func<string> getText = () => laser.GetOverview();
+                            Func<string> getText = () =>
+                            {
+                                sb.Clear();
+                                laser.AppendOverview(sb);
+                                return sb.ToString();
+                            };
                             InfoPanel panel = new InfoPanel(panelPos, panelSize, 5f, 10f, getText);
                             menu.AddInfoPanel(panel, i);
 

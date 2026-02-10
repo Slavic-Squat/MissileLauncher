@@ -33,6 +33,7 @@ namespace IngameScript
             private MatrixD _referenceMatrix;
             
             private Dictionary<long, EntityInfoExt> _targets = new Dictionary<long, EntityInfoExt>();
+            private List<long> _targetsToRemove = new List<long>();
             private PriorityQueue<long, double> _targetQueue;
             private float _maxRaycastDistance;
             private double _time;
@@ -99,7 +100,8 @@ namespace IngameScript
 
                     _referenceMatrix.Translation = _spinRotor.RotorBlock.GetPosition();
 
-                    foreach (var targetID in _targets.Keys.ToList())
+                    _targetsToRemove.Clear();
+                    foreach (var targetID in _targets.Keys)
                     {
                         EntityInfoExt target = _targets[targetID];
                         double timeSinceLastDetection = globalTime - target.TimeRecorded;
@@ -111,8 +113,13 @@ namespace IngameScript
 
                         if (timeSinceLastDetection > 5 || estimatedTargetDistance >= MaxRaycastDistance * 0.8 || targetElevation >= 45)
                         {
-                            RemoveTarget(targetID);
+                            _targetsToRemove.Add(targetID);
                         }
+                    }
+
+                    foreach (var targetID in _targetsToRemove)
+                    {
+                        RemoveTarget(targetID);
                     }
 
                     for (int i = 0; i < _targetQueue.Count; i++)
@@ -194,13 +201,11 @@ namespace IngameScript
                 }
             }
 
-            public string GetOverview()
+            public void AppendOverview(StringBuilder sb)
             {
-                StringBuilder sb = new StringBuilder();
                 sb.AppendLine("[AWACS]");
-                sb.AppendLine($"  TRGTS: {_targets.Count}");
-                sb.AppendLine($"  RNG: {_maxRaycastDistance:F0} m");
-                return sb.ToString();
+                sb.Append("  TRGTS: ").AppendFormat("{0:F0}", TargetCount).AppendLine();
+                sb.Append("  RNG: ").AppendFormat("{0:F0}", _maxRaycastDistance).Append(" m");
             }
         }
     }

@@ -50,7 +50,7 @@ namespace IngameScript
             private Func<bool> _canPress;
             private Func<string> _textGetter;
 
-            private MySprite[] _bodySprites;
+            private List<MySprite> _bodySprites = new List<MySprite>();
             private MySprite _highlightSprite;
             private MySprite _textSprite;
 
@@ -102,7 +102,8 @@ namespace IngameScript
                 bounds.Size = Size * scale;
                 bounds.Position = Pos + (Size - bounds.Size) / 2;
 
-                _bodySprites = SpriteHelper.CreateBoxFilled(bounds, borderColor, fillColor, _borderThickness * scale);
+                _bodySprites.Clear();
+                SpriteHelper.CreateBoxFilled(_bodySprites, bounds, borderColor, fillColor, _borderThickness * scale);
 
                 _highlightSprite = new MySprite()
                 {

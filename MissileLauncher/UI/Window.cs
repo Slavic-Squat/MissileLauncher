@@ -43,7 +43,7 @@ namespace IngameScript
             protected RectangleF _bounds;
             protected float _borderThickness;
 
-            protected MySprite[] _bodySprites;
+            protected List<MySprite> _bodySprites = new List<MySprite>();
             protected List<MySprite> _additionalSprites = new List<MySprite>();
 
             protected List<IHighlightable> _highlightables = new List<IHighlightable>();
@@ -85,7 +85,7 @@ namespace IngameScript
 
             protected virtual void BuildSprites()
             {
-                _bodySprites = SpriteHelper.CreateBoxFilled(Bounds, UIConfig.WindowBorderColor, UIConfig.WindowFillColor, _borderThickness);
+                SpriteHelper.CreateBoxFilled(_bodySprites, Bounds, UIConfig.WindowBorderColor, UIConfig.WindowFillColor, _borderThickness);
             }
 
             public virtual void Open(object caller)

@@ -34,6 +34,9 @@ namespace IngameScript
             private double _lastClockSync;
             private double _lastLaunch;
             private double _time;
+            private List<long> _addressesToRemove = new List<long>();
+            private List<long> _idsToRemove = new List<long>();
+            private byte[] _targetBuffer = new byte[256];
 
             public IReadOnlyDictionary<long, EntityInfoExt> MyMissilesExt => _myMissilesExt;
             public IReadOnlyDictionary<string, MissileBay> MissileBays => _missileBays;
@@ -89,45 +92,37 @@ namespace IngameScript
                     }
                 }
 
-                while (CommunicationHandler0.HasMessage("MY_MISSILE_INFO", true))
-                {
-                    MyIGCMessage message;
-                    if (CommunicationHandler0.TryRetrieveMessage("MY_MISSILE_INFO", true, out message))
-                    {
-                        if (!_registeredAddresses.Contains(message.Source))
-                        {
-                            continue;
-                        }
-                        byte[] bytes = Convert.FromBase64String(message.Data as string);
-                        EntityInfo missile = EntityInfo.Deserialize(bytes, 0);
-                        AddMissile(missile);
-                    }
-                }
+                Recieve();
 
-                foreach (var missileAddress in _addressTargetIDMap.Keys.ToList())
+                foreach (var missileAddress in _addressTargetIDMap.Keys)
                 {
                     if (!CommunicationHandler0.CanReach(missileAddress))
                     {
-                        UnregisterMissile(missileAddress);
-                        continue;
-                    }                    
-
-                    long targetID = _addressTargetIDMap[missileAddress];
-                    if (_targetInfo.ContainsKey(targetID))
-                    {
-                        byte[] targetBytes = _targetInfo[targetID].Info.Serialize();
-                        CommunicationHandler0.SendUnicast(targetBytes, missileAddress, "TARGET_INFO", true);
+                        _addressesToRemove.Add(missileAddress);
                     }
                 }
 
-                foreach (var missileKey in _myMissilesExt.Keys.ToList())
+                foreach (var address in _addressesToRemove)
                 {
-                    var missile = _myMissilesExt[missileKey];
+                    UnregisterMissile(address);
+                }
+
+                foreach (var kvp in _myMissilesExt)
+                {
+                    var missile = kvp.Value;
+                    var missileID = kvp.Key;
                     if ((time - missile.TimeRecorded) > 5f)
                     {
-                        RemoveMissile(missileKey);
+                        _idsToRemove.Add(missileID);
                     }
                 }
+
+                foreach (var id in _idsToRemove)
+                {
+                    RemoveMissile(id);
+                }
+
+                Transmit();
 
                 if ((time - _lastClockSync) > 10f)
                 {
@@ -143,10 +138,10 @@ namespace IngameScript
 
             private void AddMissile(EntityInfo entityInfo)
             {
-                if (entityInfo.SubType != EntityInfoSubType.MissileInfo) return;
+                if (entityInfo.Type != EntityType.Missile || !entityInfo.MissileInfo.IsValid) return;
 
                 long key = entityInfo.EntityID;
-                long relationID = entityInfo.MissileInfo.Value.LauncherID;
+                long relationID = entityInfo.MissileInfo.LauncherID;
                 EntitySource source = EntitySource.Remote;
                 EntityRelation relation = EntityRelation.Me;
                 EntityInfoExt entityInfoExt = new EntityInfoExt(entityInfo, source, relation, relationID);
@@ -366,16 +361,61 @@ namespace IngameScript
                 Station = null;
             }
 
-            public string GetOverview()
+            public void AppendOverview(StringBuilder sb)
             {
-                StringBuilder sb = new StringBuilder();
                 sb.AppendLine("[MISL COORDINATOR]");
-                sb.AppendLine($"  SLCTD BAYS: {NumSelectedBays}/{NumBays}");
-                sb.AppendLine($"  RDY BAYS: {NumReadyBays}/{NumBays}");
-                sb.AppendLine($"  TRCKD MISLS: {NumMissiles}");
-                sb.AppendLine($"  FIRE CTRL: {(FireControlAvail ? "AVAIL" : "IN USE")}");
+                sb.Append("  SLCTD BAYS: ").Append(NumSelectedBays).Append("/").Append(NumBays).AppendLine();
+                sb.Append("  RDY BAYS:  ").Append(NumReadyBays).Append("/").Append(NumBays).AppendLine();
+                sb.Append("  TRCKD MISLS: ").Append(NumMissiles).AppendLine();
+                sb.Append("  FIRE CTRL:  ").Append(FireControlAvail ? "AVAIL" : "IN USE");
+            }
 
-                return sb.ToString();
+            private void Transmit()
+            {
+                foreach (var kvp in _addressTargetIDMap)
+                {
+                    long address = kvp.Key;
+                    long targetID = kvp.Value;
+
+                    if (_targetInfo.ContainsKey(targetID))
+                    {
+                        int index = 0;
+                        int sizeIndex = index++;
+                        int bytesWritten = _targetInfo[targetID].Info.Serialize(_targetBuffer, index);
+                        index += bytesWritten;
+                        _targetBuffer[sizeIndex] = (byte)bytesWritten;
+                        if (index > 1)
+                        {
+                            ImmutableArray<byte> bytes = ImmutableArray.Create(_targetBuffer, 0, index);
+                            CommunicationHandler0.SendUnicast(bytes, address, "TARGET_INFO", true);
+                        }
+                    }
+                }
+            }
+
+            private void Recieve()
+            {
+                while (CommunicationHandler0.HasMessage("MY_MISSILE_INFO", true))
+                {
+                    MyIGCMessage message;
+                    if (CommunicationHandler0.TryRetrieveMessage("MY_MISSILE_INFO", true, out message))
+                    {
+                        if (!_registeredAddresses.Contains(message.Source))
+                        {
+                            continue;
+                        }
+                        ImmutableArray<byte> bytes = message.As<ImmutableArray<byte>>();
+                        int index = 0;
+                        byte size = bytes[index++];
+                        int bytesRead;
+                        EntityInfo missile = EntityInfo.Deserialize(bytes, index, out bytesRead);
+                        if (!missile.IsValid || size != bytesRead)
+                        {
+                            continue;
+                        }
+                        AddMissile(missile);
+                    }
+                }
             }
         }
     }

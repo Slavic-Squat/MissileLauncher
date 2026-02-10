@@ -35,7 +35,7 @@ namespace IngameScript
             private float _padding;
             private string _text;
             private Func<bool> _condition;
-            private MySprite[] _bodySprites;
+            private List<MySprite> _bodySprites = new List<MySprite>();
             private MySprite _textSprite;
             private MySprite _obscureSprite;
             private RectangleF _screenBounds;
@@ -52,7 +52,8 @@ namespace IngameScript
 
             private void BuildSprites()
             {
-                _bodySprites = SpriteHelper.CreateBoxFilled(Bounds, new Color(252, 3, 94, 255), new Color(38, 19, 26, 255), _borderThickness);
+                _bodySprites.Clear();
+                SpriteHelper.CreateBoxFilled(_bodySprites, Bounds, new Color(252, 3, 94, 255), new Color(38, 19, 26, 255), _borderThickness);
 
                 _obscureSprite = new MySprite()
                 {

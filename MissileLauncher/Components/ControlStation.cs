@@ -51,8 +51,8 @@ namespace IngameScript
                 _controllerReference = AllGridBlocks.Where(b => b is IMyShipController && b.CustomName.ToUpper().Contains($"CONTROL STATION {ID}")).FirstOrDefault() as IMyShipController;
                 if (_controllerReference == null)
                 {
-                    DebugWrite($"Error: No controller found for Control Station {ID}!\n", true);
-                    throw new Exception($"No controller found for Control Station {ID}!\n");
+                    DebugEcho($"Error: No controller found for Control Station {ID}!");
+                    throw new Exception($"No controller found for Control Station {ID}!");
                 }
                 float internalSurfaceCount = (_controllerReference as IMyTextSurfaceProvider)?.SurfaceCount ?? 0;
                 for (int i = 0; i < internalSurfaceCount; i++)
@@ -63,8 +63,8 @@ namespace IngameScript
                 _displays.AddRange(additionalDisplays);
                 if (_displays.Count == 0)
                 {
-                    DebugWrite($"Error: No displays found for Control Station {ID}!\n", true);
-                    throw new Exception($"No displays found for Control Station {ID}!\n");
+                    DebugEcho($"Error: No displays found for Control Station {ID}!");
+                    throw new Exception($"No displays found for Control Station {ID}!");
                 }
             }
 

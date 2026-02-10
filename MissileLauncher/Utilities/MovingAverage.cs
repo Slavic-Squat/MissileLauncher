@@ -31,6 +31,8 @@ namespace IngameScript
 
             public double Average => _values.Count > 0 ? _sum / _values.Count : 0;
             public int Count => _values.Count;
+            public double Max => _values.Count > 0 ? _values.Max() : 0;
+            public double Min => _values.Count > 0 ? _values.Min() : 0;
             public MovingAverage(int windowSize)
             {
                 if (windowSize <= 0)

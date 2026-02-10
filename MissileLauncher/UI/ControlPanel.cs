@@ -46,7 +46,7 @@ namespace IngameScript
             private int _currentPageIndex = 0;
             private IButton _highlightedButton;
 
-            private MySprite[] _bodySprites;
+            private List<MySprite> _bodySprites = new List<MySprite>();
             private MySprite _highlightSprite;
 
             private List<MySprite> _commonSprites = new List<MySprite>();
@@ -73,7 +73,8 @@ namespace IngameScript
                     borderColor = UIConfig.PanelBorderColorActive;
                 }
 
-                _bodySprites = SpriteHelper.CreateBoxFilled(_bounds, borderColor, fillColor, _borderThickness);
+                _bodySprites.Clear();
+                SpriteHelper.CreateBoxFilled(_bodySprites, _bounds, borderColor, fillColor, _borderThickness);
                 _highlightSprite = new MySprite()
                 {
                     Type = SpriteType.TEXTURE,

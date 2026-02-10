@@ -32,7 +32,6 @@ namespace IngameScript
             public static Vector3D ReferencePosition => ReferenceController.GetPosition();
             public static Vector3D ReferenceVelocity => ReferenceController.GetShipVelocities().LinearVelocity;
             public static long SelfID => ReferenceController.CubeGrid.EntityId;
-            public static EntityInfo SelfInfo { get; private set; }
 
             private Dictionary<string, ControlStation> _controlStations = new Dictionary<string, ControlStation>();
             private Dictionary<string, TargetingLaser> _targetingLasers = new Dictionary<string, TargetingLaser>();
@@ -59,8 +58,8 @@ namespace IngameScript
                 ReferenceController = AllGridBlocks.Where(b => b is IMyShipController && b.CustomName.ToUpper().Contains("MAIN CONTROLLER")).FirstOrDefault() as IMyShipController;
                 if (ReferenceController == null)
                 {
-                    DebugWrite($"Error: main controller not found!\n", true);
-                    throw new Exception($"main controller not found!\n");
+                    DebugEcho($"Error: main controller not found!");
+                    throw new Exception($"main controller not found!");
                 }
             }
 
@@ -128,11 +127,6 @@ namespace IngameScript
                 GlobalTime = time + _globalTimeOffset;
                 DebugEcho($"Global Time: {GlobalTime:F2}s");
 
-                SelfInfo = new EntityInfo(SelfID, ReferencePosition, ReferenceVelocity, GlobalTime);
-                byte[] selfInfoBytes = SelfInfo.Serialize();
-
-                CommunicationHandler0.SendBroadcast(selfInfoBytes, "FRIENDLY_INFO", true);
-
                 foreach (var targetingLaser in _targetingLasers.Values)
                 {
                     targetingLaser.Run(time);
@@ -169,7 +163,7 @@ namespace IngameScript
                     MyIGCMessage msg;
                     if (CommunicationHandler0.TryRetrieveMessage("FRIENDLY_COMMANDS", true, out msg))
                     {
-                        string command = msg.Data as string;
+                        string command = msg.As<string>();
                         CommandHandler0.RunCommands(command);
                     }
                 }
