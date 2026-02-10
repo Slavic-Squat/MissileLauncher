@@ -76,6 +76,7 @@ namespace IngameScript
 
             private void RegisterMissile()
             {
+                _timeLastRegister = _time;
                 UnregisterMissile();
 
                 if (_attachment.TopGrid == null)
@@ -121,6 +122,7 @@ namespace IngameScript
 
             private void Update()
             {
+                _timeLastUpdate = _time;
                 if (_missileComputer != null && Status < BayStatus.Ready)
                 {
                     _missileComputer.TryRun("");
@@ -174,7 +176,6 @@ namespace IngameScript
                 if (Status == BayStatus.Empty && (time - _timeLastRegister) > 5f)
                 {
                     RegisterMissile();
-                    _timeLastRegister = time;
                 }
                 else if (Status != BayStatus.Empty && (time - _timeLastUpdate) > 1f)
                 {

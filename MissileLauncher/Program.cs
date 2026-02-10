@@ -35,7 +35,7 @@ namespace IngameScript
 
         private static List<IMyTerminalBlock> _allGridBlocks = new List<IMyTerminalBlock>();
         private const string _programName = "MissileLauncher";
-        private const string _programVersion = "1.22";
+        private const string _programVersion = "1.23";
         private static string _blockTag;
 
         private SystemCoordinator _systemCoordinator;
