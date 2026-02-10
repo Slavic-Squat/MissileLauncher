@@ -85,6 +85,7 @@ namespace IngameScript
 
             protected virtual void BuildSprites()
             {
+                _bodySprites.Clear();
                 SpriteHelper.CreateBoxFilled(_bodySprites, Bounds, UIConfig.WindowBorderColor, UIConfig.WindowFillColor, _borderThickness);
             }
 

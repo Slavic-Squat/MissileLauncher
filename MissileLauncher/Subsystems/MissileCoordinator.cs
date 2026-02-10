@@ -94,6 +94,7 @@ namespace IngameScript
 
                 Receive();
 
+                _addressesToRemove.Clear();
                 foreach (var missileAddress in _addressTargetIDMap.Keys)
                 {
                     if (!CommunicationHandler0.CanReach(missileAddress))
@@ -107,6 +108,7 @@ namespace IngameScript
                     UnregisterMissile(address);
                 }
 
+                _idsToRemove.Clear();
                 foreach (var kvp in _myMissilesExt)
                 {
                     var missile = kvp.Value;
