@@ -28,7 +28,7 @@ namespace IngameScript
             {
                 UICoordinator uiCoordinator = window.UI.UICoordinator;
                 ControlStation station = window.UI.Station;
-                MissileCoordinator coordinator = uiCoordinator.MissileCoordinator;
+                MissileCoordinator missileCoordinator = uiCoordinator.MissileCoordinator;
 
                 int numButtons = 4;
                 float padding = 15f;
@@ -57,10 +57,10 @@ namespace IngameScript
                 buttonPos.X += buttonSize.X + spacing;
 
                 getText = () => "FIRE CTRL";
-                Action onPress = () => station.TakeFireControl(coordinator);
-                Action onRelease = () => station.ReleaseFireControl(coordinator);
+                Action onPress = () => station.TakeFireControl(missileCoordinator);
+                Action onRelease = () => station.ReleaseFireControl(missileCoordinator);
                 Func<bool> isPressed = () => station.HasFireControl;
-                Func<bool> canPress = () => coordinator.FireControlAvail;
+                Func<bool> canPress = () => missileCoordinator.FireControlAvail;
                 Func<bool> canRelease = () => station.HasFireControl;
 
                 ToggleButton toggleButton = new ToggleButton(buttonPos, buttonSize, 5f, 3f, 2f, getText, onPress, onRelease, isPressed, canPress: canPress, canRelease: canRelease);

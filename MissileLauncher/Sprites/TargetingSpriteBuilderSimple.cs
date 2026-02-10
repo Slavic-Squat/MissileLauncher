@@ -121,7 +121,7 @@ namespace IngameScript
                 _staticSprites.Add(selfSpriteExt);
             }
 
-            public void BuildSprites(IReadOnlyDictionary<long, EntityInfoExt> entityInfoExts, long targetedID = -1)
+            public void BuildSprites(IReadOnlyDictionary<long, EntityInfoExt> entities, long targetedID = -1)
             {
                 _finalSprites.Clear();
                 _entitySprites.Clear();
@@ -130,21 +130,19 @@ namespace IngameScript
                 MatrixD referenceWorldMatrix = SystemCoordinator.ReferenceWorldMatrix;
                 float pixelsPerMeter = _screenBounds.Width / (2f * _range);
 
-                foreach (var entityInfoExtKVP in entityInfoExts)
+                foreach (var kvp in entities)
                 {
-                    EntityInfoExt entityInfoExt = entityInfoExtKVP.Value;
-                    long key = entityInfoExtKVP.Key;
+                    EntityInfoExt entity = kvp.Value;
+                    long key = kvp.Key;
 
-                    double distance = Vector3D.Distance(referenceWorldMatrix.Translation, entityInfoExt.Position);
+                    double distance = Vector3D.Distance(referenceWorldMatrix.Translation, entity.Position);
 
                     if (distance > _range)
                     {
                         continue;
                     }
 
-                    EntityInfo entityInfo = entityInfoExt.Info;
-
-                    Vector3D entityPosWorld = entityInfo.Position;
+                    Vector3D entityPosWorld = entity.Position;
                     Vector3D entityPosLocal = Vector3D.TransformNormal(entityPosWorld - referenceWorldMatrix.Translation, MatrixD.Transpose(referenceWorldMatrix.GetOrientation()));
                     Vector2 entityPosPixel = _screenBounds.Center + new Vector2((float)entityPosLocal.X * pixelsPerMeter, (float)entityPosLocal.Z * pixelsPerMeter);
 
@@ -152,7 +150,7 @@ namespace IngameScript
                     Vector2 spriteSize = default(Vector2);
                     Color spriteColor = default(Color);
 
-                    switch (entityInfoExt.Relation)
+                    switch (entity.Relation)
                     {
                         case EntityRelation.Me:
                             spriteColor = UIConfig.MeColor;
@@ -171,14 +169,14 @@ namespace IngameScript
                             break;
                     }                    
 
-                    if (entityInfoExt.Type == EntityType.Missile)
+                    if (entity.Type == EntityType.Missile)
                     {
                         spriteName = "Missile_0";
                         spriteSize = new Vector2(16, 16);
                     }
                     else
                     {
-                        switch (entityInfoExt.Source)
+                        switch (entity.Source)
                         {
                             case EntitySource.Local:
                                 spriteName = "Target_0";
@@ -211,13 +209,13 @@ namespace IngameScript
                     };
 
                     MySpriteExt MySpriteExtEntity = new MySpriteExt(tempSprite, (float)entityPosLocal.Y);
-                    MyEntitySprite entitySprite = new MyEntitySprite(entityInfoExt, MySpriteExtEntity);
+                    MyEntitySprite entitySprite = new MyEntitySprite(entity, MySpriteExtEntity);
 
                     _entitySprites.Add(key, entitySprite);
 
                     MySpriteExt selectorSpriteExt = default(MySpriteExt);
 
-                    if (entityInfo.EntityID == targetedID)
+                    if (entity.EntityID == targetedID)
                     {
                         tempSprite = new MySprite()
                         {

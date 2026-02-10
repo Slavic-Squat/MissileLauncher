@@ -99,22 +99,22 @@ namespace IngameScript
                 _time = time;
             }
 
-            private void AddRemoteTarget(EntityInfo entityInfo, bool friendly)
+            private void AddRemoteTarget(EntityInfo entity, bool friendly)
             {
-                if (!entityInfo.IsValid)
+                if (!entity.IsValid)
                 {
                     return;
                 }
-                var entityID = entityInfo.EntityID;
+                var entityID = entity.EntityID;
                 var relationID = entityID;
 
-                if (entityInfo.Type == EntityType.Missile)
+                if (entity.Type == EntityType.Missile)
                 {
-                    if (!entityInfo.MissileInfo.IsValid)
+                    if (!entity.MissileInfo.IsValid)
                     {
                         return;
                     }
-                    relationID = entityInfo.MissileInfo.LauncherID;
+                    relationID = entity.MissileInfo.LauncherID;
                 }
 
                 if (entityID == SystemCoordinator.SelfID || relationID == SystemCoordinator.SelfID)
@@ -134,36 +134,36 @@ namespace IngameScript
                 EntitySource source = EntitySource.Remote;
                 EntityRelation relation = _friendlyIDs.Contains(relationID) ? EntityRelation.Friendly : _hostileIDs.Contains(relationID) ? EntityRelation.Hostile : EntityRelation.Neutral;
 
-                var entityInfoExt = new EntityInfoExt(entityInfo, source, relation, relationID);
+                var entityExt = new EntityInfoExt(entity, source, relation, relationID);
 
                 if (!_targetsRemote.ContainsKey(entityID))
                 {
-                    _targetsRemote.Add(entityID, entityInfoExt);
+                    _targetsRemote.Add(entityID, entityExt);
                 }
                 else
                 {
                     var original = _targetsRemote[entityID];
-                    _targetsRemote[entityID] = original.Merge(entityInfoExt);
+                    _targetsRemote[entityID] = original.Merge(entityExt);
                 }
 
                 if (!_allTargetsExt.ContainsKey(entityID))
                 {
-                    _allTargetsExt.Add(entityID, entityInfoExt);
+                    _allTargetsExt.Add(entityID, entityExt);
                 }
                 else
                 {
                     var original = _allTargetsExt[entityID];
-                    _allTargetsExt[entityID] = original.Merge(entityInfoExt);
+                    _allTargetsExt[entityID] = original.Merge(entityExt);
                 }
             }
 
-            public void AddLocalTarget(EntityInfoExt targetInfoExt)
+            public void AddLocalTarget(EntityInfoExt target)
             {
-                if (!targetInfoExt.IsValid || targetInfoExt.Source != EntitySource.Local)
+                if (!target.IsValid || target.Source != EntitySource.Local)
                 {
                     return;
                 }
-                var entityID = targetInfoExt.EntityID;
+                var entityID = target.EntityID;
                 var relationID = entityID;
 
                 if (entityID == SystemCoordinator.SelfID)
@@ -171,26 +171,26 @@ namespace IngameScript
                     return;
                 }
 
-                SetTargetRelation(relationID, targetInfoExt.Relation);
+                SetTargetRelation(relationID, target.Relation);
 
                 if (!_targetsLocal.ContainsKey(entityID))
                 {
-                    _targetsLocal.Add(entityID, targetInfoExt);
+                    _targetsLocal.Add(entityID, target);
                 }
                 else
                 {
                     var original = _targetsLocal[entityID];
-                    _targetsLocal[entityID] = original.Merge(targetInfoExt);
+                    _targetsLocal[entityID] = original.Merge(target);
                 }
 
                 if (!_allTargetsExt.ContainsKey(entityID))
                 {
-                    _allTargetsExt.Add(entityID, targetInfoExt);
+                    _allTargetsExt.Add(entityID, target);
                 }
                 else
                 {
                     var original = _allTargetsExt[entityID];
-                    _allTargetsExt[entityID] = original.Merge(targetInfoExt);
+                    _allTargetsExt[entityID] = original.Merge(target);
                 }
             }
 
@@ -334,8 +334,8 @@ namespace IngameScript
                 index = 0;
                 sizeIndex = index++;
 
-                EntityInfo selfInfo = new EntityInfo(SystemCoordinator.SelfID, SystemCoordinator.ReferencePosition, SystemCoordinator.ReferenceVelocity, SystemCoordinator.GlobalTime);
-                bytesWritten = selfInfo.Serialize(_selfBuffer, index);
+                EntityInfo self = new EntityInfo(SystemCoordinator.SelfID, SystemCoordinator.ReferencePosition, SystemCoordinator.ReferenceVelocity, SystemCoordinator.GlobalTime);
+                bytesWritten = self.Serialize(_selfBuffer, index);
                 _selfBuffer[sizeIndex] = (byte)bytesWritten;
                 index += bytesWritten;
                 if (index > 1)
@@ -360,14 +360,14 @@ namespace IngameScript
                         {
                             byte size = bytes[index++];
                             int bytesRead;
-                            EntityInfo entityInfo = EntityInfo.Deserialize(bytes, index, out bytesRead);
-                            if (!entityInfo.IsValid || size != bytesRead)
+                            EntityInfo entity = EntityInfo.Deserialize(bytes, index, out bytesRead);
+                            if (!entity.IsValid || size != bytesRead)
                             {
                                 index += size;
                                 continue;
                             }
                             index += bytesRead;
-                            AddRemoteTarget(entityInfo, false);
+                            AddRemoteTarget(entity, false);
                         }
                     }
                 }
@@ -381,12 +381,12 @@ namespace IngameScript
                         int index = 0;
                         byte size = bytes[index++];
                         int bytesRead;
-                        EntityInfo entityInfo = EntityInfo.Deserialize(bytes, index, out bytesRead);
-                        if (!entityInfo.IsValid || size != bytesRead)
+                        EntityInfo entity = EntityInfo.Deserialize(bytes, index, out bytesRead);
+                        if (!entity.IsValid || size != bytesRead)
                         {
                             continue;
                         }
-                        AddRemoteTarget(entityInfo, true);
+                        AddRemoteTarget(entity, true);
                     }
                 }
 
@@ -399,12 +399,12 @@ namespace IngameScript
                         int index = 0;
                         byte size = bytes[index++];
                         int bytesRead;
-                        EntityInfo entityInfo = EntityInfo.Deserialize(bytes, index, out bytesRead);
-                        if (!entityInfo.IsValid || size != bytesRead)
+                        EntityInfo entity = EntityInfo.Deserialize(bytes, index, out bytesRead);
+                        if (!entity.IsValid || size != bytesRead)
                         {
                             continue;
                         }
-                        AddRemoteTarget(entityInfo, false);
+                        AddRemoteTarget(entity, false);
                     }
                 }
             }

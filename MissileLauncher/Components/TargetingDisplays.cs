@@ -26,11 +26,11 @@ namespace IngameScript
         {
             private TargetingSpriteBuilderSimple _spriteBuilder;
             private List<IMyTextSurface> _displays = new List<IMyTextSurface>();
-            private IReadOnlyDictionary<long, EntityInfoExt> _entityInfo = new Dictionary<long, EntityInfoExt>();
-            public TargetingDisplays(IReadOnlyDictionary<long, EntityInfoExt> entityInfo)
+            private IReadOnlyDictionary<long, EntityInfoExt> _entities = new Dictionary<long, EntityInfoExt>();
+            public TargetingDisplays(IReadOnlyDictionary<long, EntityInfoExt> entities)
             {
                 _spriteBuilder = new TargetingSpriteBuilderSimple(new RectangleF(0, 0, 1024f, 1024f));
-                _entityInfo = entityInfo;
+                _entities = entities;
 
                 GetBlocks();
             }
@@ -53,7 +53,7 @@ namespace IngameScript
 
             public void Draw()
             {
-                _spriteBuilder.BuildSprites(_entityInfo);
+                _spriteBuilder.BuildSprites(_entities);
 
                 foreach (var display in _displays)
                 {

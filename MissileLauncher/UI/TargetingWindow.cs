@@ -81,7 +81,7 @@ namespace IngameScript
                     if (_entitySprites.ContainsKey(SelectedEntityID))
                     {
                         sb.Clear();
-                        _entitySprites[SelectedEntityID].EntityInfo.AppendInfo(sb);
+                        _entitySprites[SelectedEntityID].Entity.AppendInfo(sb);
                         return sb.ToString();
                     }
                     else
@@ -275,8 +275,8 @@ namespace IngameScript
                 _filteredEntitySprites.Clear();
                 foreach (var kvp in _entitySprites)
                 {
-                    EntityInfoExt entityInfo = kvp.Value.EntityInfo;
-                    if (EntityFilterEnumHelper.Matches(entityInfo, NavTypeFilter, NavRelationFilter, NavSourceFilter))
+                    EntityInfoExt entity = kvp.Value.Entity;
+                    if (EntityFilterEnumHelper.Matches(entity, NavTypeFilter, NavRelationFilter, NavSourceFilter))
                     {
                         _filteredEntitySprites.Add(kvp.Key, kvp.Value);
                     }

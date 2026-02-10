@@ -136,15 +136,15 @@ namespace IngameScript
                 _time = time;
             }
 
-            private void AddMissile(EntityInfo entityInfo)
+            private void AddMissile(EntityInfo missile)
             {
-                if (entityInfo.Type != EntityType.Missile || !entityInfo.MissileInfo.IsValid) return;
+                if (missile.Type != EntityType.Missile || !missile.MissileInfo.IsValid) return;
 
-                long key = entityInfo.EntityID;
-                long relationID = entityInfo.MissileInfo.LauncherID;
+                long key = missile.EntityID;
+                long relationID = missile.MissileInfo.LauncherID;
                 EntitySource source = EntitySource.Remote;
                 EntityRelation relation = EntityRelation.Me;
-                EntityInfoExt entityInfoExt = new EntityInfoExt(entityInfo, source, relation, relationID);
+                EntityInfoExt entityInfoExt = new EntityInfoExt(missile, source, relation, relationID);
                 if (!_myMissilesExt.ContainsKey(key))
                 {
                     _myMissilesExt.Add(key, entityInfoExt);

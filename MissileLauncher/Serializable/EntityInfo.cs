@@ -62,35 +62,35 @@ namespace IngameScript
                 IsValid = true;
             }
 
-            public EntityInfo Merge(EntityInfo entityInfo)
+            public EntityInfo Merge(EntityInfo other)
             {
-                if (EntityID != entityInfo.EntityID)
+                if (EntityID != other.EntityID)
                 {
                     return this;
                 }
-                MergeKinematics(entityInfo);
+                MergeKinematics(other);
 
-                if (Type == EntityType.Target && entityInfo.Type == EntityType.Missile)
+                if (Type == EntityType.Target && other.Type == EntityType.Missile)
                 {
-                    if (entityInfo.MissileInfo.IsValid)
+                    if (other.MissileInfo.IsValid)
                     {
-                        MissileInfo = entityInfo.MissileInfo;
+                        MissileInfo = other.MissileInfo;
                     }
                 }
                 return this;
             }
 
-            public EntityInfo MergeKinematics(EntityInfo entityInfo)
+            public EntityInfo MergeKinematics(EntityInfo other)
             {
-                if (EntityID != entityInfo.EntityID)
+                if (EntityID != other.EntityID)
                 {
                     return this;
                 }
-                if (TimeRecorded < entityInfo.TimeRecorded)
+                if (TimeRecorded < other.TimeRecorded)
                 {
-                    Position = entityInfo.Position;
-                    Velocity = entityInfo.Velocity;
-                    TimeRecorded = entityInfo.TimeRecorded;
+                    Position = other.Position;
+                    Velocity = other.Velocity;
+                    TimeRecorded = other.TimeRecorded;
                 }
                 return this;
             }
