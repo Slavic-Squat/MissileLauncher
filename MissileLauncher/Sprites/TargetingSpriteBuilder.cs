@@ -47,13 +47,13 @@ namespace IngameScript
             private float _zoom = 1f;
             private Vector3D _localCameraPos = new Vector3D(31334, 30557, 63764);
 
-            private List<MySpriteExt> _spritesPrePlane = new List<MySpriteExt>();
-            private List<MySpriteExt> _planeSprites = new List<MySpriteExt>();
-            private List<MySpriteExt> _spritesPostPlane = new List<MySpriteExt>();
-            private List<MySpriteExt> _staticSpritesPostPlane = new List<MySpriteExt>();
-            private List<MySpriteExt> _staticSpritesPrePlane = new List<MySpriteExt>();
-            private List<MySpriteExt> _finalSprites = new List<MySpriteExt>();
-            private Dictionary<long, MyEntitySprite> _entitySprites = new Dictionary<long, MyEntitySprite>();
+            private List<MySpriteExt> _spritesPrePlane = new List<MySpriteExt>(128);
+            private List<MySpriteExt> _planeSprites = new List<MySpriteExt>(32);
+            private List<MySpriteExt> _spritesPostPlane = new List<MySpriteExt>(128);
+            private List<MySpriteExt> _staticSpritesPostPlane = new List<MySpriteExt>(32);
+            private List<MySpriteExt> _staticSpritesPrePlane = new List<MySpriteExt>(32);
+            private List<MySpriteExt> _finalSprites = new List<MySpriteExt>(512);
+            private Dictionary<long, MyEntitySprite> _entitySprites = new Dictionary<long, MyEntitySprite>(64);
 
             private MatrixD _projectionMatrix = MatrixD.Identity;
             private RectangleF _screenBounds;

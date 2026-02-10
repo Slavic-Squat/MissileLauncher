@@ -69,7 +69,6 @@ namespace IngameScript
                 _attachment = AllGridBlocks.Where(b => b is IMyMechanicalConnectionBlock && b.CustomName.ToUpper().Contains($"MISSILE BAY {ID} ATTACHMENT")).FirstOrDefault() as IMyMechanicalConnectionBlock;
                 if (_attachment == null)
                 {
-                    DebugEcho($"Error: No attachment found for Missile Bay {ID}!");
                     throw new Exception($"No attachment found for Missile Bay {ID}!");
                 }
             }

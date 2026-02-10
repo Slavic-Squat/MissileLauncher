@@ -66,7 +66,7 @@ namespace IngameScript
             private Func<bool> _canRelease;
             private Func<string> _textGetter;
 
-            private List<MySprite> _bodySprites = new List<MySprite>();
+            private List<MySprite> _bodySprites = new List<MySprite>(8);
             private MySprite _highlightSprite;
             private MySprite _textSprite;
 

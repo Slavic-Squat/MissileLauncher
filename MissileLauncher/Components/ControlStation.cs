@@ -31,7 +31,7 @@ namespace IngameScript
             public bool IsControlling => Controllable != null;
             public IMyTextSurface PrimaryDisplay { get; private set; }
 
-            private List<IMyTextSurface> _displays = new List<IMyTextSurface>();
+            private List<IMyTextSurface> _displays = new List<IMyTextSurface>(4);
             private IMyShipController _controllerReference;
             private UI _ui;
             private UICoordinator _uiCoordinator;
@@ -51,7 +51,6 @@ namespace IngameScript
                 _controllerReference = AllGridBlocks.Where(b => b is IMyShipController && b.CustomName.ToUpper().Contains($"CONTROL STATION {ID}")).FirstOrDefault() as IMyShipController;
                 if (_controllerReference == null)
                 {
-                    DebugEcho($"Error: No controller found for Control Station {ID}!");
                     throw new Exception($"No controller found for Control Station {ID}!");
                 }
                 float internalSurfaceCount = (_controllerReference as IMyTextSurfaceProvider)?.SurfaceCount ?? 0;
@@ -63,7 +62,6 @@ namespace IngameScript
                 _displays.AddRange(additionalDisplays);
                 if (_displays.Count == 0)
                 {
-                    DebugEcho($"Error: No displays found for Control Station {ID}!");
                     throw new Exception($"No displays found for Control Station {ID}!");
                 }
             }

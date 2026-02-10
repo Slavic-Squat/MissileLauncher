@@ -25,15 +25,15 @@ namespace IngameScript
         public class TargetCoordinator
         {
             private double _time;
-            private Dictionary<long, EntityInfoExt> _targetsLocal = new Dictionary<long, EntityInfoExt>();
-            private List<long> _localsToRemove = new List<long>();
-            private Dictionary<long, EntityInfoExt> _targetsRemote = new Dictionary<long, EntityInfoExt>();
-            private List<long> _remotesToRemove = new List<long>();
-            private Dictionary<long, EntityInfoExt> _allTargetsExt = new Dictionary<long, EntityInfoExt>();
-            private HashSet<long> _neutralIDs = new HashSet<long>();
-            private HashSet<long> _hostileIDs = new HashSet<long>();
-            private HashSet<long> _friendlyIDs = new HashSet<long>();
-            private List<long> _idsToUpdate = new List<long>();
+            private Dictionary<long, EntityInfoExt> _targetsLocal = new Dictionary<long, EntityInfoExt>(16);
+            private List<long> _localsToRemove = new List<long>(16);
+            private Dictionary<long, EntityInfoExt> _targetsRemote = new Dictionary<long, EntityInfoExt>(16);
+            private List<long> _remotesToRemove = new List<long>(16);
+            private Dictionary<long, EntityInfoExt> _allTargetsExt = new Dictionary<long, EntityInfoExt>(32);
+            private HashSet<long> _neutralIDs = new HashSet<long>(64);
+            private HashSet<long> _hostileIDs = new HashSet<long>(64);
+            private HashSet<long> _friendlyIDs = new HashSet<long>(64);
+            private List<long> _idsToUpdate = new List<long>(32);
             private byte[] _targetsBuffer = new byte[1024];
             private byte[] _selfBuffer = new byte[128];
 

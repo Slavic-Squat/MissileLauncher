@@ -32,8 +32,8 @@ namespace IngameScript
 
             private MatrixD _referenceMatrix;
             
-            private Dictionary<long, EntityInfoExt> _targets = new Dictionary<long, EntityInfoExt>();
-            private List<long> _targetsToRemove = new List<long>();
+            private Dictionary<long, EntityInfoExt> _targets = new Dictionary<long, EntityInfoExt>(64);
+            private List<long> _targetsToRemove = new List<long>(32);
             private PriorityQueue<long, double> _targetQueue;
             private float _maxRaycastDistance;
             private double _time;

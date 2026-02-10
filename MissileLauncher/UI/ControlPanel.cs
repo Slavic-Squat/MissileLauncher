@@ -39,17 +39,17 @@ namespace IngameScript
             private RectangleF _bounds;
             private float _borderThickness;
             private float _highlightThickness;
-            private List<IButton> _commonButtons = new List<IButton>();
-            private List<IUpdatable> _commonUpdatables = new List<IUpdatable>();
-            private List<IUIElement> _commonUIElements = new List<IUIElement>();
-            private List<PanelPage> _pages = new List<PanelPage>();
+            private List<IButton> _commonButtons = new List<IButton>(8);
+            private List<IUpdatable> _commonUpdatables = new List<IUpdatable>(8);
+            private List<IUIElement> _commonUIElements = new List<IUIElement>(16);
+            private List<PanelPage> _pages = new List<PanelPage>(8);
             private int _currentPageIndex = 0;
             private IButton _highlightedButton;
 
-            private List<MySprite> _bodySprites = new List<MySprite>();
+            private List<MySprite> _bodySprites = new List<MySprite>(8);
             private MySprite _highlightSprite;
 
-            private List<MySprite> _commonSprites = new List<MySprite>();
+            private List<MySprite> _commonSprites = new List<MySprite>(32);
 
             public ControlPanel(object parent, Vector2 pos, Vector2 size, float borderThickness, float highlightThickness)
             {

@@ -35,7 +35,7 @@ namespace IngameScript
             private float _padding;
             private string _text;
             private Func<bool> _condition;
-            private List<MySprite> _bodySprites = new List<MySprite>();
+            private List<MySprite> _bodySprites = new List<MySprite>(8);
             private MySprite _textSprite;
             private MySprite _obscureSprite;
             private RectangleF _screenBounds;

@@ -35,7 +35,7 @@ namespace IngameScript
             private IReadOnlyDictionary<long, MyEntitySprite> _entitySprites;
             private IReadOnlyList<MySpriteExt> _targetingSprites;
             private TargetingSpriteBuilder _targetingSpriteBuilder;
-            private Dictionary<long, MyEntitySprite> _filteredEntitySprites = new Dictionary<long, MyEntitySprite>();
+            private Dictionary<long, MyEntitySprite> _filteredEntitySprites = new Dictionary<long, MyEntitySprite>(64);
 
 
             public TargetingWindow(UI ui, Vector2 pos, Vector2 size, float borderThickness) : base(ui, pos, size, borderThickness, canUserClose: false)

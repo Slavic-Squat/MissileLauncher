@@ -25,7 +25,7 @@ namespace IngameScript
     {
         public class CameraArray
         {
-            private List<IMyCameraBlock> _cameras = new List<IMyCameraBlock>();
+            private List<IMyCameraBlock> _cameras = new List<IMyCameraBlock>(32);
             private PriorityQueue<IMyCameraBlock, double> _cameraQueue;
             private MovingAverage _avgRaycastDistance = new MovingAverage(10);
             private double _timeLastRaycast;
@@ -50,7 +50,6 @@ namespace IngameScript
                 _cameras = AllGridBlocks.Where(b => b is IMyCameraBlock && b.CustomName.ToUpper().Contains(ID)).Cast<IMyCameraBlock>().ToList();
                 if (_cameras.Count == 0)
                 {
-                    DebugEcho($"Error: {ID} Camera Array on has no cameras!");
                     throw new Exception($"{ID} Camera Array on has no cameras!");
                 }
             }

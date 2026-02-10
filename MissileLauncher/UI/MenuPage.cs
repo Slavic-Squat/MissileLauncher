@@ -25,19 +25,15 @@ namespace IngameScript
         public class MenuPage
         {
             public int PageIndex { get; private set; }
-            public List<IButton> Buttons { get; private set; }
-            public List<IUpdatable> Updateables { get; private set; }
-            public List<IUIElement> UIElements { get; private set; }
-            public List<MySprite> Sprites { get; private set; }
+            public List<IButton> Buttons { get; private set; } = new List<IButton>(8);
+            public List<IUpdatable> Updateables { get; private set; } = new List<IUpdatable>(8);
+            public List<IUIElement> UIElements { get; private set; } = new List<IUIElement>(16);
+            public List<MySprite> Sprites { get; private set; } = new List<MySprite>(32);
 
 
             public MenuPage(int pageIndex)
             {
                 PageIndex = pageIndex;
-                Buttons = new List<IButton>();
-                Updateables = new List<IUpdatable>();
-                UIElements = new List<IUIElement>();
-                Sprites = new List<MySprite>();
             }
 
             public void AddButton(IButton button)

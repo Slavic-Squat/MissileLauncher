@@ -33,8 +33,8 @@ namespace IngameScript
             public static Vector3D ReferenceVelocity => ReferenceController.GetShipVelocities().LinearVelocity;
             public static long SelfID => ReferenceController.CubeGrid.EntityId;
 
-            private Dictionary<string, ControlStation> _controlStations = new Dictionary<string, ControlStation>();
-            private Dictionary<string, TargetingLaser> _targetingLasers = new Dictionary<string, TargetingLaser>();
+            private Dictionary<string, ControlStation> _controlStations = new Dictionary<string, ControlStation>(8);
+            private Dictionary<string, TargetingLaser> _targetingLasers = new Dictionary<string, TargetingLaser>(8);
 
             private bool _isMainClock = true;
             private double _lastClockSync;
@@ -58,7 +58,6 @@ namespace IngameScript
                 ReferenceController = AllGridBlocks.Where(b => b is IMyShipController && b.CustomName.ToUpper().Contains("MAIN CONTROLLER")).FirstOrDefault() as IMyShipController;
                 if (ReferenceController == null)
                 {
-                    DebugEcho($"Error: main controller not found!");
                     throw new Exception($"main controller not found!");
                 }
             }
@@ -125,7 +124,6 @@ namespace IngameScript
                 }
 
                 GlobalTime = time + _globalTimeOffset;
-                DebugEcho($"Global Time: {GlobalTime:F2}s");
 
                 foreach (var targetingLaser in _targetingLasers.Values)
                 {
