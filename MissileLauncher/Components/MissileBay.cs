@@ -32,6 +32,7 @@ namespace IngameScript
             private MyIni _missileConfig = new MyIni();
             private string _missileCustomData = "";
             private double _timeLastRegister;
+            private double _timeLastUpdate;
 
             public string ID {  get; private set; }
             public BayStatus Status { get; private set; } = BayStatus.Empty;
@@ -120,6 +121,10 @@ namespace IngameScript
 
             private void Update()
             {
+                if (_missileComputer != null && Status < BayStatus.Ready)
+                {
+                    _missileComputer.TryRun("");
+                }
                 if (_missileComputer != null && _missileComputer.CustomData != _missileCustomData)
                 {
                     _missileConfig.Clear();
@@ -171,7 +176,7 @@ namespace IngameScript
                     RegisterMissile();
                     _timeLastRegister = time;
                 }
-                else
+                else if (Status != BayStatus.Empty && (time - _timeLastUpdate) > 1f)
                 {
                     Update();
                 }
