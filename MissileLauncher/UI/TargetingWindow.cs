@@ -112,7 +112,7 @@ namespace IngameScript
                     missileCoordinator.AppendOverview(sb);
                     if (awacs != null)
                     {
-                        sb.AppendLine();
+                        sb.AppendLine("\n");
                         awacs.AppendOverview(sb);
                     }
                     return sb.ToString();
