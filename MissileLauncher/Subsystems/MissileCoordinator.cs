@@ -92,7 +92,7 @@ namespace IngameScript
                     }
                 }
 
-                Recieve();
+                Receive();
 
                 foreach (var missileAddress in _addressTargetIDMap.Keys)
                 {
@@ -393,7 +393,7 @@ namespace IngameScript
                 }
             }
 
-            private void Recieve()
+            private void Receive()
             {
                 while (CommunicationHandler0.HasMessage("MY_MISSILE_INFO", true))
                 {

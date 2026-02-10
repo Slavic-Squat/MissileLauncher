@@ -60,7 +60,7 @@ namespace IngameScript
                 }
                 double globalTime = SystemCoordinator.GlobalTime;
 
-                Recieve();
+                Receive();
 
                 _localsToRemove.Clear();
                 foreach (var targetKey in _targetsLocal.Keys)
@@ -345,7 +345,7 @@ namespace IngameScript
                 }
             }
 
-            private void Recieve()
+            private void Receive()
             {
                 while (CommunicationHandler0.HasMessage("TARGET_SHARE", true))
                 {

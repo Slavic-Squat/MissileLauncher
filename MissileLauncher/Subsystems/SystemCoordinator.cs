@@ -151,22 +151,8 @@ namespace IngameScript
                     controlStation.Run(time);
                 }
 
-                if (_isMainClock && (time - _lastClockSync) > 10f)
-                {
-                    string command = $"SYNC_CLOCK {time}";
-                    CommunicationHandler0.SendBroadcast(command, "FRIENDLY_COMMANDS", true);
-                    _lastClockSync = time;
-                }
-
-                while (CommunicationHandler0.HasMessage("FRIENDLY_COMMANDS", true))
-                {
-                    MyIGCMessage msg;
-                    if (CommunicationHandler0.TryRetrieveMessage("FRIENDLY_COMMANDS", true, out msg))
-                    {
-                        string command = msg.As<string>();
-                        CommandHandler0.RunCommands(command);
-                    }
-                }
+                Receive();
+                Transmit();
 
                 _time = time;
             }
@@ -237,6 +223,29 @@ namespace IngameScript
                 }
                 long targetID = targetingLaser.Target.EntityID;
                 MissileCoordinator.LaunchMissile(targetID, controlStation);
+            }
+
+            private void Transmit()
+            {
+                if (_isMainClock && (_time - _lastClockSync) > 10f)
+                {
+                    string command = $"SYNC_CLOCK {_time}";
+                    CommunicationHandler0.SendBroadcast(command, "FRIENDLY_COMMANDS", true);
+                    _lastClockSync = _time;
+                }
+            }
+
+            private void Receive()
+            {
+                while (CommunicationHandler0.HasMessage("FRIENDLY_COMMANDS", true))
+                {
+                    MyIGCMessage msg;
+                    if (CommunicationHandler0.TryRetrieveMessage("FRIENDLY_COMMANDS", true, out msg))
+                    {
+                        string command = msg.As<string>();
+                        CommandHandler0.RunCommands(command);
+                    }
+                }
             }
         }
     }
