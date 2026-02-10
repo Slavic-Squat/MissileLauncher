@@ -33,8 +33,8 @@ namespace IngameScript
             public static Vector3D ReferenceVelocity => ReferenceController.GetShipVelocities().LinearVelocity;
             public static long SelfID => ReferenceController.CubeGrid.EntityId;
 
-            private Dictionary<string, ControlStation> _controlStations = new Dictionary<string, ControlStation>(8);
-            private Dictionary<string, TargetingLaser> _targetingLasers = new Dictionary<string, TargetingLaser>(8);
+            private Dictionary<string, ControlStation> _controlStations = new Dictionary<string, ControlStation>();
+            private Dictionary<string, TargetingLaser> _targetingLasers = new Dictionary<string, TargetingLaser>();
 
             private bool _isMainClock = true;
             private double _lastClockSync;

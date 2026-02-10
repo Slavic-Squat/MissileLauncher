@@ -35,10 +35,10 @@ namespace IngameScript
             private float _range = 12000f;
             private RectangleF _screenBounds;
 
-            private List<MySpriteExt> _sprites = new List<MySpriteExt>(128);
-            private List<MySpriteExt> _staticSprites = new List<MySpriteExt>(32);
-            private List<MySpriteExt> _finalSprites = new List<MySpriteExt>(256);
-            private Dictionary<long, MyEntitySprite> _entitySprites = new Dictionary<long, MyEntitySprite>(64);
+            private List<MySpriteExt> _sprites = new List<MySpriteExt>();
+            private List<MySpriteExt> _staticSprites = new List<MySpriteExt>();
+            private List<MySpriteExt> _finalSprites = new List<MySpriteExt>();
+            private Dictionary<long, MyEntitySprite> _entitySprites = new Dictionary<long, MyEntitySprite>();
 
             public TargetingSpriteBuilderSimple(RectangleF screenBounds)
             {

@@ -25,10 +25,10 @@ namespace IngameScript
         public class PanelPage
         {
             public int PageIndex { get; private set; }
-            public List<IButton> Buttons { get; private set; } = new List<IButton>(8);
-            public List<IUpdatable> Updateables { get; private set; } = new List<IUpdatable>(8);
-            public List<IUIElement> UIElements { get; private set; } = new List<IUIElement>(16);
-            public List<MySprite> Sprites { get; private set; } = new List<MySprite>(32);
+            public List<IButton> Buttons { get; private set; } = new List<IButton>();
+            public List<IUpdatable> Updateables { get; private set; } = new List<IUpdatable>();
+            public List<IUIElement> UIElements { get; private set; } = new List<IUIElement>();
+            public List<MySprite> Sprites { get; private set; } = new List<MySprite>();
 
 
             public PanelPage(int pageIndex)

@@ -25,9 +25,9 @@ namespace IngameScript
     {
         public class CameraArray
         {
-            private List<IMyCameraBlock> _cameras = new List<IMyCameraBlock>(32);
+            private List<IMyCameraBlock> _cameras = new List<IMyCameraBlock>();
             private PriorityQueue<IMyCameraBlock, double> _cameraQueue;
-            private MovingAverage _avgRaycastDistance = new MovingAverage(10);
+            private MovingAverage _avgRaycastDistance = new MovingAverage(100);
             private double _timeLastRaycast;
             private double _time;
             public string ID { get; private set; }

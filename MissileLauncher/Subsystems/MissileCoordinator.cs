@@ -24,18 +24,18 @@ namespace IngameScript
     {
         public class MissileCoordinator
         {
-            private Dictionary<string, MissileBay> _missileBays = new Dictionary<string, MissileBay>(16);
-            private HashSet<MissileBay> _selectedBays = new HashSet<MissileBay>(16);
-            private HashSet<long> _registeredAddresses = new HashSet<long>(16);
-            private Dictionary<long, long> _addressTargetIDMap = new Dictionary<long, long>(16);
-            private IReadOnlyDictionary<long, EntityInfoExt> _targetInfo = new Dictionary<long, EntityInfoExt>(64);
-            private Dictionary<long, EntityInfoExt> _myMissilesExt = new Dictionary<long, EntityInfoExt>(16);
+            private Dictionary<string, MissileBay> _missileBays = new Dictionary<string, MissileBay>();
+            private HashSet<MissileBay> _selectedBays = new HashSet<MissileBay>();
+            private HashSet<long> _registeredAddresses = new HashSet<long>();
+            private Dictionary<long, long> _addressTargetIDMap = new Dictionary<long, long>();
+            private IReadOnlyDictionary<long, EntityInfoExt> _targetInfo = new Dictionary<long, EntityInfoExt>();
+            private Dictionary<long, EntityInfoExt> _myMissilesExt = new Dictionary<long, EntityInfoExt>();
             private IEnumerator<int> _launchCoroutine;
             private double _lastClockSync;
             private double _lastLaunch;
             private double _time;
-            private List<long> _addressesToRemove = new List<long>(16);
-            private List<long> _idsToRemove = new List<long>(16);
+            private List<long> _addressesToRemove = new List<long>();
+            private List<long> _idsToRemove = new List<long>();
             private byte[] _targetBuffer = new byte[256];
 
             public IReadOnlyDictionary<long, EntityInfoExt> MyMissilesExt => _myMissilesExt;

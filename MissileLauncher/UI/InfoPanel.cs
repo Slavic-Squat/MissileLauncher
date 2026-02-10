@@ -35,7 +35,7 @@ namespace IngameScript
             private float _borderThickness;
             private float _padding;
 
-            private List<MySprite> _bodySprites = new List<MySprite>(8);
+            private List<MySprite> _bodySprites = new List<MySprite>();
             private MySprite _textSprite;
 
             public InfoPanel(Vector2 pos, Vector2 size, float borderThickness, float padding, Func<string> textGetter)

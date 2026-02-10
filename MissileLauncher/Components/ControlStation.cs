@@ -31,7 +31,7 @@ namespace IngameScript
             public bool IsControlling => Controllable != null;
             public IMyTextSurface PrimaryDisplay { get; private set; }
 
-            private List<IMyTextSurface> _displays = new List<IMyTextSurface>(4);
+            private List<IMyTextSurface> _displays = new List<IMyTextSurface>();
             private IMyShipController _controllerReference;
             private UI _ui;
             private UICoordinator _uiCoordinator;

@@ -43,14 +43,14 @@ namespace IngameScript
             protected RectangleF _bounds;
             protected float _borderThickness;
 
-            protected List<MySprite> _bodySprites = new List<MySprite>(8);
-            protected List<MySprite> _additionalSprites = new List<MySprite>(32);
+            protected List<MySprite> _bodySprites = new List<MySprite>();
+            protected List<MySprite> _additionalSprites = new List<MySprite>();
 
-            protected List<IHighlightable> _highlightables = new List<IHighlightable>(16);
+            protected List<IHighlightable> _highlightables = new List<IHighlightable>();
             protected IHighlightable _highlightedElement;
-            protected List<IUpdatable> _updatables = new List<IUpdatable>(16);
-            protected List<IUIElement> _uiElements = new List<IUIElement>(32);
-            protected List<INavigable> _navigables = new List<INavigable>(16);
+            protected List<IUpdatable> _updatables = new List<IUpdatable>();
+            protected List<IUIElement> _uiElements = new List<IUIElement>();
+            protected List<INavigable> _navigables = new List<INavigable>();
             protected INavigable _navigatedElement;
 
 

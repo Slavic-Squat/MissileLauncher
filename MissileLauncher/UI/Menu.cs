@@ -41,20 +41,20 @@ namespace IngameScript
             protected Func<bool> _autoClose;
             protected RectangleF _bounds;
             protected float _borderThickness;
-            protected List<IButton> _commonButtons = new List<IButton>(8);
-            protected List<IUpdatable> _commonUpdatables = new List<IUpdatable>(8);
-            protected List<IUIElement> _commonUIElements = new List<IUIElement>(16);
-            protected List<MenuPage> _pages = new List<MenuPage>(8);
+            protected List<IButton> _commonButtons = new List<IButton>();
+            protected List<IUpdatable> _commonUpdatables = new List<IUpdatable>();
+            protected List<IUIElement> _commonUIElements = new List<IUIElement>();
+            protected List<MenuPage> _pages = new List<MenuPage>();
             protected int _currentPageIndex = 0;
             protected IButton _highlightedButton;
 
             protected bool _obscure;
             protected RectangleF _screenBounds;
 
-            protected List<MySprite> _bodySprites = new List<MySprite>(8);
+            protected List<MySprite> _bodySprites = new List<MySprite>();
             protected MySprite _obscureSprite;
 
-            protected List<MySprite> _commonSprites = new List<MySprite>(32);
+            protected List<MySprite> _commonSprites = new List<MySprite>();
 
             public Menu(object parent, Vector2 pos, Vector2 size, float borderThickness, bool obscure = false, Func<bool> autoClose = null, bool canUserClose = true, RectangleF screenBounds = default(RectangleF))
             {

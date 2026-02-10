@@ -25,8 +25,8 @@ namespace IngameScript
         public class TargetingDisplays
         {
             private TargetingSpriteBuilderSimple _spriteBuilder;
-            private List<IMyTextSurface> _displays = new List<IMyTextSurface>(8);
-            private IReadOnlyDictionary<long, EntityInfoExt> _entities = new Dictionary<long, EntityInfoExt>(64);
+            private List<IMyTextSurface> _displays = new List<IMyTextSurface>();
+            private IReadOnlyDictionary<long, EntityInfoExt> _entities = new Dictionary<long, EntityInfoExt>();
             public TargetingDisplays(IReadOnlyDictionary<long, EntityInfoExt> entities)
             {
                 _spriteBuilder = new TargetingSpriteBuilderSimple(new RectangleF(0, 0, 1024f, 1024f));

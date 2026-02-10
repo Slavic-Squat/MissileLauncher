@@ -25,7 +25,7 @@ namespace IngameScript
         public class UICoordinator
         {
             private SystemCoordinator _systemCoordinator;
-            private Dictionary<long, EntityInfoExt> _allEntities = new Dictionary<long, EntityInfoExt>(64);
+            private Dictionary<long, EntityInfoExt> _allEntities = new Dictionary<long, EntityInfoExt>();
 
             public IReadOnlyDictionary<long, EntityInfoExt> AllTargets => _systemCoordinator.TargetCoordinator.AllTargetsExt;
             public IReadOnlyDictionary<long, EntityInfoExt> AllMyMissiles => _systemCoordinator.MissileCoordinator.MyMissilesExt;
