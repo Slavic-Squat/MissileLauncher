@@ -241,7 +241,7 @@ namespace IngameScript
 
                 _finalSprites.AddRange(_staticSprites);
                 _finalSprites.AddRange(_sprites);
-                _finalSprites.SortNoAlloc((a, b) => b.Depth.CompareTo(a.Depth));
+                _finalSprites.SortNoAlloc((a, b) => a.Depth.CompareTo(b.Depth));
             }
         }
     }
