@@ -27,10 +27,10 @@ namespace IngameScript
             public bool Inverted { get; private set; }
             public float OffsetDeg { get; private set; }
             public float OffsetRad => MathHelper.ToRadians(OffsetDeg);
-            public float MinAngleRad => MathHelper.WrapAngle((Inverted ? RotorBlock.LowerLimitRad : -RotorBlock.UpperLimitRad) + OffsetRad);
-            public float MinAngleDeg => MathHelper.ToDegrees(MinAngleRad);
-            public float MaxAngleRad => MathHelper.WrapAngle((Inverted ? RotorBlock.UpperLimitRad : -RotorBlock.LowerLimitRad) + OffsetRad);
-            public float MaxAngleDeg => MathHelper.ToDegrees(MaxAngleRad);
+            public float MinAngleDeg { get; private set; }
+            public float MinAngleRad => MathHelper.ToRadians(MinAngleDeg);
+            public float MaxAngleDeg { get; private set; }
+            public float MaxAngleRad => MathHelper.ToRadians(MaxAngleDeg);
             public float RangeRad => MaxAngleRad - MinAngleRad;
             public float RangeDeg => MathHelper.ToDegrees(RangeRad);
             public float AngleRad => MathHelper.WrapAngle((Inverted ? RotorBlock.Angle : -RotorBlock.Angle) + OffsetRad);
@@ -115,7 +115,10 @@ namespace IngameScript
                 _config.Set("Config", "Inverted", Inverted);
                 OffsetDeg = _config.Get("Config", "OffsetDeg").ToSingle(0);
                 _config.Set("Config", "OffsetDeg", OffsetDeg);
-
+                MinAngleDeg = _config.Get("Config", "MinAngleDeg").ToSingle(float.NegativeInfinity);
+                _config.Set("Config", "MinAngleDeg", MinAngleDeg);
+                MaxAngleDeg = _config.Get("Config", "MaxAngleDeg").ToSingle(float.PositiveInfinity);
+                _config.Set("Config", "MaxAngleDeg", MaxAngleDeg);
                 RotorBlock.CustomData = _config.ToString();
             }
         }
