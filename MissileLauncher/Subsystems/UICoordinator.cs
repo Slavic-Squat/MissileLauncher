@@ -43,7 +43,7 @@ namespace IngameScript
             public UICoordinator(SystemCoordinator systemCoordinator)
             {
                 _systemCoordinator = systemCoordinator;
-                TargetingDisplays = new TargetingDisplays(AllEntities);
+                TargetingDisplays = new TargetingDisplays(this);
             }
 
             public void Run()
