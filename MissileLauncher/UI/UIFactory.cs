@@ -29,6 +29,7 @@ namespace IngameScript
                 UICoordinator uiCoordinator = window.UI.UICoordinator;
                 ControlStation station = window.UI.Station;
                 MissileCoordinator missileCoordinator = uiCoordinator.MissileCoordinator;
+                IMyTextSurface surface = window.UI.Display;
 
                 int numButtons = 4;
                 float padding = 15f;
@@ -48,34 +49,26 @@ namespace IngameScript
 
                 Vector2 buttonPos = panel.Pos + new Vector2(padding, padding);
 
-                Func<string> getText = () => "SCALE: " + MiscEnumHelper.GetScopeScaleStr(window.ScopeScale);
-                Action action = () => window.CycleScopeScale();
-
-                Button button = new Button(buttonPos, buttonSize, 5f, 3f, 2f, getText, action);
-                panel.AddButton(button, -1);
-
-                buttonPos.X += buttonSize.X + spacing;
-
-                getText = () => "FIRE CTRL";
+                Func<string> getText = () => "FIRE CTRL";
                 Action onPress = () => station.TakeFireControl(missileCoordinator);
                 Action onRelease = () => station.ReleaseFireControl(missileCoordinator);
                 Func<bool> isPressed = () => station.HasFireControl;
                 Func<bool> canPress = () => missileCoordinator.FireControlAvail;
                 Func<bool> canRelease = () => station.HasFireControl;
 
-                ToggleButton toggleButton = new ToggleButton(buttonPos, buttonSize, 5f, 3f, 2f, getText, onPress, onRelease, isPressed, canPress: canPress, canRelease: canRelease);
+                ToggleButton toggleButton = new ToggleButton(surface, buttonPos, buttonSize, 5f, 3f, 2f, getText, onPress, onRelease, isPressed, canPress: canPress, canRelease: canRelease);
                 panel.AddButton(toggleButton, -1);
 
                 buttonPos.X += buttonSize.X + spacing;
 
                 getText = () => "LASER CTRL";
-                action = () =>
+                Action action = () =>
                 {
                     Vector2 laserMenuPos = window.Center;
                     Menu laserMenu = CreateLaserControlMenu(laserMenuPos, window, true, true);
                     window.OpenMenu(laserMenu);
                 };
-                button = new Button(buttonPos, buttonSize, 5f, 3f, 2f, getText, action);
+                Button button = new Button(surface, buttonPos, buttonSize, 5f, 3f, 2f, getText, action);
                 panel.AddButton(button, -1);
 
                 buttonPos.X += buttonSize.X + spacing;
@@ -86,13 +79,15 @@ namespace IngameScript
                     Menu bayMenu = CreateBayMenu(window.Center, window, true, true);
                     window.OpenMenu(bayMenu);
                 };
-                button = new Button(buttonPos, buttonSize, 5f, 3f, 2f, getText, action, canPress: canPress);
+                button = new Button(surface, buttonPos, buttonSize, 5f, 3f, 2f, getText, action, canPress: canPress);
                 panel.AddButton(button, -1);
 
                 return panel;
             }
             public static ControlPanel CreateTargetingNavFilterPanel(Vector2 pos, TargetingWindow window, bool vertCent = false, bool horCent = false)
             {
+                IMyTextSurface surface = window.UI.Display;
+                StringBuilder sb = new StringBuilder();
                 int numButtons = 3;
                 float padding = 15f;
                 float spacing = 10f;
@@ -109,9 +104,11 @@ namespace IngameScript
 
                 ControlPanel panel = new ControlPanel(window, panelPos, panelSize, 5f, 2.5f);
 
-                Vector2 labelPos = panel.Pos + new Vector2(panel.Size.X / 2f - labelSize.X / 2f, padding);
-                RectangleF labelBounds = new RectangleF(labelPos, labelSize);
-                MySprite labelSprite = SpriteHelper.CreateText(labelBounds, "-NAV FILTER-\n------------------", Color.White, alignment: TextAlignment.CENTER, vertCentered: true, padding: 0);
+                Vector2 labelPos = panel.Pos + new Vector2(panel.Size.X / 2f, labelSize.Y / 2f + padding);
+                string text = "-NAV FILTER-\n------------------";
+                sb.Clear();
+                sb.Append(text);
+                MySprite labelSprite = SpriteHelper.CreateText(labelPos, sb, Color.White, surface, text: text, alignment: TextAlignment.CENTER, vertCentered: true, maxHeight: labelSize.Y, maxWidth: labelSize.X, fontID: "Monospace");
                 panel.AddSprite(labelSprite, -1);
 
                 Vector2 buttonPos = panel.Pos + new Vector2(panel.Size.X / 2f - buttonSize.X / 2f, padding + labelSize.Y);
@@ -119,7 +116,7 @@ namespace IngameScript
                 Func<string> getText = () => "TYPE: " + EntityFilterEnumHelper.GetEntityTypeFilterStr(window.NavTypeFilter);
                 Action action = () => window.CycleTypeFilter();
 
-                Button button = new Button(buttonPos, buttonSize, 5f, 3f, 2f, getText, action);
+                Button button = new Button(surface, buttonPos, buttonSize, 5f, 3f, 2f, getText, action);
                 panel.AddButton(button, -1);
 
                 buttonPos.Y += buttonSize.Y + spacing;
@@ -127,7 +124,7 @@ namespace IngameScript
                 getText = () => "REL: " + EntityFilterEnumHelper.GetEntityRelationFilterStr(window.NavRelationFilter);
                 action = () => window.CycleRelationFilter();
 
-                button = new Button(buttonPos, buttonSize, 5f, 3f, 2f, getText, action);
+                button = new Button(surface, buttonPos, buttonSize, 5f, 3f, 2f, getText, action);
                 panel.AddButton(button, -1);
 
                 buttonPos.Y += buttonSize.Y + spacing;
@@ -135,7 +132,7 @@ namespace IngameScript
                 getText = () => "SRC: " + EntityFilterEnumHelper.GetEntitySourceFilterStr(window.NavSourceFilter);
                 action = () => window.CycleSourceFilter();
 
-                button = new Button(buttonPos, buttonSize, 5f, 3f, 2f, getText, action);
+                button = new Button(surface, buttonPos, buttonSize, 5f, 3f, 2f, getText, action);
                 panel.AddButton(button, -1);
 
                 return panel;
@@ -145,7 +142,8 @@ namespace IngameScript
             {
                 UICoordinator uiCoordinator = window.UI.UICoordinator;
                 ControlStation station = window.UI.Station;
-                MissileCoordinator coordinator = uiCoordinator.MissileCoordinator;
+                MissileCoordinator missileCoordinator = uiCoordinator.MissileCoordinator;
+                IMyTextSurface surface = window.UI.Display;
 
                 var entities = uiCoordinator.AllEntities;
                 EntityInfoExt entity;
@@ -181,7 +179,7 @@ namespace IngameScript
                     Vector2 buttonPos = menu.Pos + padding;
                     Func<string> getText = () => "ABORT";
                     Action action = () => uiCoordinator.AbortMissile(address, station);
-                    Button button = new Button(buttonPos, buttonSize, 5f, 3f, 1f, getText, action);
+                    Button button = new Button(surface, buttonPos, buttonSize, 5f, 3f, 1f, getText, action);
                     menu.AddButton(button, -1);
 
                     return menu;
@@ -202,14 +200,14 @@ namespace IngameScript
                     Vector2 buttonPos = menu.Pos + padding;
                     Func<string> getText = () => "VIEW";
                     Action action = () => { };
-                    Button button = new Button(buttonPos, buttonSize, 5f, 3f, 1f, getText, action);
+                    Button button = new Button(surface, buttonPos, buttonSize, 5f, 3f, 1f, getText, action);
                     menu.AddButton(button, -1);
 
                     buttonPos.X += buttonSize.X + spacing;
                     getText = () => "FIRE MISL";
                     action = () =>
                     {
-                        if (coordinator.NumSelectedBays == 0)
+                        if (missileCoordinator.NumActiveBays == 0)
                         {
                             Menu missileMenu = CreateBayMenu(window.Center, window, true, true);
                             window.OpenMenu(missileMenu);
@@ -220,14 +218,14 @@ namespace IngameScript
                         }
                     };
                     Func<bool> canPress = () => station.HasFireControl;
-                    button = new Button(buttonPos, buttonSize, 5f, 3f, 1f, getText, action, canPress);
+                    button = new Button(surface, buttonPos, buttonSize, 5f, 3f, 1f, getText, action, canPress);
                     menu.AddButton(button, -1);
 
                     buttonPos.X += buttonSize.X + spacing;
                     getText = () => "FIRE ALL";
                     action = () =>
                     {
-                        if (coordinator.NumSelectedBays == 0)
+                        if (missileCoordinator.NumActiveBays == 0)
                         {
                             Menu missileMenu = CreateBayMenu(window.Center, window, true, true);
                             window.OpenMenu(missileMenu);
@@ -238,7 +236,7 @@ namespace IngameScript
                         }
                     };
                     canPress = () => station.HasFireControl;
-                    button = new Button(buttonPos, buttonSize, 5f, 3f, 1f, getText, action, canPress);
+                    button = new Button(surface, buttonPos, buttonSize, 5f, 3f, 1f, getText, action, canPress);
                     menu.AddButton(button, -1);
 
                     buttonPos.X += buttonSize.X + spacing;
@@ -251,15 +249,15 @@ namespace IngameScript
                         window.OpenMenu(relationMenu);
                     };
 
-                    button = new Button(buttonPos, buttonSize, 5f, 3f, 1f, getText, action);
+                    button = new Button(surface, buttonPos, buttonSize, 5f, 3f, 1f, getText, action);
                     menu.AddButton(button, -1);
 
                     buttonPos.X += buttonSize.X + spacing;
 
                     getText = () => "ADD";
-                    action = () => uiCoordinator.AddTarget(entity);
+                    action = () => uiCoordinator.AddTarget(entity.EntityID);
 
-                    button = new Button(buttonPos, buttonSize, 5f, 3f, 1f, getText, action);
+                    button = new Button(surface, buttonPos, buttonSize, 5f, 3f, 1f, getText, action);
                     menu.AddButton(button, -1);
 
                     return menu;
@@ -281,14 +279,14 @@ namespace IngameScript
                     Vector2 buttonPos = menu.Pos + padding;
                     Func<string> getText = () => "VIEW";
                     Action action = () => { };
-                    Button button = new Button(buttonPos, buttonSize, 5f, 3f, 1f, getText, action);
+                    Button button = new Button(surface, buttonPos, buttonSize, 5f, 3f, 1f, getText, action);
                     menu.AddButton(button, -1);
 
                     buttonPos.X += buttonSize.X + spacing;
                     getText = () => "FIRE MISL";
                     action = () =>
                     {
-                        if (coordinator.NumSelectedBays == 0)
+                        if (missileCoordinator.NumActiveBays == 0)
                         {
                             Menu missileMenu = CreateBayMenu(window.Center, window, true, true);
                             window.OpenMenu(missileMenu);
@@ -299,14 +297,14 @@ namespace IngameScript
                         }
                     };
                     Func<bool> canPress = () => station.HasFireControl;
-                    button = new Button(buttonPos, buttonSize, 5f, 3f, 1f, getText, action, canPress);
+                    button = new Button(surface, buttonPos, buttonSize, 5f, 3f, 1f, getText, action, canPress);
                     menu.AddButton(button, -1);
 
                     buttonPos.X += buttonSize.X + spacing;
                     getText = () => "FIRE ALL";
                     action = () =>
                     {
-                        if (coordinator.NumSelectedBays == 0)
+                        if (missileCoordinator.NumActiveBays == 0)
                         {
                             Menu missileMenu = CreateBayMenu(window.Center, window, true, true);
                             window.OpenMenu(missileMenu);
@@ -317,7 +315,7 @@ namespace IngameScript
                         }
                     };
                     canPress = () => station.HasFireControl;
-                    button = new Button(buttonPos, buttonSize, 5f, 3f, 1f, getText, action, canPress);
+                    button = new Button(surface, buttonPos, buttonSize, 5f, 3f, 1f, getText, action, canPress);
                     menu.AddButton(button, -1);
 
                     buttonPos.X += buttonSize.X + spacing;
@@ -325,7 +323,7 @@ namespace IngameScript
                     getText = () => "FORGET";
                     action = () => uiCoordinator.ForgetTarget(entity.EntityID);
 
-                    button = new Button(buttonPos, buttonSize, 5f, 3f, 1f, getText, action);
+                    button = new Button(surface, buttonPos, buttonSize, 5f, 3f, 1f, getText, action);
                     menu.AddButton(button, -1);
 
                     return menu;
@@ -338,6 +336,7 @@ namespace IngameScript
                 UICoordinator uiCoordinator = window.UI.UICoordinator;
                 ControlStation station = window.UI.Station;
                 StringBuilder sb = new StringBuilder();
+                IMyTextSurface surface = window.UI.Display;
 
                 var bays = uiCoordinator.MissileBays.Values.ToList();
 
@@ -365,9 +364,11 @@ namespace IngameScript
                 Func<bool> autoClose = () => !station.HasFireControl;
                 Menu menu = new Menu(window, menuPos, menuSize, 5f, obscure: true, autoClose: autoClose, screenBounds: screenBounds);
 
-                Vector2 labelPos = menu.Pos + new Vector2(menu.Size.X * 0.5f - labelSize.X * 0.5f, headerHeight * 0.5f - labelSize.Y * 0.5f);
-                RectangleF labelBounds = new RectangleF(labelPos, labelSize);
-                MySprite labelSprite = SpriteHelper.CreateText(labelBounds, "-MISSILE BAYS-\n------------------", Color.White, alignment: TextAlignment.CENTER, vertCentered: true, padding: 0);
+                Vector2 labelPos = menu.Pos + new Vector2(menu.Size.X * 0.5f, headerHeight * 0.5f);
+                string text = "-MISSILE BAYS-\n------------------";
+                sb.Clear();
+                sb.Append(text);
+                MySprite labelSprite = SpriteHelper.CreateText(labelPos, sb, Color.White, surface, text: text, alignment: TextAlignment.CENTER, vertCentered: true, maxHeight: labelSize.Y, maxWidth: labelSize.X, fontID: "Monospace");
                 menu.AddSprite(labelSprite, -1);
                 
                 int bayIndex = 0;
@@ -377,9 +378,10 @@ namespace IngameScript
                 for (int i = 0; i < numPages; i++)
                 {
                     Vector2 pageLabelSize = new Vector2(100f, 30f);
-                    Vector2 pageLabelPos = menu.Pos + new Vector2(menu.Size.X - padding - pageLabelSize.X, headerHeight * 0.5f - pageLabelSize.Y * 0.5f);
-                    RectangleF pageLabelBounds = new RectangleF(pageLabelPos, pageLabelSize);
-                    MySprite pageLabelSprite = SpriteHelper.CreateText(pageLabelBounds, $"PAGE: {i + 1} / {numPages}", Color.White, alignment: TextAlignment.RIGHT, vertCentered: true, padding: 0);
+                    Vector2 pageLabelPos = menu.Pos + new Vector2(menu.Size.X - padding - pageLabelSize.X, headerHeight * 0.5f);
+                    sb.Clear();
+                    sb.AppendFormat("PAGE: {0} / {1}", i + 1, numPages);
+                    MySprite pageLabelSprite = SpriteHelper.CreateText(pageLabelPos, sb, Color.White, surface, alignment: TextAlignment.RIGHT, vertCentered: true, maxHeight: pageLabelSize.Y, maxWidth: pageLabelSize.X, fontID: "Monospace");
                     menu.AddSprite(pageLabelSprite, i);
 
                     for (int j = 0; j < numRows; j++)
@@ -398,17 +400,17 @@ namespace IngameScript
                                 bay.AppendOverview(sb);
                                 return sb.ToString();
                             };
-                            InfoPanel panel = new InfoPanel(panelPos, panelSize, 5f, 10f, getText);
+                            InfoPanel panel = new InfoPanel(surface, panelPos, panelSize, 5f, 10f, getText);
                             menu.AddInfoPanel(panel, i);
 
                             Vector2 buttonPos = panel.Pos + new Vector2(panel.Size.X * 0.5f - selectButtonSize.X * 0.5f, panel.Size.Y - selectButtonSize.Y - 10f);
-                            getText = () => bay.IsSelected ? "SELECTED" : "SELECT";
-                            Action onPress = () => uiCoordinator.SelectBay(bay, station);
-                            Action onRelease = () => uiCoordinator.DeselectBay(bay, station);
-                            Func<bool> isPressed = () => bay.IsSelected;
-                            Func<bool> canPress = () => bay.IsSelectable;
+                            getText = () => bay.Status == BayStatus.Active ? "DEACTIVATE" : "ACTIVATE";
+                            Action onPress = () => uiCoordinator.ActivateBay(bay, station);
+                            Action onRelease = () => uiCoordinator.DeactivateBay(bay, station);
+                            Func<bool> isPressed = () => bay.Status == BayStatus.Active;
+                            Func<bool> canPress = () => bay.IsActivatable;
                             Func<bool> canRelease = canPress;
-                            ToggleButton button = new ToggleButton(buttonPos, selectButtonSize, 7f, 3f, 1f, getText, onPress, onRelease, isPressed, canPress: canPress, canRelease: canRelease);
+                            ToggleButton button = new ToggleButton(surface, buttonPos, selectButtonSize, 7f, 3f, 1f, getText, onPress, onRelease, isPressed, canPress: canPress, canRelease: canRelease);
                             menu.AddButton(button, i);
                             bayIndex++;
                         }
@@ -417,15 +419,15 @@ namespace IngameScript
 
                 Vector2 confirmButtonSize = new Vector2(150f, 50f);
                 Vector2 confirmButtonPos = menu.Pos + new Vector2(menu.Size.X * 0.5f - confirmButtonSize.X - 20f, menu.Size.Y - footerHeight * 0.5f - confirmButtonSize.Y * 0.5f);
-                Func<string> confirmText = () => "SELECT ALL";
-                Action action = () => uiCoordinator.SelectAllBays(station);
-                Button confirmButton = new Button(confirmButtonPos, confirmButtonSize, 10f, 4f, 1f, confirmText, action);
+                Func<string> confirmText = () => "ACTIVATE ALL";
+                Action action = () => uiCoordinator.ActivateAll(station);
+                Button confirmButton = new Button(surface, confirmButtonPos, confirmButtonSize, 10f, 4f, 1f, confirmText, action);
                 menu.AddButton(confirmButton, -1);
                 Vector2 cancelButtonSize = new Vector2(150f, 50f);
                 Vector2 cancelButtonPos = menu.Pos + new Vector2(menu.Size.X * 0.5f + 20f, menu.Size.Y - footerHeight * 0.5f - confirmButtonSize.Y * 0.5f);
-                Func<string> cancelText = () => "CLEAR ALL";
-                action = () => uiCoordinator.ClearSelectedBays(station);
-                Button cancelButton = new Button(cancelButtonPos, cancelButtonSize, 10f, 4f, 1f, cancelText, action);
+                Func<string> cancelText = () => "DEACTIVATE ALL";
+                action = () => uiCoordinator.DeactivateAll(station);
+                Button cancelButton = new Button(surface, cancelButtonPos, cancelButtonSize, 10f, 4f, 1f, cancelText, action);
                 menu.AddButton(cancelButton, -1);
                 return menu;
             }
@@ -433,6 +435,7 @@ namespace IngameScript
             public static Menu CreateRelationMenu(Vector2 pos, long targetID, TargetingWindow window, bool vertCent = false, bool horCent = false)
             {
                 UICoordinator uiCoordinator = window.UI.UICoordinator;
+                IMyTextSurface surface = window.UI.Display;
 
                 int numButtons = 3;
 
@@ -456,19 +459,19 @@ namespace IngameScript
                 Vector2 buttonPos = menu.Pos + padding;
                 Func<string> getText = () => "FRNDLY";
                 Action action = () => uiCoordinator.SetRelation(targetID, EntityRelation.Friendly);
-                Button button = new Button(buttonPos, buttonSize, 5f, 3f, 1f, getText, action);
+                Button button = new Button(surface, buttonPos, buttonSize, 5f, 3f, 1f, getText, action);
                 menu.AddButton(button, -1);
 
                 buttonPos.X += buttonSize.X + spacing;
                 getText = () => "NTRL";
                 action = () => uiCoordinator.SetRelation(targetID, EntityRelation.Neutral);
-                button = new Button(buttonPos, buttonSize, 5f, 3f, 1f, getText, action);
+                button = new Button(surface, buttonPos, buttonSize, 5f, 3f, 1f, getText, action);
                 menu.AddButton(button, -1);
 
                 buttonPos.X += buttonSize.X + spacing;
                 getText = () => "HSTL";
                 action = () => uiCoordinator.SetRelation(targetID, EntityRelation.Hostile);
-                button = new Button(buttonPos, buttonSize, 5f, 3f, 1f, getText, action);
+                button = new Button(surface, buttonPos, buttonSize, 5f, 3f, 1f, getText, action);
                 menu.AddButton(button, -1);
 
                 return menu;
@@ -478,6 +481,7 @@ namespace IngameScript
             {
                 RectangleF screenBounds = window.UI.Bounds;
                 UICoordinator uiCoordinator = window.UI.UICoordinator;
+                IMyTextSurface surface = window.UI.Display;
                 StringBuilder sb = new StringBuilder();
 
                 var lasers = uiCoordinator.TargetingLasers.Values.ToList();
@@ -506,9 +510,11 @@ namespace IngameScript
 
                 Menu menu = new Menu(window, menuPos, menuSize, 5f, obscure: true, screenBounds: screenBounds);
 
-                Vector2 labelPos = menu.Pos + new Vector2(menu.Size.X * 0.5f - labelSize.X * 0.5f, headerHeight * 0.5f - labelSize.Y * 0.5f);
-                RectangleF labelBounds = new RectangleF(labelPos, labelSize);
-                MySprite labelSprite = SpriteHelper.CreateText(labelBounds, "-TARGETING LASERS-\n------------------", Color.White, alignment: TextAlignment.CENTER, vertCentered: true, padding: 0);
+                Vector2 labelPos = menu.Pos + new Vector2(menu.Size.X * 0.5f, headerHeight * 0.5f);
+                string text = "-TARGETING LASERS-\n------------------";
+                sb.Clear();
+                sb.Append(text);
+                MySprite labelSprite = SpriteHelper.CreateText(labelPos, sb, Color.White, surface, text: text, alignment: TextAlignment.CENTER, vertCentered: true, maxHeight: labelSize.Y, maxWidth: labelSize.X, fontID: "Monospace");
                 menu.AddSprite(labelSprite, -1);
 
                 int numPages = (int)Math.Ceiling((float)numLasers / (numRows * numColumns));
@@ -517,9 +523,10 @@ namespace IngameScript
                 for (int i = 0; i < numPages; i++)
                 {
                     Vector2 pageLabelSize = new Vector2(100f, 30f);
-                    Vector2 pageLabelPos = menu.Pos + new Vector2(menu.Size.X - padding - pageLabelSize.X, headerHeight * 0.5f - pageLabelSize.Y * 0.5f);
-                    RectangleF pageLabelBounds = new RectangleF(pageLabelPos, pageLabelSize);
-                    MySprite pageLabelSprite = SpriteHelper.CreateText(pageLabelBounds, $"PAGE: {i + 1} / {numPages}", Color.White, alignment: TextAlignment.RIGHT, vertCentered: true, padding: 0);
+                    Vector2 pageLabelPos = menu.Pos + new Vector2(menu.Size.X - padding - pageLabelSize.X, headerHeight * 0.5f);
+                    sb.Clear();
+                    sb.AppendFormat("PAGE: {0} / {1}", i + 1, numPages);
+                    MySprite pageLabelSprite = SpriteHelper.CreateText(pageLabelPos, sb, Color.White, surface, alignment: TextAlignment.RIGHT, vertCentered: true, maxHeight: pageLabelSize.Y, maxWidth: pageLabelSize.X, fontID: "Monospace");
                     menu.AddSprite(pageLabelSprite, i);
 
                     for (int j = 0; j < numRows; j++)
@@ -538,7 +545,7 @@ namespace IngameScript
                                 laser.AppendOverview(sb);
                                 return sb.ToString();
                             };
-                            InfoPanel panel = new InfoPanel(panelPos, panelSize, 5f, 10f, getText);
+                            InfoPanel panel = new InfoPanel(surface, panelPos, panelSize, 5f, 10f, getText);
                             menu.AddInfoPanel(panel, i);
 
                             Vector2 buttonPos = panel.Pos + new Vector2(panel.Size.X * 0.5f - ctrlButtonSize.X * 0.5f, panel.Size.Y - ctrlButtonSize.Y - 10f);
@@ -547,7 +554,7 @@ namespace IngameScript
                             Action isPressed = () => ReferenceEquals(ctrlStation.Controllable, laser);
                             Func<bool> canPress = () => !laser.IsUnderControl;
                             Func<bool> canRelease = canPress;
-                            Button button = new Button(buttonPos, ctrlButtonSize, 7f, 3f, 1f, getText, action, canPress);
+                            Button button = new Button(surface, buttonPos, ctrlButtonSize, 7f, 3f, 1f, getText, action, canPress);
                             menu.AddButton(button, i);
                             laserIndex++;
                         }

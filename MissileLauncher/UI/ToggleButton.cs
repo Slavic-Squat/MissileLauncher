@@ -69,9 +69,12 @@ namespace IngameScript
             private List<MySprite> _bodySprites = new List<MySprite>();
             private MySprite _highlightSprite;
             private MySprite _textSprite;
+            private StringBuilder _sb = new StringBuilder();
+            private IMyTextSurface _surface;
 
-            public ToggleButton(Vector2 pos, Vector2 size, float padding, float borderThickness, float highlightThickness, Func<string> textGetter, Action onPress, Action onRelease, Func<bool> isPressed, Func<bool> canPress = null, Func<bool> canRelease = null)
+            public ToggleButton(IMyTextSurface surface, Vector2 pos, Vector2 size, float padding, float borderThickness, float highlightThickness, Func<string> textGetter, Action onPress, Action onRelease, Func<bool> isPressed, Func<bool> canPress = null, Func<bool> canRelease = null)
             {
+                _surface = surface;
                 _bounds = new RectangleF(pos, size);
                 _padding = padding;
                 _borderThickness = borderThickness;
@@ -134,7 +137,10 @@ namespace IngameScript
                     Alignment = TextAlignment.CENTER
                 };
 
-                _textSprite = SpriteHelper.CreateText(bounds, _textGetter(), textColor, alignment: TextAlignment.CENTER, vertCentered: true, padding: _borderThickness + _padding);
+                string text = _textGetter();
+                _sb.Clear();
+                _sb.Append(text);
+                _textSprite = SpriteHelper.CreateText(bounds.Center, _sb, textColor, _surface, text: text, alignment: TextAlignment.CENTER, vertCentered: true, maxHeight: bounds.Height - 2f * (_borderThickness + _padding), maxWidth: _bounds.Width - 2f * (_borderThickness + _padding), fontID: "Monospace");
             }
 
             public void Press()

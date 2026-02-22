@@ -18,7 +18,6 @@ using VRage.Game.ModAPI.Ingame;
 using VRage.Game.ModAPI.Ingame.Utilities;
 using VRage.Game.ObjectBuilders.Definitions;
 using VRageMath;
-using static IngameScript.Program;
 
 namespace IngameScript
 {
@@ -34,18 +33,15 @@ namespace IngameScript
             public static long SelfID => ReferenceController.CubeGrid.EntityId;
 
             private Dictionary<string, ControlStation> _controlStations = new Dictionary<string, ControlStation>();
-            private Dictionary<string, TargetingLaser> _targetingLasers = new Dictionary<string, TargetingLaser>();
 
             private bool _isMainClock = true;
             private double _lastClockSync;
             private double _globalTimeOffset;
             private double _time;
-
-            public AWACS AWACS { get; private set; }
-            public IReadOnlyDictionary<string, TargetingLaser> TargetingLasers => _targetingLasers;
             public TargetCoordinator TargetCoordinator { get; private set; }
             public MissileCoordinator MissileCoordinator { get; private set; }
             public UICoordinator UICoordinator { get; private set; }
+            public IReadOnlyDictionary<string, ControlStation> ControlStations => _controlStations;
 
             public SystemCoordinator()
             {
@@ -67,35 +63,8 @@ namespace IngameScript
                 _isMainClock = Config.Get("Config", "IsMainClock").ToBoolean(true);
                 Config.Set("Config", "IsMainClock", _isMainClock);
 
-                int numLasers = Config.Get("Targeting", "NumLasers").ToInt32(1);
-                Config.Set("Targeting", "NumLasers", numLasers);
-                for (int i = 0; i < numLasers; i++)
-                {
-                    string id = i.ToString().ToUpper();
-                    float maxLaserDist = Config.Get("Targeting", $"Laser{id}MaxDistance").ToSingle(5000);
-                    Config.Set("Targeting", $"Laser{id}MaxDistance", maxLaserDist);
-                    float sensitivity = Config.Get("Targeting", $"Laser{id}Sensitivity").ToSingle(0.05f);
-                    Config.Set("Targeting", $"Laser{id}Sensitivity", sensitivity);
-                    TargetingLaser laser = new TargetingLaser(id, sensitivity, maxLaserDist);
-                    laser.SyncRequested += SyncTarget;
-                    _targetingLasers[id] = laser;
-                }
-
-                bool hasAWACS = Config.Get("AWACS", "Enabled").ToBoolean(true);
-                Config.Set("AWACS", "Enabled", hasAWACS);
-                float maxAWACSDist = Config.Get("AWACS", "MaxDistance").ToSingle(5000);
-                Config.Set("AWACS", "MaxDistance", maxAWACSDist);
-                if (hasAWACS)
-                {
-                    AWACS = new AWACS(maxAWACSDist);
-                }
-
                 TargetCoordinator = new TargetCoordinator();
-
-                int numBays = Config.Get("Missiles", "NumBays").ToInt32(1);
-                Config.Set("Missiles", "NumBays", numBays);
-                MissileCoordinator = new MissileCoordinator(numBays, TargetCoordinator.AllTargetsExt);
-
+                MissileCoordinator = new MissileCoordinator(TargetCoordinator.AllTargets);
                 UICoordinator = new UICoordinator(this);
 
                 int numControlStations = Config.Get("Config", "NumControlStations").ToInt32(1);
@@ -106,6 +75,8 @@ namespace IngameScript
                     ControlStation controlStation = new ControlStation(id, UICoordinator);
                     _controlStations[id] = controlStation;
                 }
+
+                MePb.CustomData = Config.ToString();
 
                 CommunicationHandler0.RegisterBroadcastListener("FRIENDLY_COMMANDS", true);
                 CommandHandler0.RegisterCommand("SET_MAIN_CLOCK", (args) => { if (args.Length > 0) SetMainClock(args[0]); });
@@ -125,21 +96,6 @@ namespace IngameScript
 
                 GlobalTime = time + _globalTimeOffset;
 
-                foreach (var targetingLaser in _targetingLasers.Values)
-                {
-                    targetingLaser.Run(time);
-                    TargetCoordinator.AddLocalTarget(targetingLaser.Target);
-                }
-
-                if (AWACS != null)
-                {
-                    AWACS.Run(time);
-                    foreach (var target in AWACS.Targets.Values)
-                    {
-                        TargetCoordinator.AddLocalTarget(target);
-                    }
-                }
-
                 TargetCoordinator.Run(time);
                 MissileCoordinator.Run(time);
                 UICoordinator.Run();
@@ -153,15 +109,6 @@ namespace IngameScript
                 Transmit();
 
                 _time = time;
-            }
-
-            private void SyncTarget(TargetingLaser laser)
-            {
-                EntityInfoExt target = laser.Target;
-
-                if (!target.IsValid || AWACS == null) return;
-
-                AWACS.AddTarget(target);
             }
 
             private void SetMainClock(string boolString)
@@ -215,7 +162,7 @@ namespace IngameScript
                     return;
                 }
                 TargetingLaser targetingLaser = controlStation.Controllable as TargetingLaser;
-                if (!targetingLaser.HasTarget)
+                if (!targetingLaser.TargetSet)
                 {
                     return;
                 }

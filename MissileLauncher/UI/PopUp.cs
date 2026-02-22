@@ -40,20 +40,26 @@ namespace IngameScript
             private MySprite _obscureSprite;
             private RectangleF _screenBounds;
 
-            public PopUp(Vector2 pos, Vector2 size, float borderThickness, float padding, Func<bool> condition, string text, RectangleF screenBounds)
+            private StringBuilder _sb = new StringBuilder();
+            private IMyTextSurface _surface;
+
+            public PopUp(IMyTextSurface surface, Vector2 pos, Vector2 size, float borderThickness, float padding, Func<bool> condition, string text, RectangleF screenBounds)
             {
+                _surface = surface;
                 _bounds = new RectangleF(pos, size);
                 _borderThickness = borderThickness;
                 _text = text;
                 _condition = condition;
                 _padding = padding;
                 _screenBounds = screenBounds;
+
+                _sb.Append(text);
             }
 
             private void BuildSprites()
             {
                 _bodySprites.Clear();
-                SpriteHelper.CreateBoxFilled(_bodySprites, Bounds, new Color(252, 3, 94, 255), new Color(38, 19, 26, 255), _borderThickness);
+                SpriteHelper.CreateBoxFilled(_bodySprites, _bounds, new Color(252, 3, 94, 255), new Color(38, 19, 26, 255), _borderThickness);
 
                 _obscureSprite = new MySprite()
                 {
@@ -65,7 +71,7 @@ namespace IngameScript
                     Alignment = TextAlignment.CENTER
                 };
 
-                _textSprite = SpriteHelper.CreateText(Bounds, _text, new Color(252, 3, 94, 255), alignment: TextAlignment.CENTER, vertCentered: true, padding: _borderThickness + _padding);
+                _textSprite = SpriteHelper.CreateText(_bounds.Center, _sb, new Color(252, 3, 94, 255), _surface, text: _text, alignment: TextAlignment.CENTER, vertCentered: true, maxHeight: _bounds.Height - 2f * (_borderThickness + _padding), maxWidth: _bounds.Width - 2f * (_borderThickness + _padding), fontID: "Monospace");
             }
 
             public void Draw(MySpriteDrawFrame frame)

@@ -24,12 +24,14 @@ namespace IngameScript
     {
         public class TargetCoordinator
         {
+            private Dictionary<string, TargetingLaser> _targetingLasers = new Dictionary<string, TargetingLaser>();
+            private AWACS _awacs;
             private double _time;
             private Dictionary<long, EntityInfoExt> _targetsLocal = new Dictionary<long, EntityInfoExt>();
             private List<long> _localsToRemove = new List<long>();
             private Dictionary<long, EntityInfoExt> _targetsRemote = new Dictionary<long, EntityInfoExt>();
             private List<long> _remotesToRemove = new List<long>();
-            private Dictionary<long, EntityInfoExt> _allTargetsExt = new Dictionary<long, EntityInfoExt>();
+            private Dictionary<long, EntityInfoExt> _allTargets = new Dictionary<long, EntityInfoExt>();
             private HashSet<long> _neutralIDs = new HashSet<long>();
             private HashSet<long> _hostileIDs = new HashSet<long>();
             private HashSet<long> _friendlyIDs = new HashSet<long>();
@@ -37,7 +39,9 @@ namespace IngameScript
             private byte[] _targetsBuffer = new byte[1024];
             private byte[] _selfBuffer = new byte[128];
 
-            public IReadOnlyDictionary<long, EntityInfoExt> AllTargetsExt => _allTargetsExt;
+            public IReadOnlyDictionary<long, EntityInfoExt> AllTargets => _allTargets;
+            public IReadOnlyDictionary<string, TargetingLaser> TargetingLasers => _targetingLasers;
+            public AWACS AWACS => _awacs;
 
             public TargetCoordinator()
             {
@@ -46,6 +50,26 @@ namespace IngameScript
 
             private void Init()
             {
+                int numLasers = Config.Get("Targeting", "NumLasers").ToInt32(1);
+                Config.Set("Targeting", "NumLasers", numLasers);
+                for (int i = 0; i < numLasers; i++)
+                {
+                    string id = i.ToString().ToUpper();
+                    TargetingLaser laser = new TargetingLaser(id);
+                    laser.SyncTarget += _awacs.AddTarget;
+                    laser.OnTargetUpdated += AddLocalTarget;
+                    _targetingLasers[id] = laser;
+                }
+
+                bool hasAWACS = Config.Get("AWACS", "Enabled").ToBoolean(true);
+                Config.Set("AWACS", "Enabled", hasAWACS);
+                if (hasAWACS)
+                {
+                    _awacs = new AWACS(AllTargets);
+                    _awacs.OnTargetUpdated += AddLocalTarget;
+                }
+
+                MePb.CustomData = Config.ToString();
                 CommunicationHandler0.RegisterBroadcastListener("TARGET_SHARE", true);
                 CommunicationHandler0.RegisterBroadcastListener("ALL_MISSILE_INFO", false);
                 CommunicationHandler0.RegisterBroadcastListener("FRIENDLY_INFO", true);
@@ -62,14 +86,20 @@ namespace IngameScript
 
                 Receive();
 
-                _localsToRemove.Clear();
-                foreach (var targetKey in _targetsLocal.Keys)
+                foreach (var laser in _targetingLasers.Values)
                 {
-                    double timeSinceLastDetection = globalTime - _targetsLocal[targetKey].TimeRecorded;
+                    laser.Run(globalTime);
+                }
+                _awacs?.Run(globalTime);
+
+                _localsToRemove.Clear();
+                foreach (var target in _targetsLocal.Values)
+                {
+                    double timeSinceLastDetection = globalTime - target.TimeRecorded;
 
                     if (timeSinceLastDetection > 5f)
                     {
-                        _localsToRemove.Add(targetKey);
+                        _localsToRemove.Add(target.EntityID);
                     }
                 }
 
@@ -79,13 +109,13 @@ namespace IngameScript
                 }
 
                 _remotesToRemove.Clear();
-                foreach (var targetKey in _targetsRemote.Keys)
+                foreach (var target in _targetsRemote.Values)
                 {
-                    double timeSinceLastDetection = globalTime - _targetsRemote[targetKey].TimeRecorded;
+                    double timeSinceLastDetection = globalTime - target.TimeRecorded;
 
                     if (timeSinceLastDetection > 5f)
                     {
-                        _remotesToRemove.Add(targetKey);
+                        _remotesToRemove.Add(target.EntityID);
                     }
                 }
 
@@ -146,14 +176,14 @@ namespace IngameScript
                     _targetsRemote[entityID] = original.Merge(entityExt);
                 }
 
-                if (!_allTargetsExt.ContainsKey(entityID))
+                if (!_allTargets.ContainsKey(entityID))
                 {
-                    _allTargetsExt.Add(entityID, entityExt);
+                    _allTargets.Add(entityID, entityExt);
                 }
                 else
                 {
-                    var original = _allTargetsExt[entityID];
-                    _allTargetsExt[entityID] = original.Merge(entityExt);
+                    var original = _allTargets[entityID];
+                    _allTargets[entityID] = original.Merge(entityExt);
                 }
             }
 
@@ -183,14 +213,14 @@ namespace IngameScript
                     _targetsLocal[entityID] = original.Merge(target);
                 }
 
-                if (!_allTargetsExt.ContainsKey(entityID))
+                if (!_allTargets.ContainsKey(entityID))
                 {
-                    _allTargetsExt.Add(entityID, target);
+                    _allTargets.Add(entityID, target);
                 }
                 else
                 {
-                    var original = _allTargetsExt[entityID];
-                    _allTargetsExt[entityID] = original.Merge(target);
+                    var original = _allTargets[entityID];
+                    _allTargets[entityID] = original.Merge(target);
                 }
             }
 
@@ -198,22 +228,22 @@ namespace IngameScript
             {
                 _targetsRemote.Remove(entityID);
 
-                if (_allTargetsExt.ContainsKey(entityID))
+                if (_allTargets.ContainsKey(entityID))
                 {
-                    var original = _allTargetsExt[entityID];
+                    var original = _allTargets[entityID];
                     if (original.Source == EntitySource.Remote)
                     {
-                        _allTargetsExt.Remove(entityID);
+                        _allTargets.Remove(entityID);
                     }
                     else if ((original.Source & EntitySource.Remote) != 0)
                     {
                         EntitySource newSource = original.Source & ~EntitySource.Remote;
                         var newInfo = new EntityInfoExt(original.Info, newSource, original.Relation, original.RelationID);
-                        _allTargetsExt[entityID] = newInfo;
+                        _allTargets[entityID] = newInfo;
                     }
                     else
                     {
-                        _allTargetsExt.Remove(entityID);
+                        _allTargets.Remove(entityID);
                     }
                 }
             }
@@ -222,22 +252,22 @@ namespace IngameScript
             {
                 _targetsLocal.Remove(entityID);
 
-                if (_allTargetsExt.ContainsKey(entityID))
+                if (_allTargets.ContainsKey(entityID))
                 {
-                    var original = _allTargetsExt[entityID];
+                    var original = _allTargets[entityID];
                     if (original.Source == EntitySource.Local)
                     {
-                        _allTargetsExt.Remove(entityID);
+                        _allTargets.Remove(entityID);
                     }
                     else if ((original.Source & EntitySource.Local) != 0)
                     {
                         EntitySource newSource = original.Source & ~EntitySource.Local;
                         var newInfo = new EntityInfoExt(original.Info, newSource, original.Relation, original.RelationID);
-                        _allTargetsExt[entityID] = newInfo;
+                        _allTargets[entityID] = newInfo;
                     }
                     else
                     {
-                        _allTargetsExt.Remove(entityID);
+                        _allTargets.Remove(entityID);
                     }
                 }
             }
@@ -273,7 +303,7 @@ namespace IngameScript
                 _idsToUpdate.Clear();
                 _idsToUpdate.Add(entityID);
 
-                foreach (var target in _allTargetsExt.Values)
+                foreach (var target in _allTargets.Values)
                 {
                     if (target.RelationID == entityID)
                     {
@@ -283,11 +313,11 @@ namespace IngameScript
 
                 foreach (var id in _idsToUpdate)
                 {
-                    if (_allTargetsExt.ContainsKey(id))
+                    if (_allTargets.ContainsKey(id))
                     {
-                        var original = _allTargetsExt[id];
+                        var original = _allTargets[id];
                         var newInfo = new EntityInfoExt(original.Info, original.Source, relation, original.RelationID);
-                        _allTargetsExt[id] = newInfo;
+                        _allTargets[id] = newInfo;
                     }
                     if (_targetsLocal.ContainsKey(id))
                     {

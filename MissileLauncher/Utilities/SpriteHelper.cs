@@ -24,69 +24,63 @@ namespace IngameScript
     {
         public static class SpriteHelper
         {
-            public static MySprite CreateText(Vector2 pos, string text, Color color, float scale = 1f, string fontId = "White", TextAlignment alignment = TextAlignment.LEFT, bool vertCentered = false)
+            public static MySprite CreateText(Vector2 pos, StringBuilder sb, Color color, IMyTextSurface surface, string text = null, float scale = -1, float maxWidth = float.PositiveInfinity, float maxHeight = float.PositiveInfinity, string fontID = "White", TextAlignment alignment = TextAlignment.LEFT, bool vertCentered = false)
             {
-                if (vertCentered)
+
+                float fillScale;
+                if (maxWidth == float.PositiveInfinity && maxHeight == float.PositiveInfinity)
                 {
-                    float textHeight = MeasureStringInPixels(text, fontId, scale).Y;
-                    pos.Y -= textHeight / 2;
+                    fillScale = scale > 0 ? scale : 1;
+
+                    if (vertCentered)
+                    {
+                        Vector2 textSize = MeasureStringInPixels(surface, sb, fontID, fillScale);
+                        pos.Y -= (textSize.Y * fillScale) / 2f;
+                    }
                 }
-                return new MySprite()
+                else if (scale > 0)
                 {
-                    Type = SpriteType.TEXT,
-                    Data = text,
-                    Position = pos,
-                    Color = color,
-                    RotationOrScale = scale,
-                    Alignment = alignment,
-                    FontId = fontId
-                };
-            }
+                    Vector2 textSize = MeasureStringInPixels(surface, sb, fontID, scale);
+                    if (textSize.X <= maxWidth && textSize.Y <= maxHeight)
+                    {
+                        fillScale = scale;
+                    }
+                    else
+                    {
+                        fillScale = Math.Min(maxWidth / textSize.X, maxHeight / textSize.Y);
+                    }
 
-            public static MySprite CreateText(RectangleF bounds, string text, Color color, float maxScale = 10f, string fontId = "White", TextAlignment alignment = TextAlignment.LEFT, bool vertCentered = false, float padding = 0f)
-            {
-                bounds.Size -= 2 * padding;
-                bounds.Position += padding;
-                Vector2 pos = bounds.Position;
-
-                Vector2 textSize = MeasureStringInPixels(text, fontId, 1);
-                float fillScale = Math.Min(bounds.Size.X / textSize.X, bounds.Size.Y / textSize.Y);
-                fillScale = Math.Min(fillScale, maxScale);
-
-                if (vertCentered)
-                {
-                    pos.Y = bounds.Center.Y - (textSize.Y * fillScale) / 2;
+                    if (vertCentered)
+                    {
+                        pos.Y -= (textSize.Y * fillScale) / 2f;
+                    }
                 }
-
-                switch (alignment)
+                else
                 {
-                    case TextAlignment.LEFT:
-                        break;
-                    case TextAlignment.RIGHT:
-                        pos.X = bounds.Right;
-                        break;
-                    case TextAlignment.CENTER:
-                        pos.X = bounds.Center.X;
-                        break;
+                    Vector2 textSize = MeasureStringInPixels(surface, sb, fontID, 1);
+                    fillScale = Math.Min(maxWidth / textSize.X, maxHeight / textSize.Y);
+
+                    if (vertCentered)
+                    {
+                        pos.Y -= (textSize.Y * fillScale) / 2f;
+                    }
                 }
 
                 return new MySprite()
                 {
                     Type = SpriteType.TEXT,
-                    Data = text,
+                    Data = text ?? sb.ToString(),
                     Position = pos,
                     Color = color,
                     RotationOrScale = fillScale,
                     Alignment = alignment,
-                    FontId = fontId
+                    FontId = fontID
                 };
             }
 
-            public static Vector2 MeasureStringInPixels(string text, string font = "White", float scale = 1f)
+            public static Vector2 MeasureStringInPixels(IMyTextSurface surface, StringBuilder sb, string font = "White", float scale = 1f)
             {
-                IMyTextSurface referenceSurface = MePb.GetSurface(0);
-                var sb = new StringBuilder(text);
-                return referenceSurface.MeasureStringInPixels(sb, font, scale);
+                return surface.MeasureStringInPixels(sb, font, scale);
             }
 
             public static void CreateBoxFilled(List<MySprite> sprites, RectangleF bounds, Color borderColor, Color fillColor, float borderThickness)

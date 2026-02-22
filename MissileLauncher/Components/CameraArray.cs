@@ -41,21 +41,17 @@ namespace IngameScript
                 ID = id.ToUpper();
                 MaxRaycastDistance = maxRaycastDistance;
 
-                GetBLocks();
                 Init();
-            }
-
-            private void GetBLocks()
-            {
-                _cameras = AllGridBlocks.Where(b => b is IMyCameraBlock && b.CustomName.ToUpper().Contains(ID)).Cast<IMyCameraBlock>().ToList();
-                if (_cameras.Count == 0)
-                {
-                    throw new Exception($"{ID} Camera Array on has no cameras!");
-                }
             }
 
             private void Init()
             {
+                _cameras = AllGridBlocks.Where(b => b is IMyCameraBlock && b.CustomName.ToUpper().Contains($"CAMERA ARRAY {ID} CAMERA")).Cast<IMyCameraBlock>().ToList();
+                if (_cameras.Count == 0)
+                {
+                    throw new Exception($"Camera Array {ID} has no cameras!");
+                }
+
                 foreach (var camera in _cameras)
                 {
                     camera.EnableRaycast = true;
@@ -90,7 +86,7 @@ namespace IngameScript
 
             public MyDetectedEntityInfo Raycast(Vector3D raycastTarget, float overshoot)
             {
-                Vector3D raycastOvershoot = (raycastTarget - GetCameraPosition()) * overshoot;
+                Vector3D raycastOvershoot = (raycastTarget - GetCameraPosition()).Normalized() * overshoot;
                 raycastTarget += raycastOvershoot;
 
                 return Raycast(raycastTarget);
@@ -113,13 +109,23 @@ namespace IngameScript
 
             public bool CanScan(Vector3D raycastTarget, float overshoot)
             {
-                Vector3D raycastOvershoot = (raycastTarget - GetCameraPosition()) * overshoot;
+                Vector3D raycastOvershoot = (raycastTarget - GetCameraPosition()).Normalized() * overshoot;
                 raycastTarget += raycastOvershoot;
 
                 return CanScan(raycastTarget);
             }
 
             public Vector3D GetCameraPosition() => _cameraQueue.Peek().GetPosition();
+
+            public void AddCamera(IMyCameraBlock camera)
+            {
+                if (!_cameras.Contains(camera))
+                {
+                    _cameras.Add(camera);
+                    camera.EnableRaycast = true;
+                    _cameraQueue.Enqueue(camera);
+                }
+            }
         }
     }
 }

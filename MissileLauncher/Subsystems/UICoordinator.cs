@@ -27,15 +27,15 @@ namespace IngameScript
             private SystemCoordinator _systemCoordinator;
             private Dictionary<long, EntityInfoExt> _allEntities = new Dictionary<long, EntityInfoExt>();
 
-            public IReadOnlyDictionary<long, EntityInfoExt> AllTargets => _systemCoordinator.TargetCoordinator.AllTargetsExt;
-            public IReadOnlyDictionary<long, EntityInfoExt> AllMyMissiles => _systemCoordinator.MissileCoordinator.MyMissilesExt;
+            public IReadOnlyDictionary<long, EntityInfoExt> AllTargets => _systemCoordinator.TargetCoordinator.AllTargets;
+            public IReadOnlyDictionary<long, EntityInfoExt> AllMyMissiles => _systemCoordinator.MissileCoordinator.MyMissiles;
             public IReadOnlyDictionary<long, EntityInfoExt> AllEntities => _allEntities;
 
-            public IReadOnlyDictionary<string, TargetingLaser> TargetingLasers => _systemCoordinator.TargetingLasers;
+            public IReadOnlyDictionary<string, TargetingLaser> TargetingLasers => _systemCoordinator.TargetCoordinator.TargetingLasers;
             public MissileCoordinator MissileCoordinator => _systemCoordinator.MissileCoordinator;
             public TargetCoordinator TargetCoordinator => _systemCoordinator.TargetCoordinator;
             public IReadOnlyDictionary<string, MissileBay> MissileBays => _systemCoordinator.MissileCoordinator.MissileBays;
-            public AWACS AWACS => _systemCoordinator.AWACS;
+            public AWACS AWACS => _systemCoordinator.TargetCoordinator.AWACS;
             public TargetingDisplays TargetingDisplays { get; private set; }
 
             private int _runCounter = 0;
@@ -67,14 +67,14 @@ namespace IngameScript
                 }
             }
 
-            public void SelectBay(MissileBay bay, object caller) => MissileCoordinator.SelectBay(bay, caller);
-            public void DeselectBay(MissileBay bay, object caller) => MissileCoordinator.DeselectBay(bay, caller);
-            public void ClearSelectedBays(object caller) => MissileCoordinator.ClearSelectedBays(caller);
-            public void SelectAllBays(object caller) => MissileCoordinator.SelectAllBays(caller);
+            public void ActivateBay(MissileBay bay, object caller) => MissileCoordinator.ActivateBay(bay, caller);
+            public void DeactivateBay(MissileBay bay, object caller) => MissileCoordinator.DeactivateBay(bay, caller);
+            public void DeactivateAll(object caller) => MissileCoordinator.DeactivateAll(caller);
+            public void ActivateAll(object caller) => MissileCoordinator.ActivateAll(caller);
             public void LaunchMissiles(long targetID, object caller) => MissileCoordinator.LaunchMissiles(targetID, caller);
             public void LaunchMissile(long targetID, object caller) => MissileCoordinator.LaunchMissile(targetID, caller);
             public void ForgetTarget(long targetID) => AWACS.RemoveTarget(targetID);
-            public void AddTarget(EntityInfoExt target) => AWACS.AddTarget(target);
+            public void AddTarget(long targetID) => AWACS.AddTarget(targetID);
             public void AbortMissile(long address, object caller) => MissileCoordinator.AbortMissile(address, caller);
             public void SetRelation(long entityID, EntityRelation relation) => TargetCoordinator.SetTargetRelation(entityID, relation);
         }

@@ -38,8 +38,12 @@ namespace IngameScript
             private List<MySprite> _bodySprites = new List<MySprite>();
             private MySprite _textSprite;
 
-            public InfoPanel(Vector2 pos, Vector2 size, float borderThickness, float padding, Func<string> textGetter)
+            private StringBuilder _sb = new StringBuilder();
+            private IMyTextSurface _surface;
+
+            public InfoPanel(IMyTextSurface surface, Vector2 pos, Vector2 size, float borderThickness, float padding, Func<string> textGetter)
             {
+                _surface = surface;
                 _bounds = new RectangleF(pos, size);
                 _borderThickness = borderThickness;
                 _textGetter = textGetter;
@@ -49,8 +53,12 @@ namespace IngameScript
             private void BuildSprites()
             {
                 _bodySprites.Clear();
-                SpriteHelper.CreateBoxFilled(_bodySprites, Bounds, UIConfig.PanelBorderColor, UIConfig.PanelFillColor, _borderThickness);
-                _textSprite = SpriteHelper.CreateText(Bounds, _textGetter(), Color.White, alignment: TextAlignment.LEFT, vertCentered: false, padding: _borderThickness + _padding);
+                SpriteHelper.CreateBoxFilled(_bodySprites, _bounds, UIConfig.PanelBorderColor, UIConfig.PanelFillColor, _borderThickness);
+
+                string text = _textGetter();
+                _sb.Clear();
+                _sb.Append(text);
+                _textSprite = SpriteHelper.CreateText(_bounds.Position + (_borderThickness + _padding), _sb, Color.White, _surface, text: text, maxHeight: _bounds.Height - 2f * (_borderThickness + _padding), maxWidth: _bounds.Width - 2f * (_borderThickness + _padding), fontID: "Monospace");
             }
 
             public void Draw(MySpriteDrawFrame frame)

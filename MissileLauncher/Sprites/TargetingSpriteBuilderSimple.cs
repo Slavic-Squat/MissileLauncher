@@ -24,24 +24,26 @@ namespace IngameScript
     {
         public class TargetingSpriteBuilderSimple
         {
-            public float Range
-            {
-                get { return _range; }
-                set { _range = value; }
-            }
             public IReadOnlyList<MySpriteExt> FinalSprites => _finalSprites;
             public IReadOnlyDictionary<long, MyEntitySprite> EntitySprites => _entitySprites;
 
-            private float _range = 12000f;
+            private float _range = 6000f;
+            private string _rangeStr = "6 km";
             private RectangleF _screenBounds;
+            private float _resScale = 1f;
+
+            private StringBuilder _sb = new StringBuilder();
+            private IMyTextSurface _surface;
 
             private List<MySpriteExt> _sprites = new List<MySpriteExt>();
             private List<MySpriteExt> _staticSprites = new List<MySpriteExt>();
             private List<MySpriteExt> _finalSprites = new List<MySpriteExt>();
             private Dictionary<long, MyEntitySprite> _entitySprites = new Dictionary<long, MyEntitySprite>();
 
-            public TargetingSpriteBuilderSimple(RectangleF screenBounds)
+            public TargetingSpriteBuilderSimple(IMyTextSurface surface, RectangleF screenBounds)
             {
+                _surface = surface;
+                _resScale = Math.Max(screenBounds.Width, screenBounds.Height) / 1024f;
                 _screenBounds = screenBounds;
                 BuildStaticSprites();
             }
@@ -53,7 +55,7 @@ namespace IngameScript
                     Type = SpriteType.TEXTURE,
                     Data = "Self_1",
                     Position = _screenBounds.Center,
-                    Size = new Vector2(128, 128),
+                    Size = new Vector2(128, 128) * _resScale,
                     Color = Color.White,
                     Alignment = TextAlignment.CENTER,
                     RotationOrScale = 0f
@@ -67,7 +69,7 @@ namespace IngameScript
                     Data = "Radial_Grid_1",
                     Position = _screenBounds.Center,
                     Size = _screenBounds.Size,
-                    Color = new Color(128, 128, 128, 255),
+                    Color = Color.Gray,
                     Alignment = TextAlignment.CENTER,
                     RotationOrScale = 0f
                 };
@@ -80,7 +82,7 @@ namespace IngameScript
                     Data = "Radial_Grad_1",
                     Position = _screenBounds.Center,
                     Size = _screenBounds.Size,
-                    Color = new Color(1, 89, 68, 255),
+                    Color = new Color(64, 64, 64, 255),
                     Alignment = TextAlignment.CENTER,
                     RotationOrScale = 0f
                 };
@@ -93,7 +95,7 @@ namespace IngameScript
                     Data = "StarryBackground",
                     Position = _screenBounds.Center,
                     Size = _screenBounds.Size,
-                    Color = new Color(200, 200, 200, 255),
+                    Color = Color.LightGray,
                     Alignment = TextAlignment.CENTER,
                     RotationOrScale = 0f
                 };
@@ -128,13 +130,28 @@ namespace IngameScript
                 _sprites.Clear();
 
                 MatrixD referenceWorldMatrix = SystemCoordinator.ReferenceWorldMatrix;
+
+                double farthestDistance = 0;
+                foreach (var entity in entities.Values)
+                {
+                    double distance = Vector3D.Distance(referenceWorldMatrix.Translation, entity.Position);
+                    if (distance > farthestDistance)
+                    {
+                        farthestDistance = distance;
+                    }
+                }
+
+                _range = farthestDistance > 3000 ? 6000f : 3000f;
+                _rangeStr = _range == 6000f ? "6 km" : "3 km";
+
+                Vector2 rangeTextPos = _screenBounds.Position + new Vector2(10f, 10f) * _resScale;
+                MySprite rangeTextSprite = SpriteHelper.CreateText(rangeTextPos, _sb.Clear().Append(_rangeStr), Color.White, _surface, text: _rangeStr, fontID: "Monospace", scale: 1.5f * _resScale);
+                _sprites.Add(new MySpriteExt(rangeTextSprite, 0.01f));
+
                 float pixelsPerMeter = _screenBounds.Width / (2f * _range);
 
-                foreach (var kvp in entities)
+                foreach (var entity in entities.Values)
                 {
-                    EntityInfoExt entity = kvp.Value;
-                    long key = kvp.Key;
-
                     double distance = Vector3D.Distance(referenceWorldMatrix.Translation, entity.Position);
 
                     if (distance > _range)
@@ -172,7 +189,7 @@ namespace IngameScript
                     if (entity.Type == EntityType.Missile)
                     {
                         spriteName = "Missile_0";
-                        spriteSize = new Vector2(16, 16);
+                        spriteSize = new Vector2(16, 16) * _resScale;
                     }
                     else
                     {
@@ -180,19 +197,19 @@ namespace IngameScript
                         {
                             case EntitySource.Local:
                                 spriteName = "Target_0";
-                                spriteSize = new Vector2(32, 32);
+                                spriteSize = new Vector2(32, 32) * _resScale;
                                 break;
                             case EntitySource.Remote:
                                 spriteName = "Target_1";
-                                spriteSize = new Vector2(32, 32);
+                                spriteSize = new Vector2(32, 32) * _resScale;
                                 break;
                             case EntitySource.Both:
                                 spriteName = "Target_2";
-                                spriteSize = new Vector2(32, 32);
+                                spriteSize = new Vector2(32, 32) * _resScale;
                                 break;
                             default:
                                 spriteName = "Target_0";
-                                spriteSize = new Vector2(32, 32);
+                                spriteSize = new Vector2(32, 32) * _resScale;
                                 break;
                         }
                     }
@@ -211,7 +228,7 @@ namespace IngameScript
                     MySpriteExt MySpriteExtEntity = new MySpriteExt(tempSprite, (float)entityPosLocal.Y);
                     MyEntitySprite entitySprite = new MyEntitySprite(entity, MySpriteExtEntity);
 
-                    _entitySprites.Add(key, entitySprite);
+                    _entitySprites.Add(entity.EntityID, entitySprite);
 
                     MySpriteExt selectorSpriteExt = default(MySpriteExt);
 
@@ -223,7 +240,7 @@ namespace IngameScript
                             Data = "Selector_0",
                             Position = entityPosPixel,
                             Size = MySpriteExtEntity.Sprite.Size * 1.5f,
-                            Color = UIConfig.SelectorColor,
+                            Color = Color.OrangeRed,
                             Alignment = TextAlignment.CENTER,
                             RotationOrScale = 0f,
                         };

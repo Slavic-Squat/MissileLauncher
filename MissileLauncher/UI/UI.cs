@@ -119,7 +119,7 @@ namespace IngameScript
             {
                 if (_isPaused && _activePopUp == null)
                 {
-                    PopUp pausePopUp = new PopUp(Bounds.Center - Bounds.Size * 0.75f * 0.5f, Bounds.Size * 0.75f, 10f, 10f, () => !_isPaused, "UI NAV PAUSED", Bounds);
+                    PopUp pausePopUp = new PopUp(Display, Bounds.Center - Bounds.Size * 0.75f * 0.5f, Bounds.Size * 0.75f, 10f, 10f, () => !_isPaused, "UI NAV PAUSED", Bounds);
                     OpenPopUp(pausePopUp);
                 }
                 if (_activePopUp?.CanClose ?? false)

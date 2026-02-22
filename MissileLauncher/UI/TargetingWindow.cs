@@ -28,7 +28,6 @@ namespace IngameScript
             public EntityTypeFilter NavTypeFilter { get; private set; } = EntityTypeFilter.Targets;
             public EntityRelationFilter NavRelationFilter { get; private set; } = EntityRelationFilter.All;
             public EntitySourceFilter NavSourceFilter { get; private set; } = EntitySourceFilter.Both;
-            public ScopeScale ScopeScale { get; private set; } = ScopeScale.Medium;
             public long SelectedEntityID { get; private set; }
 
             private IReadOnlyDictionary<long, EntityInfoExt> _allEntities;
@@ -36,6 +35,7 @@ namespace IngameScript
             private IReadOnlyList<MySpriteExt> _targetingSprites;
             private TargetingSpriteBuilder _targetingSpriteBuilder;
             private Dictionary<long, MyEntitySprite> _filteredEntitySprites = new Dictionary<long, MyEntitySprite>();
+            private StringBuilder _sb = new StringBuilder();
 
 
             public TargetingWindow(UI ui, Vector2 pos, Vector2 size, float borderThickness) : base(ui, pos, size, borderThickness, canUserClose: false)
@@ -53,23 +53,23 @@ namespace IngameScript
                 _additionalSprites.Clear();
                 base.BuildSprites();
 
-                SpriteHelper.CreateBoxHollow(_additionalSprites, Bounds, UIConfig.WindowBorderColor, _borderThickness);
+                SpriteHelper.CreateBoxHollow(_additionalSprites, _bounds, UIConfig.WindowBorderColor, _borderThickness);
 
                 RectangleF labelBounds = new RectangleF(Pos.X, Pos.Y, 250f, 100f);
                 SpriteHelper.CreateBoxFilled(_additionalSprites, labelBounds, UIConfig.WindowBorderColor, UIConfig.WindowFillColor, _borderThickness);
 
-                MySprite labelTextSprite = SpriteHelper.CreateText(labelBounds, "-TARGETING-", Color.White, alignment: TextAlignment.CENTER, vertCentered: true, padding: _borderThickness + 10f);
+                string labelText = "-TARGETING-";
+                _sb.Clear();
+                _sb.Append(labelText);
+                MySprite labelTextSprite = SpriteHelper.CreateText(labelBounds.Position + (_borderThickness + 10f), _sb, Color.White, UI.Display, text: labelText, alignment: TextAlignment.CENTER, vertCentered: true, maxHeight: labelBounds.Height - 2f * (_borderThickness + 10f), maxWidth: labelBounds.Width - 2f * (_borderThickness + 10f), fontID: "Monospace");
                 _additionalSprites.Add(labelTextSprite);
             }
 
             private void Init()
             {
-                StringBuilder sb = new StringBuilder();
-
                 _allEntities = UI.UICoordinator.AllEntities;
 
-                _targetingSpriteBuilder = new TargetingSpriteBuilder(new RectangleF(0, 0, 1024f, 1024f));
-                _targetingSpriteBuilder.Zoom = MiscEnumHelper.GetScopeScaleValue(ScopeScale);
+                _targetingSpriteBuilder = new TargetingSpriteBuilder(UI.Display, new RectangleF(0, 0, 1024f, 1024f), 1f);
 
                 _entitySprites = _targetingSpriteBuilder.EntitySprites;
                 _targetingSprites = _targetingSpriteBuilder.FinalSprites;
@@ -80,16 +80,16 @@ namespace IngameScript
                 {
                     if (_entitySprites.ContainsKey(SelectedEntityID))
                     {
-                        sb.Clear();
-                        _entitySprites[SelectedEntityID].Entity.AppendInfo(sb);
-                        return sb.ToString();
+                        _sb.Clear();
+                        _entitySprites[SelectedEntityID].Entity.AppendInfo(_sb);
+                        return _sb.ToString();
                     }
                     else
                     {
                         return "No Target Selected";
                     }
                 };
-                InfoPanel targetPanel = new InfoPanel(targetInfoPanelPos, targetInfoPanelSize, 5f, 10f, targetInfoGetter);
+                InfoPanel targetPanel = new InfoPanel(UI.Display, targetInfoPanelPos, targetInfoPanelSize, 5f, 10f, targetInfoGetter);
                 AddInfoPanel(targetPanel);
 
                 Vector2 navFilterPanelPos = Pos + new Vector2(0, 100f);
@@ -108,22 +108,22 @@ namespace IngameScript
                 AWACS awacs = UI.UICoordinator.AWACS;
                 Func<string> targetingInfoGetter = () =>
                 {
-                    sb.Clear();
-                    missileCoordinator.AppendOverview(sb);
+                    _sb.Clear();
+                    missileCoordinator.AppendOverview(_sb);
                     if (awacs != null)
                     {
-                        sb.AppendLine("\n");
-                        awacs.AppendOverview(sb);
+                        _sb.AppendLine("\n");
+                        awacs.AppendOverview(_sb);
                     }
-                    return sb.ToString();
+                    return _sb.ToString();
                 };
-                InfoPanel targetingInfoPanel = new InfoPanel(targetingInfoPanelPos, targetingInfoPanelSize, 5f, 10f, targetingInfoGetter);
+                InfoPanel targetingInfoPanel = new InfoPanel(UI.Display, targetingInfoPanelPos, targetingInfoPanelSize, 5f, 10f, targetingInfoGetter);
                 AddInfoPanel(targetingInfoPanel);
 
                 Vector2 navModeInfoPanelSize = new Vector2(180f, 35f);
                 Vector2 navModeInfoPanelPos = Pos + new Vector2(0, Size.Y - navModeInfoPanelSize.Y);
-                Func<string> navModeInfoGetter = () => $"NAV MODE: {MiscEnumHelper.GetNavModeStr(NavMode)}";
-                InfoPanel navModeInfoPanel = new InfoPanel(navModeInfoPanelPos, navModeInfoPanelSize, 3f, 5f, navModeInfoGetter);
+                Func<string> navModeInfoGetter = () => "NAV MODE: " + MiscEnumHelper.GetNavModeStr(NavMode);
+                InfoPanel navModeInfoPanel = new InfoPanel(UI.Display, navModeInfoPanelPos, navModeInfoPanelSize, 3f, 5f, navModeInfoGetter);
                 AddInfoPanel(navModeInfoPanel);
             }
 
@@ -208,12 +208,6 @@ namespace IngameScript
                 }
 
                 NavMode = MiscEnumHelper.NextNavMode(NavMode);
-            }
-
-            public void CycleScopeScale()
-            {
-                ScopeScale = MiscEnumHelper.NextScopeScale(ScopeScale);
-                _targetingSpriteBuilder.Zoom = MiscEnumHelper.GetScopeScaleValue(ScopeScale);
             }
 
             public void CycleTypeFilter()
