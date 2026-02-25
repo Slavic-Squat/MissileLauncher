@@ -36,7 +36,7 @@ namespace IngameScript
             public event Action<IWindow> RequestClose;
             public event Action<INavigable> RequestStopNavigation;
 
-            protected double _time;
+            protected double _lastUpdateTime;
 
             protected bool _canUserClose;
 
@@ -286,9 +286,9 @@ namespace IngameScript
 
             public virtual void Update(double time)
             {
-                if (_time == 0)
+                if (_lastUpdateTime == 0)
                 {
-                    _time = time;
+                    _lastUpdateTime = time;
                     return;
                 }
 
@@ -297,7 +297,7 @@ namespace IngameScript
                 {
                     updatable.Update(time);
                 }
-                _time = time;
+                _lastUpdateTime = time;
             }
 
             public virtual void Draw(MySpriteDrawFrame frame)

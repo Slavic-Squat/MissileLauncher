@@ -26,7 +26,7 @@ namespace IngameScript
         {
             private Dictionary<string, TargetingLaser> _targetingLasers = new Dictionary<string, TargetingLaser>();
             private AWACS _awacs;
-            private double _time;
+            private double _lastRunTime;
             private Dictionary<long, EntityInfoExt> _targetsLocal = new Dictionary<long, EntityInfoExt>();
             private List<long> _localsToRemove = new List<long>();
             private Dictionary<long, EntityInfoExt> _targetsRemote = new Dictionary<long, EntityInfoExt>();
@@ -70,16 +70,16 @@ namespace IngameScript
                 }
 
                 MePb.CustomData = Config.ToString();
-                CommunicationHandler0.RegisterBroadcastListener("TARGET_SHARE", true);
-                CommunicationHandler0.RegisterBroadcastListener("ALL_MISSILE_INFO", false);
-                CommunicationHandler0.RegisterBroadcastListener("FRIENDLY_INFO", true);
+                CommunicationHandlerInst.RegisterBroadcastListener("TARGET_SHARE", true);
+                CommunicationHandlerInst.RegisterBroadcastListener("ALL_MISSILES", false);
+                CommunicationHandlerInst.RegisterBroadcastListener("FRIENDLIES", true);
             }
 
             public void Run(double time)
             {
-                if (_time == 0)
+                if (_lastRunTime == 0)
                 {
-                    _time = time;
+                    _lastRunTime = time;
                     return;
                 }
                 double globalTime = SystemCoordinator.GlobalTime;
@@ -126,7 +126,7 @@ namespace IngameScript
 
                 Transmit();
 
-                _time = time;
+                _lastRunTime = time;
             }
 
             private void AddRemoteTarget(EntityInfo entity, bool friendly)
@@ -358,7 +358,7 @@ namespace IngameScript
                 if (index > 1)
                 {
                     ImmutableArray<byte> bytes = ImmutableArray.Create(_targetsBuffer, 0, index);
-                    CommunicationHandler0.SendBroadcast(bytes, "TARGET_SHARE", true);
+                    CommunicationHandlerInst.SendBroadcast(bytes, "TARGET_SHARE", true);
                 }
 
                 index = 0;
@@ -371,16 +371,16 @@ namespace IngameScript
                 if (index > 1)
                 {
                     ImmutableArray<byte> bytes = ImmutableArray.Create(_selfBuffer, 0, index);
-                    CommunicationHandler0.SendBroadcast(bytes, "FRIENDLY_INFO", true);
+                    CommunicationHandlerInst.SendBroadcast(bytes, "FRIENDLIES", true);
                 }
             }
 
             private void Receive()
             {
-                while (CommunicationHandler0.HasMessage("TARGET_SHARE", true))
+                while (CommunicationHandlerInst.HasMessage("TARGET_SHARE", true))
                 {
                     MyIGCMessage message;
-                    if (CommunicationHandler0.TryRetrieveMessage("TARGET_SHARE", true, out message))
+                    if (CommunicationHandlerInst.TryRetrieveMessage("TARGET_SHARE", true, out message))
                     {
                         ImmutableArray<byte> bytes = message.As<ImmutableArray<byte>>();
                         int index = 0;
@@ -402,10 +402,10 @@ namespace IngameScript
                     }
                 }
 
-                while (CommunicationHandler0.HasMessage("FRIENDLY_INFO", true))
+                while (CommunicationHandlerInst.HasMessage("FRIENDLIES", true))
                 {
                     MyIGCMessage message;
-                    if (CommunicationHandler0.TryRetrieveMessage("FRIENDLY_INFO", true, out message))
+                    if (CommunicationHandlerInst.TryRetrieveMessage("FRIENDLIES", true, out message))
                     {
                         ImmutableArray<byte> bytes = message.As<ImmutableArray<byte>>();
                         int index = 0;
@@ -420,10 +420,10 @@ namespace IngameScript
                     }
                 }
 
-                while (CommunicationHandler0.HasMessage("ALL_MISSILE_INFO", false))
+                while (CommunicationHandlerInst.HasMessage("ALL_MISSILES", false))
                 {
                     MyIGCMessage message;
-                    if (CommunicationHandler0.TryRetrieveMessage("ALL_MISSILE_INFO", false, out message))
+                    if (CommunicationHandlerInst.TryRetrieveMessage("ALL_MISSILES", false, out message))
                     {
                         ImmutableArray<byte> bytes = message.As<ImmutableArray<byte>>();
                         int index = 0;

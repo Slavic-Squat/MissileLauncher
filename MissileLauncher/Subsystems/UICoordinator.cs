@@ -67,10 +67,10 @@ namespace IngameScript
                 }
             }
 
-            public void ActivateBay(MissileBay bay, object caller) => MissileCoordinator.ActivateBay(bay, caller);
-            public void DeactivateBay(MissileBay bay, object caller) => MissileCoordinator.DeactivateBay(bay, caller);
-            public void DeactivateAll(object caller) => MissileCoordinator.DeactivateAll(caller);
-            public void ActivateAll(object caller) => MissileCoordinator.ActivateAll(caller);
+            public void SelectBay(MissileBay bay, object caller) => MissileCoordinator.SelectBay(bay, caller);
+            public void DeselectBay(MissileBay bay, object caller) => MissileCoordinator.DeselectBay(bay, caller);
+            public void DeselectAll(object caller) => MissileCoordinator.DeselectAll(caller);
+            public void SelectAll(object caller) => MissileCoordinator.SelectAll(caller);
             public void LaunchMissiles(long targetID, object caller) => MissileCoordinator.LaunchMissiles(targetID, caller);
             public void LaunchMissile(long targetID, object caller) => MissileCoordinator.LaunchMissile(targetID, caller);
             public void ForgetTarget(long targetID) => AWACS.RemoveTarget(targetID);

@@ -35,7 +35,7 @@ namespace IngameScript
             public bool IsPaused { get; private set; } = true;
             public event Action<INavigable> RequestStopNavigation;
 
-            private double _time;
+            private double _lastUpdateTime;
             private RectangleF _bounds;
             private float _borderThickness;
             private float _highlightThickness;
@@ -233,9 +233,9 @@ namespace IngameScript
 
             public void Update(double time)
             {
-                if (_time == 0)
+                if (_lastUpdateTime == 0)
                 {
-                    _time = time;
+                    _lastUpdateTime = time;
                     return;
                 }
 
@@ -248,7 +248,7 @@ namespace IngameScript
                 {
                     page.Updateables.ForEach(u => u.Update(time));
                 }
-                _time = time;
+                _lastUpdateTime = time;
             }
 
             private void ActivateButton(IButton button)

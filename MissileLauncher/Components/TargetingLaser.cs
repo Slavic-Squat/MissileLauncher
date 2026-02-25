@@ -30,12 +30,14 @@ namespace IngameScript
             private CameraArray _cameraArray;
             private IMyCameraBlock _referenceCamera;
 
+            private EntityInfoExt _lastTarget;
+            private EntityInfoExt _target;
             private float _maxRaycastDistance;
             private MatrixD _referenceMatrix;
             private int _matchingDetectionCounter;
             private int _countThreshold;
-            private MyDetectedEntityInfo _previouslyDetectedEntity;
-            private double _time;
+            private MyDetectedEntityInfo _lastDetectedEntity;
+            private double _lastRunTime;
             private float _sensitivity;
             private bool _hasAzimuthCtrl;
             private bool _hasElevationCtrl;
@@ -47,7 +49,7 @@ namespace IngameScript
             public IController Controller { get; private set; }
             public bool IsControlPaused { get; private set; } = true;
             public bool IsUnderControl => Controller != null;
-            public bool TargetSet => Target.IsValid;
+            public bool TargetSet => _target.IsValid;
             public float MaxRaycastDistance
             {
                 get
@@ -60,7 +62,7 @@ namespace IngameScript
                     _cameraArray.MaxRaycastDistance = value * 1.1f;
                 }
             }
-            public EntityInfoExt Target {  get; private set; }
+            public EntityInfoExt Target => _target;
 
             public event Action<long> SyncTarget;
             public event Action<IControllable> RequestRelease;
@@ -107,7 +109,7 @@ namespace IngameScript
                     _elevationPID = null;
                 }
 
-                _referenceCamera = AllGridBlocks.FirstOrDefault(b => b is IMyCameraBlock && b.CustomName.ToUpper().Contains($"LASER {ID} REFERENCE CAMERA")) as IMyCameraBlock;
+                _referenceCamera = AllBlocks.FirstOrDefault(b => b is IMyCameraBlock && b.CustomName.ToUpper().Contains($"LASER {ID} REFERENCE CAMERA")) as IMyCameraBlock;
                 if (_referenceCamera == null)
                 {
                     throw new Exception($"Reference Camera for Laser {ID} not found!");
@@ -120,13 +122,11 @@ namespace IngameScript
 
             public void Run(double time)
             {
-                if (_time == 0)
+                if (_lastRunTime == 0)
                 {
-                    _time = time;
+                    _lastRunTime = time;
                     return;
                 }
-
-                _cameraArray.Update(time);
 
                 _referenceMatrix = _referenceCamera.WorldMatrix;
 
@@ -139,17 +139,16 @@ namespace IngameScript
                 {
                     AutoTrack(time);
                 }
-                _time = time;
+                _lastRunTime = time;
             }
 
             private void AutoTrack(double time)
             {
-                double timeDeltaSeconds = time - _time;
                 double globalTime = SystemCoordinator.GlobalTime;
 
-                double timeSinceLastDetection = globalTime - Target.TimeRecorded;
-                Vector3D estimatedTargetPosition = Target.Position + Target.Velocity * timeSinceLastDetection;
-                double estimatedTargetDistance = (estimatedTargetPosition - _referenceMatrix.Translation).Length();
+                double timeSinceLastDetection = globalTime - _target.TimeRecorded;
+                EntityInfo estimatedTarget = EstimateTargetKinematics(_target.Info, _lastTarget.Info);
+                double estimatedTargetDistance = (estimatedTarget.Position - _referenceMatrix.Translation).Length();
 
                 if (estimatedTargetDistance > MaxRaycastDistance * 0.8 || timeSinceLastDetection > 5)
                 {
@@ -157,8 +156,8 @@ namespace IngameScript
                     return;
                 }
 
-                AimAt(estimatedTargetPosition, time);
-                FireLaser(estimatedTargetPosition, 10f);
+                AimAt(estimatedTarget.Position, time);
+                FireLaser(estimatedTarget.Position, 10f);
             }
 
             private void MoveLaser(float azimuthInput, float elevationInput)
@@ -169,7 +168,8 @@ namespace IngameScript
 
             private void ForgetTarget()
             {
-                Target = default(EntityInfoExt);
+                _target = default(EntityInfoExt);
+                _lastTarget = default(EntityInfoExt);
                 _matchingDetectionCounter = 0;
             }
 
@@ -186,7 +186,7 @@ namespace IngameScript
                 {
                     if (!TargetSet)
                     {
-                        if (raycastResult.EntityId == _previouslyDetectedEntity.EntityId)
+                        if (raycastResult.EntityId == _lastDetectedEntity.EntityId)
                         {
                             _matchingDetectionCounter++;
                         }
@@ -195,25 +195,27 @@ namespace IngameScript
                             _matchingDetectionCounter = 0;
                         }
 
-                        _previouslyDetectedEntity = raycastResult;
+                        _lastDetectedEntity = raycastResult;
 
                         if (_matchingDetectionCounter >= _countThreshold)
                         {
-                            Target = new EntityInfoExt(raycastResult, globalTime);
-                            OnTargetUpdated?.Invoke(Target);
+                            _lastTarget = _target;
+                            _target = new EntityInfoExt(raycastResult, globalTime);
+                            OnTargetUpdated?.Invoke(_target);
                         }
                     }
-                    else if (raycastResult.EntityId == Target.EntityID)
+                    else if (raycastResult.EntityId == _target.EntityID)
                     {
-                        Target = new EntityInfoExt(raycastResult, globalTime);
-                        OnTargetUpdated?.Invoke(Target);
+                        _lastTarget = _target;
+                        _target = new EntityInfoExt(raycastResult, globalTime);
+                        OnTargetUpdated?.Invoke(_target);
                     }
                 }
             }
 
             private void AimAt(Vector3D aimTarget, double time)
             {
-                double timeDeltaSeconds = time - _time;
+                double timeDeltaSeconds = time - _lastRunTime;
                 Vector3D aimTargetLocal = Vector3D.TransformNormal(aimTarget - _referenceMatrix.Translation, MatrixD.Transpose(_referenceMatrix));
                 double aimTargetDistance = aimTargetLocal.Length();
                 Vector3D aimTargetDirLocal = aimTargetDistance == 0 ? Vector3D.Zero : aimTargetLocal / aimTargetDistance;
@@ -234,6 +236,27 @@ namespace IngameScript
                 MoveLaser(azimuthInput, elevationInput);
             }
 
+            private EntityInfo EstimateTargetKinematics(EntityInfo currentTarget, EntityInfo lastTarget)
+            {
+                if (!currentTarget.IsValid || !lastTarget.IsValid || currentTarget.EntityID != lastTarget.EntityID)
+                {
+                    return currentTarget;
+                }
+                Vector3D accel = Vector3D.Zero;
+                Vector3D velDelta = currentTarget.Velocity - lastTarget.Velocity;
+                double recordedTimeDelta = currentTarget.TimeRecorded - lastTarget.TimeRecorded;
+                if (recordedTimeDelta > 0)
+                {
+                    accel = velDelta / recordedTimeDelta;
+                }
+
+                double timeSinceLastRecord = SystemCoordinator.GlobalTime - currentTarget.TimeRecorded;
+                Vector3D estimatedVel = currentTarget.Velocity + accel * timeSinceLastRecord;
+                Vector3D estimatedPos = currentTarget.Position + currentTarget.Velocity * timeSinceLastRecord + 0.5 * accel * timeSinceLastRecord * timeSinceLastRecord;
+
+                return new EntityInfo(currentTarget.EntityID, estimatedPos, estimatedVel, SystemCoordinator.GlobalTime);
+            }
+
             public void Control(UserInput input, object caller)
             {
                 if (!IsUnderControl || IsControlPaused || !ReferenceEquals(Controller, caller))
@@ -241,7 +264,7 @@ namespace IngameScript
 
                 if (input.QRelease && TargetSet)
                 {
-                    SyncTarget?.Invoke(Target.EntityID);
+                    SyncTarget?.Invoke(_target.EntityID);
                 }
 
                 if (!TargetSet)

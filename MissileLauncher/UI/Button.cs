@@ -37,7 +37,7 @@ namespace IngameScript
                 None = 0, Highlighted = 1, Pressed = 1 << 1, Disabled = 1 << 2
             }
 
-            private double _time;
+            private double _lastUpdateTime;
             private RectangleF _bounds;
 
             private float _padding;
@@ -132,7 +132,7 @@ namespace IngameScript
                     return;
                 }
                 _action?.Invoke();
-                _timePressed = _time;
+                _timePressed = SystemTime;
                 _state |= ButtonState.Pressed;
             }
 
@@ -148,9 +148,9 @@ namespace IngameScript
 
             public void Update(double time)
             {
-                if (_time == 0)
+                if (_lastUpdateTime == 0)
                 {
-                    _time = time;
+                    _lastUpdateTime = time;
                     return;
                 }
 
@@ -167,7 +167,7 @@ namespace IngameScript
                 {
                     _state |= ButtonState.Disabled;
                 }
-                _time = time;
+                _lastUpdateTime = time;
             }
 
             public void Draw(MySpriteDrawFrame frame)

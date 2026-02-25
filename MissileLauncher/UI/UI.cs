@@ -35,7 +35,7 @@ namespace IngameScript
             public Vector2 Size => Bounds.Size;
             public Vector2 Pos => Bounds.Position;
 
-            private double _time;
+            private double _lastRunTime;
             private IWindow _activeWindow = null;
             private IPopUp _activePopUp = null;
             private bool _isPaused = false;
@@ -62,9 +62,9 @@ namespace IngameScript
                 if (_runCounter >= int.MaxValue) _runCounter = 0;
                 _runCounter++;
 
-                if (_time == 0)
+                if (_lastRunTime == 0)
                 {
-                    _time = time;
+                    _lastRunTime = time;
                     return;
                 }
 
@@ -75,7 +75,7 @@ namespace IngameScript
                     Draw();
                 }
 
-                _time = time;
+                _lastRunTime = time;
             }
 
             public void OpenWindow(IWindow window)

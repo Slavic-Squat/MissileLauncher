@@ -36,7 +36,7 @@ namespace IngameScript
             public event Action<IMenu> RequestClose;
             public event Action<INavigable> RequestStopNavigation;
 
-            protected double _time;
+            protected double _lastUpdateTime;
             protected bool _canUserClose;
             protected Func<bool> _autoClose;
             protected RectangleF _bounds;
@@ -269,9 +269,9 @@ namespace IngameScript
 
             public virtual void Update(double time)
             {
-                if (_time == 0)
+                if (_lastUpdateTime == 0)
                 {
-                    _time = time;
+                    _lastUpdateTime = time;
                     return;
                 }
 
@@ -291,7 +291,7 @@ namespace IngameScript
                 {
                     page.Updateables.ForEach(u => u.Update(time));
                 }
-                _time = time;
+                _lastUpdateTime = time;
             }
 
             protected virtual void ActivateButton(IButton button)

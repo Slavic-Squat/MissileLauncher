@@ -35,9 +35,9 @@ namespace IngameScript
             private Dictionary<string, ControlStation> _controlStations = new Dictionary<string, ControlStation>();
 
             private bool _isMainClock = true;
-            private double _lastClockSync;
+            private double _lastClockSyncTime;
             private double _globalTimeOffset;
-            private double _time;
+            private double _lastRunTime;
             public TargetCoordinator TargetCoordinator { get; private set; }
             public MissileCoordinator MissileCoordinator { get; private set; }
             public UICoordinator UICoordinator { get; private set; }
@@ -51,7 +51,7 @@ namespace IngameScript
 
             private void GetBlocks()
             {
-                ReferenceController = AllGridBlocks.Where(b => b is IMyShipController && b.CustomName.ToUpper().Contains("MAIN CONTROLLER")).FirstOrDefault() as IMyShipController;
+                ReferenceController = AllBlocks.Where(b => b is IMyShipController && b.CustomName.ToUpper().Contains("MAIN CONTROLLER")).FirstOrDefault() as IMyShipController;
                 if (ReferenceController == null)
                 {
                     throw new Exception($"main controller not found!");
@@ -78,19 +78,21 @@ namespace IngameScript
 
                 MePb.CustomData = Config.ToString();
 
-                CommunicationHandler0.RegisterBroadcastListener("FRIENDLY_COMMANDS", true);
-                CommandHandler0.RegisterCommand("SET_MAIN_CLOCK", (args) => { if (args.Length > 0) SetMainClock(args[0]); });
-                CommandHandler0.RegisterCommand("SYNC_CLOCK", (args) => { if (args.Length > 0) SyncClock(args[0]); });
-                CommandHandler0.RegisterCommand("PAUSE_CONTROL_STATION", (args) => { if (args.Length > 0) PauseControlStation(args[0]); });
-                CommandHandler0.RegisterCommand("RESUME_CONTROL_STATION", (args) => { if (args.Length > 0) ResumeControlStation(args[0]); });
-                CommandHandler0.RegisterCommand("QUICK_LAUNCH", (args) => { if (args.Length > 0) QuickLaunch(args[0]); });
+                CommunicationHandlerInst.RegisterBroadcastListener("FRIENDLY_COMMANDS", true);
+                CommunicationHandlerInst.RegisterTag("COMMANDS", true);
+
+                CommandHandlerInst.RegisterCommand("SET_MAIN_CLOCK", (args) => { if (args.Length > 0) SetMainClock(args[0]); });
+                CommandHandlerInst.RegisterCommand("SYNC_CLOCK", (args) => { if (args.Length > 0) SyncClock(args[0]); });
+                CommandHandlerInst.RegisterCommand("PAUSE_CONTROL_STATION", (args) => { if (args.Length > 0) PauseControlStation(args[0]); });
+                CommandHandlerInst.RegisterCommand("RESUME_CONTROL_STATION", (args) => { if (args.Length > 0) ResumeControlStation(args[0]); });
+                CommandHandlerInst.RegisterCommand("QUICK_LAUNCH", (args) => { if (args.Length > 0) QuickLaunch(args[0]); });
             }
 
             public void Run(double time)
             {
-                if (_time == 0)
+                if (_lastRunTime == 0)
                 {
-                    _time = time;
+                    _lastRunTime = time;
                     return;
                 }
 
@@ -108,7 +110,7 @@ namespace IngameScript
                 Receive();
                 Transmit();
 
-                _time = time;
+                _lastRunTime = time;
             }
 
             private void SetMainClock(string boolString)
@@ -129,7 +131,7 @@ namespace IngameScript
                 {
                     return;
                 }
-                _globalTimeOffset = time - _time;
+                _globalTimeOffset = time - SystemTime;
             }
 
             private void PauseControlStation(string id)
@@ -172,23 +174,33 @@ namespace IngameScript
 
             private void Transmit()
             {
-                if (_isMainClock && (_time - _lastClockSync) > 10f)
+                if (_isMainClock && (SystemTime - _lastClockSyncTime) > 10f)
                 {
-                    string command = $"SYNC_CLOCK {_time}";
-                    CommunicationHandler0.SendBroadcast(command, "FRIENDLY_COMMANDS", true);
-                    _lastClockSync = _time;
+                    string command = $"SYNC_CLOCK {SystemTime}";
+                    CommunicationHandlerInst.SendBroadcast(command, "FRIENDLY_COMMANDS", true);
+                    _lastClockSyncTime = SystemTime;
                 }
             }
 
             private void Receive()
             {
-                while (CommunicationHandler0.HasMessage("FRIENDLY_COMMANDS", true))
+                while (CommunicationHandlerInst.HasMessage("FRIENDLY_COMMANDS", true))
                 {
                     MyIGCMessage msg;
-                    if (CommunicationHandler0.TryRetrieveMessage("FRIENDLY_COMMANDS", true, out msg))
+                    if (CommunicationHandlerInst.TryRetrieveMessage("FRIENDLY_COMMANDS", true, out msg))
                     {
                         string command = msg.As<string>();
-                        CommandHandler0.RunCommands(command);
+                        CommandHandlerInst.RunCommands(command);
+                    }
+                }
+
+                while (CommunicationHandlerInst.HasMessage("COMMANDS", true))
+                {
+                    MyIGCMessage msg;
+                    if (CommunicationHandlerInst.TryRetrieveMessage("COMMANDS", true, out msg))
+                    {
+                        string command = msg.As<string>();
+                        CommandHandlerInst.RunCommands(command);
                     }
                 }
             }

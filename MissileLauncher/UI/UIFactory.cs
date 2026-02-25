@@ -207,7 +207,7 @@ namespace IngameScript
                     getText = () => "FIRE MISL";
                     action = () =>
                     {
-                        if (missileCoordinator.NumActiveBays == 0)
+                        if (missileCoordinator.NumSelectedBays == 0)
                         {
                             Menu missileMenu = CreateBayMenu(window.Center, window, true, true);
                             window.OpenMenu(missileMenu);
@@ -225,7 +225,7 @@ namespace IngameScript
                     getText = () => "FIRE ALL";
                     action = () =>
                     {
-                        if (missileCoordinator.NumActiveBays == 0)
+                        if (missileCoordinator.NumSelectedBays == 0)
                         {
                             Menu missileMenu = CreateBayMenu(window.Center, window, true, true);
                             window.OpenMenu(missileMenu);
@@ -286,7 +286,7 @@ namespace IngameScript
                     getText = () => "FIRE MISL";
                     action = () =>
                     {
-                        if (missileCoordinator.NumActiveBays == 0)
+                        if (missileCoordinator.NumSelectedBays == 0)
                         {
                             Menu missileMenu = CreateBayMenu(window.Center, window, true, true);
                             window.OpenMenu(missileMenu);
@@ -304,7 +304,7 @@ namespace IngameScript
                     getText = () => "FIRE ALL";
                     action = () =>
                     {
-                        if (missileCoordinator.NumActiveBays == 0)
+                        if (missileCoordinator.NumSelectedBays == 0)
                         {
                             Menu missileMenu = CreateBayMenu(window.Center, window, true, true);
                             window.OpenMenu(missileMenu);
@@ -404,11 +404,11 @@ namespace IngameScript
                             menu.AddInfoPanel(panel, i);
 
                             Vector2 buttonPos = panel.Pos + new Vector2(panel.Size.X * 0.5f - selectButtonSize.X * 0.5f, panel.Size.Y - selectButtonSize.Y - 10f);
-                            getText = () => bay.Status == BayStatus.Active ? "DEACTIVATE" : "ACTIVATE";
-                            Action onPress = () => uiCoordinator.ActivateBay(bay, station);
-                            Action onRelease = () => uiCoordinator.DeactivateBay(bay, station);
-                            Func<bool> isPressed = () => bay.Status == BayStatus.Active;
-                            Func<bool> canPress = () => bay.IsActivatable;
+                            getText = () => bay.IsSelected ? "DESELECT" : "SELECT";
+                            Action onPress = () => uiCoordinator.SelectBay(bay, station);
+                            Action onRelease = () => uiCoordinator.DeselectBay(bay, station);
+                            Func<bool> isPressed = () => bay.IsSelected;
+                            Func<bool> canPress = () => bay.IsSelectable;
                             Func<bool> canRelease = canPress;
                             ToggleButton button = new ToggleButton(surface, buttonPos, selectButtonSize, 7f, 3f, 1f, getText, onPress, onRelease, isPressed, canPress: canPress, canRelease: canRelease);
                             menu.AddButton(button, i);
@@ -419,14 +419,14 @@ namespace IngameScript
 
                 Vector2 confirmButtonSize = new Vector2(150f, 50f);
                 Vector2 confirmButtonPos = menu.Pos + new Vector2(menu.Size.X * 0.5f - confirmButtonSize.X - 20f, menu.Size.Y - footerHeight * 0.5f - confirmButtonSize.Y * 0.5f);
-                Func<string> confirmText = () => "ACTIVATE ALL";
-                Action action = () => uiCoordinator.ActivateAll(station);
+                Func<string> confirmText = () => "SELECT ALL";
+                Action action = () => uiCoordinator.SelectAll(station);
                 Button confirmButton = new Button(surface, confirmButtonPos, confirmButtonSize, 10f, 4f, 1f, confirmText, action);
                 menu.AddButton(confirmButton, -1);
                 Vector2 cancelButtonSize = new Vector2(150f, 50f);
                 Vector2 cancelButtonPos = menu.Pos + new Vector2(menu.Size.X * 0.5f + 20f, menu.Size.Y - footerHeight * 0.5f - confirmButtonSize.Y * 0.5f);
-                Func<string> cancelText = () => "DEACTIVATE ALL";
-                action = () => uiCoordinator.DeactivateAll(station);
+                Func<string> cancelText = () => "DESELECT ALL";
+                action = () => uiCoordinator.DeselectAll(station);
                 Button cancelButton = new Button(surface, cancelButtonPos, cancelButtonSize, 10f, 4f, 1f, cancelText, action);
                 menu.AddButton(cancelButton, -1);
                 return menu;

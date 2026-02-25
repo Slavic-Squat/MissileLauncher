@@ -36,7 +36,7 @@ namespace IngameScript
             private UI _ui;
             private UICoordinator _uiCoordinator;
             private bool _isPaused = false;
-            private double _time;
+            private double _lastRunTime;
             public ControlStation(string id, UICoordinator uiCoordinator)
             {
                 ID = id.ToUpper();
@@ -48,7 +48,7 @@ namespace IngameScript
 
             private void GetBlocks()
             {
-                _controllerReference = AllGridBlocks.Where(b => b is IMyShipController && b.CustomName.ToUpper().Contains($"CONTROL STATION {ID}")).FirstOrDefault() as IMyShipController;
+                _controllerReference = AllBlocks.Where(b => b is IMyShipController && b.CustomName.ToUpper().Contains($"CONTROL STATION {ID}")).FirstOrDefault() as IMyShipController;
                 if (_controllerReference == null)
                 {
                     throw new Exception($"No controller found for Control Station {ID}!");
@@ -58,7 +58,7 @@ namespace IngameScript
                 {
                     _displays.Add((_controllerReference as IMyTextSurfaceProvider).GetSurface(i));
                 }
-                IEnumerable<IMyTextPanel> additionalDisplays = AllGridBlocks.Where(b => b is IMyTextPanel && b.CustomName.ToUpper().Contains($"CONTROL STATION {ID} DISPLAY")).Cast<IMyTextPanel>();
+                IEnumerable<IMyTextPanel> additionalDisplays = AllBlocks.Where(b => b is IMyTextPanel && b.CustomName.ToUpper().Contains($"CONTROL STATION {ID} DISPLAY")).Cast<IMyTextPanel>();
                 _displays.AddRange(additionalDisplays);
                 if (_displays.Count == 0)
                 {
@@ -75,9 +75,9 @@ namespace IngameScript
 
             public void Run(double time)
             {
-                if (_time == 0)
+                if (_lastRunTime == 0)
                 {
-                    _time = time;
+                    _lastRunTime = time;
                     return;
                 }
 
@@ -92,7 +92,7 @@ namespace IngameScript
                 {
                     Controllable.Control(UserInput, this);
                 }
-                _time = time;
+                _lastRunTime = time;
             }
 
             public void TakeFireControl(MissileCoordinator coordinator)

@@ -36,7 +36,7 @@ namespace IngameScript
             private HashSet<long> _targetsToRemove = new HashSet<long>();
             private PriorityQueue<long, double> _targetQueue;
             private float _maxRaycastDistance;
-            private double _time;
+            private double _lastRunTime;
             public float MaxRaycastDistance
             {
                 get
@@ -81,17 +81,12 @@ namespace IngameScript
 
             public void Run(double time)
             {
-                if (_time == 0)
+                if (_lastRunTime == 0)
                 {
-                    _time = time;
+                    _lastRunTime = time;
                     return;
                 }
                 double globalTime = SystemCoordinator.GlobalTime;
-
-                _cameraArray0.Update(time);
-                _cameraArray1.Update(time);
-                _cameraArray2.Update(time);
-                _cameraArray3.Update(time);
 
                 if (_targetQueue.Count != 0)
                 {
@@ -147,7 +142,7 @@ namespace IngameScript
                         _targetQueue.Enqueue(targetID);
                     }
                 }
-                _time = time;
+                _lastRunTime = time;
             }
 
             public void AddTarget(long targetID)
