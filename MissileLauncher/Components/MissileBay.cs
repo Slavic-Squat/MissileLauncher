@@ -194,15 +194,6 @@ namespace IngameScript
                 sb.Append("  MISL GUIDANCE: ").AppendLine(MissileEnumHelper.GetMissileGuidanceStr(_missileGuidanceType));
                 sb.Append("  MISL PAYLOAD: ").Append(MissileEnumHelper.GetMissilePayloadStr(_missilePayload));
             }
-
-            public void AppendOverviewShort(StringBuilder sb)
-            {
-                if (IsSelected)
-                {
-                    sb.Append("-");
-                }
-                sb.Append("[").Append(ID).Append("]: ").Append(MiscEnumHelper.GetBayStatusStrShort(Status));
-            }
         }
     }
 }
