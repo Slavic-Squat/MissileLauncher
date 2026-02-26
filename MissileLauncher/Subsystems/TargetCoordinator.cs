@@ -50,23 +50,26 @@ namespace IngameScript
 
             private void Init()
             {
+                bool hasAWACS = Config.Get("AWACS", "Enabled").ToBoolean(false);
+                Config.Set("AWACS", "Enabled", hasAWACS);
+                if (hasAWACS)
+                {
+                    _awacs = new AWACS(AllTargets);
+                    _awacs.OnTargetUpdated += AddLocalTarget;
+                }
+
                 int numLasers = Config.Get("Targeting", "NumLasers").ToInt32(1);
                 Config.Set("Targeting", "NumLasers", numLasers);
                 for (int i = 0; i < numLasers; i++)
                 {
                     string id = i.ToString().ToUpper();
                     TargetingLaser laser = new TargetingLaser(id);
-                    laser.SyncTarget += _awacs.AddTarget;
+                    if (_awacs != null)
+                    {
+                        laser.SyncTarget += _awacs.AddTarget;
+                    }
                     laser.OnTargetUpdated += AddLocalTarget;
                     _targetingLasers[id] = laser;
-                }
-
-                bool hasAWACS = Config.Get("AWACS", "Enabled").ToBoolean(true);
-                Config.Set("AWACS", "Enabled", hasAWACS);
-                if (hasAWACS)
-                {
-                    _awacs = new AWACS(AllTargets);
-                    _awacs.OnTargetUpdated += AddLocalTarget;
                 }
 
                 MePb.CustomData = Config.ToString();

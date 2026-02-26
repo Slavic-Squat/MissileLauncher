@@ -61,7 +61,7 @@ namespace IngameScript
                 string labelText = "-TARGETING-";
                 _sb.Clear();
                 _sb.Append(labelText);
-                MySprite labelTextSprite = SpriteHelper.CreateText(labelBounds.Position + (_borderThickness + 10f), _sb, Color.White, UI.Display, text: labelText, alignment: TextAlignment.CENTER, vertCentered: true, maxHeight: labelBounds.Height - 2f * (_borderThickness + 10f), maxWidth: labelBounds.Width - 2f * (_borderThickness + 10f), fontID: "Monospace");
+                MySprite labelTextSprite = SpriteHelper.CreateText(labelBounds.Center, _sb, Color.White, UI.Display, text: labelText, alignment: TextAlignment.CENTER, vertCentered: true, maxHeight: labelBounds.Height - 2f * (_borderThickness + 10f), maxWidth: labelBounds.Width - 2f * (_borderThickness + 10f), fontID: "Monospace");
                 _additionalSprites.Add(labelTextSprite);
             }
 

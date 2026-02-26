@@ -43,7 +43,7 @@ namespace IngameScript
             public bool FireControlAvail => Station == null;
             public int NumBays { get; private set; }
             public int NumSelectedBays => _selectedBays.Count;
-            public int NumReadyBays => _missileBays.Count(bay => bay.Value.Status == BayStatus.Ready || bay.Value.Status == BayStatus.Active);
+            public int NumReadyBays => _missileBays.Count(bay => bay.Value.IsSelectable);
             public bool IsLaunching => _launchCoroutine != null;
             public int NumMissiles => _addressTargetIDMap.Count;
 

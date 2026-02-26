@@ -31,7 +31,7 @@ namespace IngameScript
                 MissileCoordinator missileCoordinator = uiCoordinator.MissileCoordinator;
                 IMyTextSurface surface = window.UI.Display;
 
-                int numButtons = 4;
+                int numButtons = 3;
                 float padding = 15f;
                 float spacing = 10f;
 
@@ -105,7 +105,7 @@ namespace IngameScript
                 ControlPanel panel = new ControlPanel(window, panelPos, panelSize, 5f, 2.5f);
 
                 Vector2 labelPos = panel.Pos + new Vector2(panel.Size.X / 2f, labelSize.Y / 2f + padding);
-                string text = "-NAV FILTER-\n------------------";
+                string text = "-NAV FILTER-\n------------";
                 sb.Clear();
                 sb.Append(text);
                 MySprite labelSprite = SpriteHelper.CreateText(labelPos, sb, Color.White, surface, text: text, alignment: TextAlignment.CENTER, vertCentered: true, maxHeight: labelSize.Y, maxWidth: labelSize.X, fontID: "Monospace");

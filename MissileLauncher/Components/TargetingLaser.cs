@@ -150,7 +150,7 @@ namespace IngameScript
                 EntityInfo estimatedTarget = EstimateTargetKinematics(_target.Info, _lastTarget.Info);
                 double estimatedTargetDistance = (estimatedTarget.Position - _referenceMatrix.Translation).Length();
 
-                if (estimatedTargetDistance > MaxRaycastDistance * 0.8 || timeSinceLastDetection > 5)
+                if (estimatedTargetDistance > _maxRaycastDistance || timeSinceLastDetection > 5)
                 {
                     ForgetTarget();
                     return;
@@ -238,16 +238,15 @@ namespace IngameScript
 
             private EntityInfo EstimateTargetKinematics(EntityInfo currentTarget, EntityInfo lastTarget)
             {
-                if (!currentTarget.IsValid || !lastTarget.IsValid || currentTarget.EntityID != lastTarget.EntityID)
-                {
-                    return currentTarget;
-                }
                 Vector3D accel = Vector3D.Zero;
-                Vector3D velDelta = currentTarget.Velocity - lastTarget.Velocity;
-                double recordedTimeDelta = currentTarget.TimeRecorded - lastTarget.TimeRecorded;
-                if (recordedTimeDelta > 0)
+                if (lastTarget.IsValid && currentTarget.EntityID == lastTarget.EntityID)
                 {
-                    accel = velDelta / recordedTimeDelta;
+                    Vector3D velDelta = currentTarget.Velocity - lastTarget.Velocity;
+                    double recordedTimeDelta = currentTarget.TimeRecorded - lastTarget.TimeRecorded;
+                    if (recordedTimeDelta > 0)
+                    {
+                        accel = velDelta / recordedTimeDelta;
+                    }
                 }
 
                 double timeSinceLastRecord = SystemCoordinator.GlobalTime - currentTarget.TimeRecorded;
